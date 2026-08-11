@@ -102,7 +102,17 @@
 .terminal-pane .xterm-wrap {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* IME pre-edit overflow at the rightmost column must never pan the terminal.
+     xterm's composition view lives inside .xterm-scrollable-element (overflow
+     visible, a sibling of the vestigial .xterm-viewport) and extends past the
+     right edge when a CJK IME composes at the last column. That overflow makes
+     this wrap a horizontal scroll container, so Chromium's IME scroll-into-view
+     pans it left (terminal content shifts left until the cursor wraps). `clip`
+     makes it non-scrollable so nothing can pan it — the pre-edit simply clips at
+     the terminal's right edge. BOTH axes must be `clip`: per CSS Overflow, the
+     pair (clip, hidden) computes to (hidden, hidden), so a lone overflow-x: clip
+     alongside overflow-y: hidden is silently downgraded and changes nothing. */
+  overflow: clip;
 }
 
 .terminal-pane .xterm {
@@ -262,7 +272,10 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  /* Same IME-pan guard as .terminal-pane .xterm-wrap: shell terminals have no
+     .xterm-wrap, so the composition overflow would pan this container instead.
+     `clip` (both axes) keeps it non-scrollable. */
+  overflow: clip;
   position: relative;
 }
 

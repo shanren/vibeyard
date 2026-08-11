@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const providerCaps = new Map([
   ['claude', { costTracking: true, contextWindow: true, pendingPromptTrigger: 'startup-arg' }],
@@ -649,5 +651,17 @@ describe('injectPromptIntoRunningSession', () => {
     expect(result).toBe(true);
     expect(mockPtyWrite).toHaveBeenNthCalledWith(1, 'inj-3', 'fix the bug');
     expect(mockPtyWrite).toHaveBeenNthCalledWith(2, 'inj-3', '\r');
+  });
+
+  it('CSS clips the xterm wrap (both axes) so IME pre-edit at the right edge cannot pan the terminal', () => {
+    const css = readFileSync(join(process.cwd(), 'src', 'renderer', 'styles', 'terminal.css'), 'utf8');
+    // The composition view lives in .xterm-scrollable-element (overflow visible)
+    // and extends past the right edge at the last column, making .xterm-wrap the
+    // scroll container Chromium pans. The guard must be `clip` on BOTH axes: a
+    // lone `overflow-x: clip` paired with `overflow-y: hidden` computes to
+    // (hidden, hidden) per CSS Overflow and does nothing.
+    const block = css.match(/\.terminal-pane \.xterm-wrap\s*\{([^}]*)\}/);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/overflow\s*:\s*clip\s*;/);
   });
 });
