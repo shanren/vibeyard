@@ -216,6 +216,20 @@ export interface DeepSearchResult {
   profileId?: string;
 }
 
+/** A CLI session transcript on disk that belongs to a specific project — used to
+ *  surface a provider's own session history inside the per-project Sessions panel. */
+export interface ProjectTranscript {
+  providerId: ProviderId;
+  cliSessionId: string;
+  transcriptPath: string;
+  /** Name derived from the first user message, or a truncated cliSessionId fallback. */
+  name: string;
+  /** Last-modified time of the transcript file (ms epoch). */
+  mtimeMs: number;
+  /** Profile whose config dir holds this transcript (Claude profiles). */
+  profileId?: string;
+}
+
 export interface ProjectInsightsData {
   initialContextSnapshots: InitialContextSnapshot[];
   dismissed: string[];

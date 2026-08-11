@@ -7,6 +7,8 @@ const mockAppState = vi.hoisted(() => {
     projects: [] as Array<{ id: string; sessionHistory: unknown[] }>,
     activeProject: {
       id: 'p1',
+      name: 'My Repo',
+      path: '/repo',
       sessionHistory: [
         {
           id: 'h1',
@@ -29,6 +31,8 @@ const mockAppState = vi.hoisted(() => {
     toggleBookmark: vi.fn(),
     removeHistoryEntry: vi.fn(),
     resumeFromHistory: vi.fn(),
+    setActiveProject: vi.fn(),
+    openCliSession: vi.fn(),
     emit(event: string) {
       listeners.get(event)?.forEach(cb => cb());
     },
@@ -38,6 +42,8 @@ const mockAppState = vi.hoisted(() => {
       state.preferences.sidebarViews.sessionHistory = true;
       state.activeProject = {
         id: 'p1',
+        name: 'My Repo',
+        path: '/repo',
         sessionHistory: [
           {
             id: 'h1',
@@ -56,6 +62,8 @@ const mockAppState = vi.hoisted(() => {
       state.toggleBookmark.mockClear();
       state.removeHistoryEntry.mockClear();
       state.resumeFromHistory.mockClear();
+      state.setActiveProject.mockClear();
+      state.openCliSession.mockClear();
       state.on.mockClear();
     },
   };
@@ -217,6 +225,21 @@ async function renderHistory(): Promise<FakeElement> {
   return container;
 }
 
+function stubCliTranscripts(transcripts: unknown[]): void {
+  vi.stubGlobal('window', {
+    vibeyard: { session: { projectTranscripts: vi.fn(async () => transcripts) } },
+  });
+}
+
+function flushAsync(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function cliItems(container: FakeElement): FakeElement[] {
+  const cli = container.querySelector('.history-cli');
+  return cli ? cli.querySelectorAll('.history-item') : [];
+}
+
 beforeEach(() => {
   mockAppState.reset();
   vi.unstubAllGlobals();
@@ -321,5 +344,121 @@ describe('renderSessionHistory', () => {
 
     expect(sidebarContainer.innerHTML).toBe('');
     expect(dialogContainer.innerHTML).toBe('');
+  });
+});
+
+describe('renderSessionHistory — CLI transcript section', () => {
+  it('renders the provider CLI history in its own section below the archive', async () => {
+    stubCliTranscripts([
+      { providerId: 'claude', cliSessionId: 'cli-99', transcriptPath: '/t', name: 'fix the widget', mtimeMs: 1 },
+      { providerId: 'claude', cliSessionId: 'cli-98', transcriptPath: '/t2', name: 'tune the store', mtimeMs: 2 },
+    ]);
+    const container = await renderHistory();
+    await flushAsync();
+
+    const items = cliItems(container);
+    expect(items.length).toBe(2);
+    expect(items[0].querySelector('.history-item-name')?.textContent).toBe('fix the widget');
+    expect(items[0].querySelector('.history-item-details')?.textContent).toContain('Claude Code');
+    expect(container.querySelector('.history-cli-title')?.textContent).toContain('Session history from CLI');
+  });
+
+  it('fetches transcripts for the project path', async () => {
+    const fetchFn = vi.fn(async () => []);
+    vi.stubGlobal('window', { vibeyard: { session: { projectTranscripts: fetchFn } } });
+    await renderHistory();
+    await flushAsync();
+    expect(fetchFn).toHaveBeenCalledWith('/repo');
+  });
+
+  it('does not duplicate sessions already in the Vibeyard archive', async () => {
+    // archived h1 is a codex session with cliSessionId 'cli-1'
+    stubCliTranscripts([
+      { providerId: 'codex', cliSessionId: 'cli-1', transcriptPath: '/dup', name: 'already archived', mtimeMs: 1 },
+      { providerId: 'claude', cliSessionId: 'cli-2', transcriptPath: '/fresh', name: 'fresh cli session', mtimeMs: 2 },
+    ]);
+    const container = await renderHistory();
+    await flushAsync();
+
+    const items = cliItems(container);
+    expect(items.length).toBe(1);
+    expect(items[0].querySelector('.history-item-name')?.textContent).toBe('fresh cli session');
+  });
+
+  it('resumes a CLI session on click via openCliSession', async () => {
+    stubCliTranscripts([
+      { providerId: 'claude', cliSessionId: 'cli-99', transcriptPath: '/t', name: 'fix the widget', mtimeMs: 1, profileId: 'work' },
+    ]);
+    const container = await renderHistory();
+    await flushAsync();
+
+    cliItems(container)[0].dispatch('click');
+    expect(mockAppState.setActiveProject).toHaveBeenCalledWith('p1');
+    expect(mockAppState.openCliSession).toHaveBeenCalledWith('p1', 'cli-99', 'fix the widget', 'claude', 'work');
+  });
+
+  it('keeps the empty state when there is neither archive nor CLI history', async () => {
+    stubCliTranscripts([]);
+    mockAppState.activeProject.sessionHistory = [];
+    const container = await renderHistory();
+    await flushAsync();
+
+    expect(container.querySelector('.history-empty')?.textContent).toBe('No session history yet');
+    expect(container.querySelector('.history-cli')).toBeNull();
+  });
+
+  it('shows the CLI section instead of the empty state when only CLI history exists', async () => {
+    stubCliTranscripts([
+      { providerId: 'claude', cliSessionId: 'cli-9', transcriptPath: '/t', name: 'only cli', mtimeMs: 1 },
+    ]);
+    mockAppState.activeProject.sessionHistory = [];
+    const container = await renderHistory();
+    await flushAsync();
+
+    expect(container.querySelector('.history-empty')).toBeNull();
+    expect(cliItems(container).length).toBe(1);
+  });
+
+  it('tolerates an IPC failure when loading CLI transcripts', async () => {
+    vi.stubGlobal('window', {
+      vibeyard: { session: { projectTranscripts: vi.fn(async () => { throw new Error('boom'); }) } },
+    });
+    mockAppState.activeProject.sessionHistory = [];
+    const container = await renderHistory();
+    await flushAsync();
+
+    expect(container.querySelector('.history-empty')?.textContent).toBe('No session history yet');
+    expect(container.querySelector('.history-cli')).toBeNull();
+  });
+
+  it('caps the CLI list at MAX_VISIBLE and shows a "more items" note', async () => {
+    const transcripts = Array.from({ length: 55 }, (_, i) => ({
+      providerId: 'claude', cliSessionId: `cli-${i}`, transcriptPath: `/t${i}`, name: `session ${i}`, mtimeMs: i,
+    }));
+    stubCliTranscripts(transcripts);
+    const container = await renderHistory();
+    await flushAsync();
+
+    expect(cliItems(container).length).toBe(50);
+    const details = container.querySelector('.history-cli-list')!.querySelectorAll('.history-item-details');
+    expect(details[details.length - 1].textContent).toContain('more items');
+  });
+
+  it('refresh button re-fetches the CLI transcripts', async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce([{ providerId: 'claude', cliSessionId: 'a', transcriptPath: '/a', name: 'first', mtimeMs: 1 }])
+      .mockResolvedValueOnce([{ providerId: 'claude', cliSessionId: 'b', transcriptPath: '/b', name: 'second', mtimeMs: 2 }]);
+    vi.stubGlobal('window', { vibeyard: { session: { projectTranscripts: fetchFn } } });
+
+    const container = await renderHistory();
+    await flushAsync();
+    expect(cliItems(container).length).toBe(1);
+
+    container.querySelector('.history-cli-refresh')!.dispatch('click', { stopPropagation() {} });
+    await flushAsync();
+
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(cliItems(container).length).toBe(1);
+    expect(cliItems(container)[0].querySelector('.history-item-name')?.textContent).toBe('second');
   });
 });

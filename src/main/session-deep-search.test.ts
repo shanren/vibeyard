@@ -14,7 +14,7 @@ vi.mock('./providers/registry', () => ({
 }));
 
 import * as fs from 'fs';
-import { searchSessions, _resetForTesting } from './session-deep-search';
+import { projectTranscripts, searchSessions, _resetForTesting } from './session-deep-search';
 
 const mockStat = vi.mocked(fs.promises.stat);
 
@@ -272,5 +272,174 @@ describe('searchSessions()', () => {
     }));
     mockStat.mockResolvedValue(makeStat(1));
     expect(await searchSessions('asdcv')).toEqual([]);
+  });
+});
+
+describe('projectTranscripts()', () => {
+  it('matches Claude transcripts by the slugified project path', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'claude',
+      descriptors: [
+        { cliSessionId: 'c1', transcriptPath: '/-repo-my-project/c1.jsonl', projectSlug: '-repo-My-Project' },
+        { cliSessionId: 'c2', transcriptPath: '/-other/c2.jsonl', projectSlug: '-other' },
+      ],
+      index: {
+        '/-repo-my-project/c1.jsonl': { text: 'refactor the store', cwd: '/repo/My Project' },
+        '/-other/c2.jsonl': { text: 'unrelated', cwd: '/other' },
+      },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    const results = await projectTranscripts('/repo/My Project');
+    expect(results).toHaveLength(1);
+    expect(results[0].cliSessionId).toBe('c1');
+    expect(results[0].name).toBe('refactor the store');
+    expect(results[0].providerId).toBe('claude');
+  });
+
+  it('matches transcripts recorded under a different path casing (Windows)', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'claude',
+      descriptors: [{ cliSessionId: 'c1', transcriptPath: '/e--workspace-vibeyard/c1.jsonl', projectSlug: 'e--workspace-vibeyard' }],
+      index: { '/e--workspace-vibeyard/c1.jsonl': { text: 'package the app', cwd: '' } },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    const results = await projectTranscripts('E:\\workspace\\vibeyard');
+    expect(results).toHaveLength(1);
+    expect(results[0].cliSessionId).toBe('c1');
+  });
+
+  it('matches Copilot/Gemini transcripts by projectCwd, normalizing separators and trailing slashes', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'copilot',
+      descriptors: [
+        { cliSessionId: 'cp1', transcriptPath: '/cp1/events.jsonl', projectCwd: 'C:\\Users\\me\\repo\\' },
+        { cliSessionId: 'cp2', transcriptPath: '/cp2/events.jsonl', projectCwd: 'C:\\Users\\me\\other' },
+      ],
+      index: {
+        '/cp1/events.jsonl': { text: 'copilot fix', cwd: '' },
+        '/cp2/events.jsonl': { text: 'copilot other', cwd: '' },
+      },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    const results = await projectTranscripts('C:/Users/me/repo');
+    expect(results).toHaveLength(1);
+    expect(results[0].cliSessionId).toBe('cp1');
+  });
+
+  it('skips Codex transcripts (no project slug or cwd recorded)', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'codex',
+      descriptors: [{ cliSessionId: 'cx1', transcriptPath: '/2026/08/01/rollout-cx1.jsonl' }],
+      index: { '/2026/08/01/rollout-cx1.jsonl': { text: 'codex change', cwd: '' } },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    expect(await projectTranscripts('/repo')).toEqual([]);
+  });
+
+  it('falls back to a truncated cliSessionId when the transcript has no user text', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'claude',
+      descriptors: [{ cliSessionId: '12345678-abcd-ef00-0000-000000000000', transcriptPath: '/-repo/a.jsonl', projectSlug: '-repo' }],
+      index: { '/-repo/a.jsonl': { text: '', cwd: '/repo' } },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    const results = await projectTranscripts('/repo');
+    expect(results[0].name).toBe('12345678…');
+  });
+
+  it('dedupes the same cliSessionId across roots (default + profile), keeping the newest transcript', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'claude',
+      descriptors: [
+        { cliSessionId: 'dup', transcriptPath: '/default/-repo/dup.jsonl', projectSlug: '-repo' },
+        { cliSessionId: 'dup', transcriptPath: '/profile/-repo/dup.jsonl', projectSlug: '-repo', profileId: 'work' },
+      ],
+      index: {
+        '/default/-repo/dup.jsonl': { text: 'older copy', cwd: '' },
+        '/profile/-repo/dup.jsonl': { text: 'newer copy', cwd: '' },
+      },
+    }));
+    mockStat.mockImplementation((p) => {
+      if (String(p) === '/profile/-repo/dup.jsonl') return Promise.resolve(makeStat(200));
+      return Promise.resolve(makeStat(100));
+    });
+
+    const results = await projectTranscripts('/repo');
+    expect(results).toHaveLength(1);
+    expect(results[0].transcriptPath).toBe('/profile/-repo/dup.jsonl');
+    expect(results[0].profileId).toBe('work');
+  });
+
+  it('prefers projectCwd when a provider also sets a non-path projectSlug (Gemini)', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'gemini',
+      descriptors: [
+        { cliSessionId: 'g1', transcriptPath: '/gem/tmp/k1/g1.jsonl', projectSlug: 'k1-project-key-hash', projectCwd: '/repo' },
+        { cliSessionId: 'g2', transcriptPath: '/gem/tmp/k2/g2.jsonl', projectSlug: 'k2-project-key-hash', projectCwd: '/other' },
+      ],
+      index: {
+        '/gem/tmp/k1/g1.jsonl': { text: 'gemini change', cwd: '/repo' },
+        '/gem/tmp/k2/g2.jsonl': { text: 'gemini other', cwd: '/other' },
+      },
+    }));
+    mockStat.mockResolvedValue(makeStat(1));
+
+    const results = await projectTranscripts('/repo');
+    expect(results).toHaveLength(1);
+    expect(results[0].cliSessionId).toBe('g1');
+  });
+
+  it('caps indexing to the newest MAX_PROJECT_TRANSCRIPTS transcripts', async () => {
+    const descriptors: TranscriptDescriptor[] = [];
+    const index: Record<string, { text: string; cwd: string }> = {};
+    const indexSpy = vi.fn(async (p: string) => index[String(p)] ?? { text: 'project work', cwd: '' });
+    for (let i = 0; i < 120; i++) {
+      descriptors.push({ cliSessionId: `s${i}`, transcriptPath: `/-repo/s${i}.jsonl`, projectSlug: '-repo' });
+    }
+    const provider: CliProvider = {
+      meta: { id: 'claude', displayName: 'c', binaryName: 'c', capabilities: {} as any, defaultContextWindowSize: 0 },
+      discoverTranscripts: async () => descriptors,
+      indexTranscript: indexSpy,
+    } as CliProvider;
+    providersForTest.push(provider);
+    // newest ids (119..20) get the highest mtimes → they win the cap slice.
+    mockStat.mockImplementation((p) => {
+      const m = /\/-repo\/s(\d+)\.jsonl/.exec(String(p));
+      return Promise.resolve(makeStat(m ? Number(m[1]) : 0));
+    });
+
+    const results = await projectTranscripts('/repo');
+    expect(results).toHaveLength(100);
+    // Only the newest 100 were indexed.
+    expect(indexSpy).toHaveBeenCalledTimes(100);
+    expect(results[0].cliSessionId).toBe('s119');
+  });
+
+  it('sorts newest-first across providers and carries profileId through', async () => {
+    providersForTest.push(fakeProvider({
+      id: 'claude',
+      descriptors: [
+        { cliSessionId: 'old', transcriptPath: '/-repo/old.jsonl', projectSlug: '-repo' },
+        { cliSessionId: 'new', transcriptPath: '/-repo/new.jsonl', projectSlug: '-repo', profileId: 'work' },
+      ],
+      index: {
+        '/-repo/old.jsonl': { text: 'old work', cwd: '' },
+        '/-repo/new.jsonl': { text: 'new work', cwd: '' },
+      },
+    }));
+    mockStat.mockImplementation((p) => {
+      if (String(p) === '/-repo/new.jsonl') return Promise.resolve(makeStat(500));
+      return Promise.resolve(makeStat(100));
+    });
+
+    const results = await projectTranscripts('/repo');
+    expect(results.map((r) => r.cliSessionId)).toEqual(['new', 'old']);
+    expect(results[0].profileId).toBe('work');
+    expect(results[1].profileId).toBeUndefined();
   });
 });

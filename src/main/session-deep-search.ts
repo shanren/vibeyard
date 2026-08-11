@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import type { DeepSearchResult } from '../shared/types';
+import type { DeepSearchResult, ProjectTranscript } from '../shared/types';
 import type { CliProvider, TranscriptDescriptor } from './providers/provider';
 import { getAllProviders } from './providers/registry';
 import { TRANSCRIPT_TEXT_SEPARATOR } from './providers/transcript-utils';
@@ -129,4 +129,77 @@ export async function searchSessions(query: string): Promise<DeepSearchResult[]>
   const results = all.flat();
   results.sort((a, b) => b.score - a.score);
   return results.slice(0, 20);
+}
+
+/** Normalize a path for cross-platform project matching (case + separators). */
+function normProjectPath(p: string): string {
+  return p.replace(/[\\/]+$/, '').replace(/\\/g, '/').toLowerCase();
+}
+
+/** Bound on how many transcripts are indexed+returned per project (newest kept). */
+const MAX_PROJECT_TRANSCRIPTS = 100;
+
+/**
+ * List transcripts that belong to a single project, for the per-project Sessions
+ * panel. Providers attribute transcripts differently: Claude slugs the project
+ * path (`projectSlug`), while Copilot/Gemini record the working directory
+ * (`projectCwd`). Codex transcripts carry neither, so they can't be attributed.
+ * Sorted newest-first, deduped by (providerId, cliSessionId).
+ */
+export async function projectTranscripts(projectPath: string): Promise<ProjectTranscript[]> {
+  const slug = projectPath.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+  const normCwd = normProjectPath(projectPath);
+
+  const perProvider = await Promise.all(getAllProviders().map(async (provider) => {
+    if (!provider.discoverTranscripts || !provider.indexTranscript) return [];
+    let descriptors: TranscriptDescriptor[];
+    try {
+      descriptors = await provider.discoverTranscripts();
+    } catch {
+      return [];
+    }
+    // Prefer the working directory when recorded: Copilot/Gemini set projectCwd,
+    // and Gemini's projectSlug is a ~/.gemini/tmp project-key hash, not the path.
+    // Fall back to the slug for providers like Claude that only carry projectSlug.
+    const matched = descriptors.filter((d) => {
+      if (d.projectCwd) return normProjectPath(d.projectCwd) === normCwd;
+      if (d.projectSlug) return d.projectSlug.toLowerCase() === slug;
+      return false;
+    });
+    // Stat all matches (cheap) so only the newest MAX_PROJECT_TRANSCRIPTS get
+    // read+parsed — a transcript-heavy project shouldn't trigger a full re-index
+    // of every file just to populate a bounded list.
+    const withMtime = await Promise.all(matched.map(async (desc) => {
+      let mtime = 0;
+      try {
+        mtime = (await fs.promises.stat(desc.transcriptPath)).mtimeMs;
+      } catch {
+        // transcript vanished mid-scan; keep mtime 0
+      }
+      return { desc, mtime };
+    }));
+    withMtime.sort((a, b) => b.mtime - a.mtime);
+    const items = await Promise.all(withMtime.slice(0, MAX_PROJECT_TRANSCRIPTS).map(async ({ desc, mtime }) => {
+      const entry = await getCachedIndex(provider, desc.transcriptPath);
+      return {
+        providerId: provider.meta.id,
+        cliSessionId: desc.cliSessionId,
+        transcriptPath: desc.transcriptPath,
+        name: deriveName(entry.text) ?? `${desc.cliSessionId.slice(0, 8)}…`,
+        mtimeMs: entry.mtime || mtime,
+        profileId: desc.profileId,
+      };
+    }));
+    return items;
+  }));
+
+  const seen = new Set<string>();
+  const out: ProjectTranscript[] = [];
+  for (const item of perProvider.flat().sort((a, b) => b.mtimeMs - a.mtimeMs)) {
+    const key = `${item.providerId}:${item.cliSessionId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
 }

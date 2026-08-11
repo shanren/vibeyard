@@ -141,6 +141,50 @@
   font-style: italic;
 }
 
+/* CLI session-history section — the provider's own on-disk transcripts. */
+.history-cli {
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.history-cli-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 8px 4px;
+}
+
+.history-cli-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.history-cli-refresh {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: inherit;
+}
+
+.history-cli-refresh:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.history-cli-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 /* Sidebar panel size overrides — scoped to .project-panel-history so the
    full-screen session-search dialog keeps its own sizing. */
 .project-panel-history .history-search {

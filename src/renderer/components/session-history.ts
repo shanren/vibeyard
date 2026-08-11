@@ -2,7 +2,7 @@ import { appState, ArchivedSession, ProjectRecord } from '../state.js';
 import { loadProviderAvailability } from '../provider-availability.js';
 import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
 import { showConfirmDialog } from './modal.js';
-import type { ProviderId } from '../../shared/types.js';
+import type { ProjectTranscript, ProviderId } from '../../shared/types.js';
 
 const MAX_VISIBLE = 50;
 const PROVIDER_LABELS: Record<string, string> = {
@@ -20,6 +20,11 @@ interface ProjectFilterState {
 const filterStateByProject = new Map<string, ProjectFilterState>();
 const activePanels = new Map<string, Map<string, HTMLElement>>();
 const DEFAULT_INSTANCE_KEY = 'sidebar';
+
+/** On-disk CLI transcripts per project (the provider's own session history), cached across re-renders. */
+const cliTranscriptsByProject = new Map<string, ProjectTranscript[]>();
+/** Monotonic load token per project so a newer refresh supersedes an in-flight fetch. */
+const cliLoadTokens = new Map<string, number>();
 
 let historyContextMenu: HTMLElement | null = null;
 
@@ -131,62 +136,187 @@ export function renderSessionHistory(
 
   container.innerHTML = '';
 
-  if (history.length === 0) {
+  if (history.length > 0) {
+    const searchInput = document.createElement('input');
+    searchInput.className = 'history-search';
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Filter history...';
+    searchInput.value = filter.searchText;
+    searchInput.addEventListener('input', () => {
+      filter.searchText = searchInput.value;
+      renderList(project, container, history, filter);
+    });
+    container.appendChild(searchInput);
+
+    const bookmarkFilter = document.createElement('button');
+    const applyFilterState = () => {
+      bookmarkFilter.className = `history-bookmark-filter${filter.bookmarkOnly ? ' active' : ''}`;
+      bookmarkFilter.textContent = filter.bookmarkOnly ? '★ Bookmarked' : '☆ Bookmarked';
+    };
+    applyFilterState();
+    bookmarkFilter.addEventListener('click', () => {
+      filter.bookmarkOnly = !filter.bookmarkOnly;
+      applyFilterState();
+      renderList(project, container, history, filter);
+    });
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'history-clear-btn';
+    clearBtn.textContent = 'Clear History';
+    clearBtn.addEventListener('click', () => {
+      showConfirmDialog(
+        'Clear session history',
+        `Clear all non-bookmarked sessions for "${project.name}"? Bookmarked sessions will be kept. This cannot be undone.`,
+        {
+          confirmLabel: 'Clear',
+          onConfirm: () => appState.clearSessionHistory(project.id),
+        },
+      );
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'history-actions';
+    actions.appendChild(bookmarkFilter);
+    actions.appendChild(clearBtn);
+    container.appendChild(actions);
+
+    const listEl = document.createElement('div');
+    listEl.className = 'history-list';
+    container.appendChild(listEl);
+
+    renderList(project, container, history, filter);
+  } else {
     const empty = document.createElement('div');
     empty.className = 'history-empty';
     empty.textContent = 'No session history yet';
     container.appendChild(empty);
-    return;
   }
 
-  const searchInput = document.createElement('input');
-  searchInput.className = 'history-search';
-  searchInput.type = 'text';
-  searchInput.placeholder = 'Filter history...';
-  searchInput.value = filter.searchText;
-  searchInput.addEventListener('input', () => {
-    filter.searchText = searchInput.value;
-    renderList(project, container, history, filter);
-  });
-  container.appendChild(searchInput);
+  // The provider's own on-disk session history (e.g. Claude Code transcripts) for
+  // this project — shown in its own section below the Vibeyard archive. Loaded once
+  // per panel open, then cached so re-renders (history-changed, search) don't refetch.
+  const cached = cliTranscriptsByProject.get(project.id);
+  if (cached) {
+    renderCliSection(project, container, instanceKey, cached, history);
+  } else {
+    void loadCliTranscripts(project, container, instanceKey);
+  }
+}
 
-  const bookmarkFilter = document.createElement('button');
-  const applyFilterState = () => {
-    bookmarkFilter.className = `history-bookmark-filter${filter.bookmarkOnly ? ' active' : ''}`;
-    bookmarkFilter.textContent = filter.bookmarkOnly ? '★ Bookmarked' : '☆ Bookmarked';
-  };
-  applyFilterState();
-  bookmarkFilter.addEventListener('click', () => {
-    filter.bookmarkOnly = !filter.bookmarkOnly;
-    applyFilterState();
-    renderList(project, container, history, filter);
-  });
+function updateEmptyState(container: HTMLElement, history: ArchivedSession[], cliList: ProjectTranscript[]): void {
+  container.querySelector('.history-empty')?.remove();
+  if (history.length === 0 && cliList.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'history-empty';
+    empty.textContent = 'No session history yet';
+    container.appendChild(empty);
+  }
+}
 
-  const clearBtn = document.createElement('button');
-  clearBtn.className = 'history-clear-btn';
-  clearBtn.textContent = 'Clear History';
-  clearBtn.addEventListener('click', () => {
-    showConfirmDialog(
-      'Clear session history',
-      `Clear all non-bookmarked sessions for "${project.name}"? Bookmarked sessions will be kept. This cannot be undone.`,
-      {
-        confirmLabel: 'Clear',
-        onConfirm: () => appState.clearSessionHistory(project.id),
-      },
-    );
-  });
+async function loadCliTranscripts(project: ProjectRecord, container: HTMLElement, instanceKey: string): Promise<void> {
+  const token = (cliLoadTokens.get(project.id) ?? 0) + 1;
+  cliLoadTokens.set(project.id, token);
+  let list: ProjectTranscript[] = [];
+  try {
+    list = await window.vibeyard.session.projectTranscripts(project.path);
+  } catch {
+    list = [];
+  }
+  // A newer load for this project supersedes this one.
+  if (cliLoadTokens.get(project.id) !== token) return;
+  cliTranscriptsByProject.set(project.id, list);
+  // The panel may have re-rendered (or closed) while we awaited.
+  if (activePanels.get(project.id)?.get(instanceKey) !== container) return;
+  renderCliSection(project, container, instanceKey, list, appState.getSessionHistory(project.id));
+}
 
-  const actions = document.createElement('div');
-  actions.className = 'history-actions';
-  actions.appendChild(bookmarkFilter);
-  actions.appendChild(clearBtn);
-  container.appendChild(actions);
+function renderCliSection(
+  project: ProjectRecord,
+  container: HTMLElement,
+  instanceKey: string,
+  list: ProjectTranscript[],
+  history: ArchivedSession[],
+): void {
+  container.querySelector('.history-cli')?.remove();
 
-  const listEl = document.createElement('div');
-  listEl.className = 'history-list';
-  container.appendChild(listEl);
+  // Skip sessions already archived in Vibeyard so the same session isn't listed twice.
+  const archivedKeys = new Set<string>();
+  for (const a of history) {
+    if (!a.cliSessionId) continue;
+    archivedKeys.add(`${a.providerId || 'claude'}:${a.cliSessionId}`);
+  }
+  const items = list.filter((t) => !archivedKeys.has(`${t.providerId}:${t.cliSessionId}`));
 
-  renderList(project, container, history, filter);
+  if (items.length > 0) {
+    const cli = document.createElement('div');
+    cli.className = 'history-cli';
+
+    const header = document.createElement('div');
+    header.className = 'history-cli-header';
+    const title = document.createElement('span');
+    title.className = 'history-cli-title';
+    title.textContent = 'Session history from CLI';
+    const refresh = document.createElement('button');
+    refresh.className = 'history-cli-refresh';
+    refresh.title = 'Refresh';
+    refresh.textContent = '↻';
+    refresh.addEventListener('click', (e) => {
+      e.stopPropagation();
+      void loadCliTranscripts(project, container, instanceKey);
+    });
+    header.appendChild(title);
+    header.appendChild(refresh);
+
+    const listEl = document.createElement('div');
+    listEl.className = 'history-cli-list';
+    for (const t of items.slice(0, MAX_VISIBLE)) {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        appState.setActiveProject(project.id);
+        appState.openCliSession(project.id, t.cliSessionId, t.name, t.providerId, t.profileId);
+      });
+
+      const info = document.createElement('div');
+      info.className = 'history-item-info';
+
+      const name = document.createElement('div');
+      name.className = 'history-item-name';
+      name.textContent = t.name;
+      name.title = `${t.name}\nSession ID: ${t.cliSessionId}`;
+      info.appendChild(name);
+
+      const details = document.createElement('div');
+      details.className = 'history-item-details';
+      const mtimeMs = Number.isFinite(t.mtimeMs) ? t.mtimeMs : Date.now();
+      details.textContent = `${formatDate(new Date(mtimeMs).toISOString())} · ${getProviderLabel(t.providerId)}`;
+      info.appendChild(details);
+
+      item.appendChild(info);
+      listEl.appendChild(item);
+    }
+
+    if (items.length > MAX_VISIBLE) {
+      const more = document.createElement('div');
+      more.className = 'history-item-details';
+      more.style.padding = '4px 12px';
+      more.textContent = `${items.length - MAX_VISIBLE} more items...`;
+      listEl.appendChild(more);
+    }
+
+    cli.appendChild(header);
+    cli.appendChild(listEl);
+
+    container.appendChild(cli);
+  }
+
+  updateEmptyState(container, history, list);
+}
+
+function dropCliCache(projectId: string): void {
+  cliTranscriptsByProject.delete(projectId);
+  cliLoadTokens.delete(projectId);
 }
 
 export function closeSessionHistory(projectId: string, instanceKey?: string): void {
@@ -195,17 +325,22 @@ export function closeSessionHistory(projectId: string, instanceKey?: string): vo
   if (instanceKey === undefined) {
     for (const container of panels.values()) container.innerHTML = '';
     activePanels.delete(projectId);
+    dropCliCache(projectId);
     return;
   }
   const container = panels.get(instanceKey);
   if (container) container.innerHTML = '';
   panels.delete(instanceKey);
-  if (panels.size === 0) activePanels.delete(projectId);
+  if (panels.size === 0) {
+    activePanels.delete(projectId);
+    dropCliCache(projectId);
+  }
 }
 
 export function clearProjectState(projectId: string): void {
   filterStateByProject.delete(projectId);
   activePanels.delete(projectId);
+  dropCliCache(projectId);
 }
 
 function renderList(

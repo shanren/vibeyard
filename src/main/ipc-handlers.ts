@@ -17,7 +17,7 @@ import { checkForUpdates, quitAndInstall } from './auto-updater';
 import { createAppMenu } from './menu';
 import { getProvider, getProviderMeta, getAllProviderMetas, getAllProviders } from './providers/registry';
 import { buildHandoffPrompt } from './providers/resume-handoff';
-import { searchSessions } from './session-deep-search';
+import { projectTranscripts, searchSessions } from './session-deep-search';
 import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, EditAction } from '../shared/types';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../shared/token-estimate';
 import { analyzeReadiness } from './readiness/analyzer';
@@ -391,6 +391,10 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('session:deepSearch', (_event, query: string) => {
     return searchSessions(query);
+  });
+
+  ipcMain.handle('session:projectTranscripts', (_event, projectPath: string) => {
+    return projectTranscripts(projectPath);
   });
 
   ipcMain.handle('provider:checkBinary', (_event, providerId: ProviderId = 'claude') => {
