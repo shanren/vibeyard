@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify';
 import { appState } from '../state.js';
 import { closeSessionIfFileMissing } from '../session-close.js';
 import { destroySearchBar } from './search-bar.js';
-import { escapeHtml } from './dom-search-backend.js';
+import { createFileEditor, type FileEditorHandle } from './code-editor.js';
 import { isAbsolutePath, dirname, samePath } from '../../shared/platform.js';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../../shared/token-estimate.js';
 import { pathToFileURL } from '../file-url.js';
@@ -19,6 +19,9 @@ interface FileReaderInstance {
   unsupported: boolean;
   rawContent?: string;
   imageDataUrl?: string;
+  editor?: FileEditorHandle | null;
+  dirty: boolean;
+  saveBtn?: HTMLButtonElement | null;
 }
 
 function isMarkdownFile(filePath: string): boolean {
@@ -35,31 +38,6 @@ function isHtmlFile(filePath: string): boolean {
 
 const instances = new Map<string, FileReaderInstance>();
 let unwatchFileChanged: (() => void) | null = null;
-
-function renderFileContent(content: string): HTMLElement {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'file-reader-content';
-
-  const lines = content.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const row = document.createElement('div');
-    row.className = 'file-reader-line';
-
-    const lineNum = document.createElement('span');
-    lineNum.className = 'file-reader-line-num';
-    lineNum.textContent = String(i + 1);
-
-    const lineText = document.createElement('span');
-    lineText.className = 'file-reader-line-text';
-    lineText.innerHTML = escapeHtml(lines[i]) || '&nbsp;';
-
-    row.appendChild(lineNum);
-    row.appendChild(lineText);
-    wrapper.appendChild(row);
-  }
-
-  return wrapper;
-}
 
 export function renderMarkdownContent(content: string): HTMLElement {
   const wrapper = document.createElement('div');
@@ -86,17 +64,53 @@ function renderBody(instance: FileReaderInstance): void {
   if (sel && sel.rangeCount > 0 && !sel.isCollapsed && body.contains(sel.anchorNode)) {
     return;
   }
-  body.innerHTML = '';
   if (instance.kind === 'image') {
+    instance.editor?.destroy();
+    instance.editor = null;
+    body.innerHTML = '';
     if (instance.imageDataUrl) {
       body.appendChild(renderImageContent(instance.imageDataUrl, instance.filePath));
     }
     return;
   }
   if (instance.viewMode === 'rendered') {
+    instance.editor?.destroy();
+    instance.editor = null;
+    body.innerHTML = '';
     body.appendChild(renderMarkdownContent(instance.rawContent!));
-  } else {
-    body.appendChild(renderFileContent(instance.rawContent!));
+    return;
+  }
+  if (instance.rawContent === undefined) {
+    instance.editor?.destroy();
+    instance.editor = null;
+    body.innerHTML = '';
+    showFileReaderMessage(body, 'Unable to preview this file');
+    return;
+  }
+  body.innerHTML = '';
+  const existing = instance.editor;
+  if (existing && body.contains(existing.getView().dom)) {
+    // Editor still attached — sync from disk only when clean (dirty edits win).
+    if (!instance.dirty) existing.setContent(instance.rawContent);
+    return;
+  }
+  // Editor exists but its DOM was detached (re-render/reload raced with a live
+  // view) or none yet — recreate so the body always ends up with a visible editor.
+  existing?.destroy();
+  instance.editor = null;
+  instance.editor = createFileEditor(body as HTMLElement, instance.rawContent, instance.filePath, () =>
+    markDirty(instance),
+  );
+}
+
+function markDirty(instance: FileReaderInstance): void {
+  instance.dirty = true;
+  const btn = instance.saveBtn;
+  if (btn) {
+    btn.disabled = false;
+    btn.classList.add('dirty');
+    btn.textContent = 'Save';
+    btn.title = 'Unsaved changes — Ctrl+S to save';
   }
 }
 
@@ -118,6 +132,8 @@ async function loadFile(instance: FileReaderInstance, sessionId: string): Promis
 
   instance.unsupported = false;
   hideTokenBadge(instance);
+  instance.editor?.destroy();
+  instance.editor = null;
   const body = instance.element.querySelector('.file-reader-body')!;
   showFileReaderMessage(body, 'Loading...');
 
@@ -185,7 +201,7 @@ function ensureFileChangedListener(): void {
   unwatchFileChanged = window.vibeyard.fs.onFsChange((changes) => {
     for (const change of changes) {
       for (const [sessionId, instance] of instances) {
-        if (instance.resolvedPath && samePath(instance.resolvedPath, change.path) && instance.loaded) {
+        if (instance.resolvedPath && samePath(instance.resolvedPath, change.path) && instance.loaded && !instance.dirty) {
           // reloadFileReader -> loadFile -> closeSessionIfFileMissing handles deletes.
           reloadFileReader(sessionId);
         }
@@ -199,6 +215,30 @@ export function reloadFileReader(sessionId: string): void {
   if (!instance) return;
   instance.loaded = false;
   loadFile(instance, sessionId);
+}
+
+export async function saveFileReader(sessionId: string): Promise<void> {
+  const instance = instances.get(sessionId);
+  if (!instance?.editor || !instance.dirty) return;
+  if (!instance.resolvedPath) return;
+
+  const content = instance.editor.getView().state.doc.toString();
+  const btn = instance.saveBtn;
+  if (btn) btn.disabled = true;
+  const result = await window.vibeyard.fs.writeFile(instance.resolvedPath, content);
+  if (result.ok) {
+    instance.dirty = false;
+    if (btn) {
+      btn.classList.remove('dirty');
+      btn.textContent = 'Save';
+      btn.title = 'Save (Ctrl+S)';
+    }
+  } else {
+    if (btn) {
+      btn.disabled = false;
+      btn.title = `Save failed: ${result.error ?? 'unknown error'}`;
+    }
+  }
 }
 
 export function createFileReaderPane(sessionId: string, filePath: string, targetLine?: number): void {
@@ -218,9 +258,11 @@ export function createFileReaderPane(sessionId: string, filePath: string, target
   pathSpan.className = 'file-viewer-path';
   pathSpan.textContent = filePath;
 
-  const badge = document.createElement('span');
-  badge.className = 'file-reader-badge';
-  badge.textContent = 'READ-ONLY';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'search-toggle-btn file-reader-save-btn';
+  saveBtn.textContent = 'Save';
+  saveBtn.disabled = true;
+  saveBtn.title = 'Save (Ctrl+S)';
 
   const tokenBadge = document.createElement('span');
   tokenBadge.className = 'file-reader-token-badge';
@@ -228,7 +270,7 @@ export function createFileReaderPane(sessionId: string, filePath: string, target
   tokenBadge.title = 'Rough token estimate (provider-agnostic)';
 
   header.appendChild(pathSpan);
-  header.appendChild(badge);
+  header.appendChild(saveBtn);
   header.appendChild(tokenBadge);
 
   const isMd = isMarkdownFile(filePath);
@@ -238,7 +280,16 @@ export function createFileReaderPane(sessionId: string, filePath: string, target
     viewMode: isMd ? 'rendered' : 'raw',
     kind: isImage ? 'image' : 'text',
     unsupported: false,
+    dirty: false,
+    saveBtn,
   };
+
+  if (isImage) {
+    saveBtn.style.display = 'none';
+  }
+  saveBtn.addEventListener('click', () => {
+    void saveFileReader(sessionId);
+  });
 
   if (isHtmlFile(filePath)) {
     const openBtn = document.createElement('button');
@@ -251,7 +302,7 @@ export function createFileReaderPane(sessionId: string, filePath: string, target
         appState.addBrowserTabSession(project.id, pathToFileURL(resolveFilePath(instance)));
       }
     });
-    header.insertBefore(openBtn, badge);
+    header.insertBefore(openBtn, saveBtn);
   }
 
   if (isMd) {
@@ -303,6 +354,8 @@ export function destroyFileReaderPane(sessionId: string): void {
   }
   destroySearchBar(sessionId);
   destroyGoToLineBar(sessionId);
+  instance.editor?.destroy();
+  instance.editor = null;
   instance.element.remove();
   instances.delete(sessionId);
 }
@@ -341,6 +394,13 @@ export function setFileReaderLine(sessionId: string, line: number): void {
 function scrollToLine(instance: FileReaderInstance): void {
   const line = instance.targetLine;
   if (!line) return;
+
+  if (instance.viewMode === 'raw') {
+    if (instance.editor) {
+      instance.editor.scrollToLine(line);
+      return;
+    }
+  }
 
   const body = instance.element.querySelector('.file-reader-body');
   if (!body) return;
@@ -456,7 +516,11 @@ export function hideGoToLineBar(sessionId: string): void {
   entry.bar.classList.add('hidden');
   const instance = instances.get(sessionId);
   if (instance) {
-    instance.element.querySelector('.file-reader-body')?.focus();
+    if (instance.editor) {
+      instance.editor.getView().focus();
+    } else {
+      (instance.element.querySelector('.file-reader-body') as HTMLElement | null)?.focus();
+    }
   }
 }
 

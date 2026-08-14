@@ -11,9 +11,10 @@ import { getActiveShellSessionId } from './components/project-terminal.js';
 import { showQuickOpen } from './components/quick-open.js';
 import { showSessionSearchPalette } from './components/session-search-palette.js';
 import { shortcutManager } from './shortcuts.js';
-import { getFileReaderInstance, getFileReaderTextSelector, showGoToLineBar } from './components/file-reader.js';
+import { getFileReaderInstance, getFileReaderTextSelector, showGoToLineBar, saveFileReader } from './components/file-reader.js';
 import { getFileViewerInstance } from './components/file-viewer.js';
 import { DomSearchBackend } from './components/dom-search-backend.js';
+import { CodeMirrorSearchBackend } from './components/code-editor-search.js';
 import { toggleInspector } from './components/session-inspector.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 import { getBrowserTabInstance } from './components/browser-tab/instance.js';
@@ -74,6 +75,10 @@ export function initKeybindings(): void {
     if (session.type === 'file-reader') {
       const instance = getFileReaderInstance(session.id);
       if (!instance) return;
+      if (instance.viewMode === 'raw' && instance.editor) {
+        showSearchBar(session.id, new CodeMirrorSearchBackend(instance.editor.getView(), instance.element));
+        return;
+      }
       const body = instance.element.querySelector('.file-reader-body') as HTMLElement;
       if (!body) return;
       showSearchBar(session.id, new DomSearchBackend(body, getFileReaderTextSelector(session.id)));
@@ -96,6 +101,10 @@ export function initKeybindings(): void {
   });
   shortcutManager.registerHandler('help', () => showPreferencesModal('help'));
   shortcutManager.registerHandler('close-session', handleCloseSession);
+  shortcutManager.registerHandler('save-file', () => {
+    const session = appState.activeSession;
+    if (session?.type === 'file-reader') void saveFileReader(session.id);
+  });
   shortcutManager.registerHandler('toggle-inspector', toggleInspector);
   shortcutManager.registerHandler('zoom-in', zoomIn);
   shortcutManager.registerHandler('zoom-out', zoomOut);

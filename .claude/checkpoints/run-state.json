@@ -1,0 +1,106 @@
+{
+  "schema": "run-state.v2",
+  "runId": "explorer-global-search",
+  "status": "running",
+  "currentPhase": null,
+  "completed": [
+    "ticket",
+    "develop",
+    "qa"
+  ],
+  "phases": {
+    "spec": {
+      "status": "running",
+      "inputs": [
+        "docs/intent.json"
+      ],
+      "inputHash": "6cb1bbee80eb6371e086b957b74b951630f9080775e8b58525cc66519c9451db",
+      "outputs": [],
+      "endedAt": null
+    },
+    "architecture": {
+      "status": "running",
+      "inputs": [
+        "docs/CONTEXT.md",
+        "docs/prd/PRD-explorer-global-search.md",
+        "docs/spec/SPEC-explorer-global-search.md"
+      ],
+      "inputHash": "6c0fab33b65d60b069e7730b55bda22aeb5814f612bc30b29882db1d9eb48058",
+      "outputs": [],
+      "endedAt": null
+    },
+    "ticket": {
+      "status": "done",
+      "inputs": [
+        "docs/spec/SPEC-explorer-global-search.md",
+        "docs/design/DESIGN-explorer-global-search.md"
+      ],
+      "inputHash": "7448e1473c741b18318c68407f5beb5a80d21cc057cdf06c6e0af8cb6aa742b3",
+      "outputs": [],
+      "endedAt": "2026-08-14T08:16:49.164Z"
+    },
+    "develop": {
+      "status": "done",
+      "inputs": [
+        "docs/spec/SPEC-explorer-global-search.md",
+        "docs/design/DESIGN-explorer-global-search.md",
+        "docs/tickets/PLAN-explorer-global-search.md",
+        "docs/tickets/TASK-001.md",
+        "docs/tickets/TASK-002.md",
+        "docs/tickets/TASK-003.md",
+        "docs/tickets/TASK-004.md"
+      ],
+      "inputHash": "936cbd425937866cda9d38732b059d842d8e70e0074192bb4e0cb28215bf1f4f",
+      "outputs": [],
+      "endedAt": "2026-08-14T08:29:23.040Z"
+    },
+    "qa": {
+      "status": "done",
+      "inputs": [
+        "docs/spec/SPEC-explorer-global-search.md",
+        "docs/tickets/TASK-001.md",
+        "docs/tickets/TASK-002.md",
+        "docs/tickets/TASK-003.md",
+        "docs/tickets/TASK-004.md"
+      ],
+      "inputHash": "12fa4d4d1ba77b508b19ca87ff12247b9a7025f42d0ab4ba71b8ca00a48ce7c0",
+      "outputs": [],
+      "endedAt": "2026-08-14T08:35:11.786Z"
+    }
+  },
+  "gates": {
+    "deps": {
+      "status": "passed",
+      "checks": {
+        "TASK 数量": 4,
+        "依赖图有环": "否",
+        "悬空依赖": 0
+      }
+    },
+    "build": {
+      "status": "passed",
+      "checks": {
+        "构建命令": "npm run build",
+        "构建退出码": 0
+      }
+    },
+    "verify": {
+      "status": "passed",
+      "checks": {
+        "验证命令": "npm run test",
+        "验证退出码": 0
+      }
+    },
+    "review": {
+      "status": "passed",
+      "checks": {
+        "Blocker 数": 0
+      }
+    }
+  },
+  "refs": {
+    "metrics": "observability/metrics.json",
+    "acp": "acp/journal.jsonl",
+    "checkpointsDir": "checkpoints/"
+  }
+}

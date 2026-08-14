@@ -81,15 +81,26 @@ function getPaneContext(): PaneContext | null {
   let lineStart: number | undefined;
   let lineEnd: number | undefined;
   if (inst.viewMode === 'raw') {
-    const range = sel.getRangeAt(0);
-    const a = findLineNumber(range.startContainer);
-    const b = findLineNumber(range.endContainer);
-    if (a && b) {
-      lineStart = Math.min(a, b);
-      lineEnd = Math.max(a, b);
+    if (inst.editor) {
+      const view = inst.editor.getView();
+      const main = view.state.selection.main;
+      if (!main.empty) {
+        const a = view.state.doc.lineAt(main.from).number;
+        const b = view.state.doc.lineAt(main.to).number;
+        lineStart = Math.min(a, b);
+        lineEnd = Math.max(a, b);
+      }
     } else {
-      lineStart = a ?? b;
-      lineEnd = lineStart;
+      const range = sel.getRangeAt(0);
+      const a = findLineNumber(range.startContainer);
+      const b = findLineNumber(range.endContainer);
+      if (a && b) {
+        lineStart = Math.min(a, b);
+        lineEnd = Math.max(a, b);
+      } else {
+        lineStart = a ?? b;
+        lineEnd = lineStart;
+      }
     }
   }
 

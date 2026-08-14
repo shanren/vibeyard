@@ -14,6 +14,7 @@ import { isCliSession } from '../../session-utils.js';
 import { esc } from '../../dom-utils.js';
 import {
   closeSessionWithConfirm,
+  closeSessionWithAlwaysConfirm,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
   closeSessionsFromRightWithConfirm,
@@ -337,11 +338,12 @@ export function render(): void {
       }
     });
 
-    // Middle-click to close
+    // Middle-click to close (always confirmed — an accidental middle-press must
+    // never silently destroy a session, especially a file reader or completed one)
     tab.addEventListener('auxclick', (e) => {
       if (e.button === 1) {
         e.preventDefault();
-        closeSessionWithConfirm(project.id, session.id);
+        closeSessionWithAlwaysConfirm(project.id, session.id);
       }
     });
 

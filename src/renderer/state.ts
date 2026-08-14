@@ -88,6 +88,7 @@ type EventType =
   | 'insights-changed'
   | 'readiness-changed'
   | 'sidebar-toggled'
+  | 'explorer-toggled'
   | 'cli-session-cleared'
   | 'board-changed'
   | 'team-changed'
@@ -109,7 +110,7 @@ const defaultPreferences: Preferences = {
   copyOnSelect: false,
   zoomFactor: 1.0,
   readinessExcludedProviders: [],
-  sidebarViews: { gitPanel: true, sessionHistory: true, discussions: true, fileTree: true, activeSessions: true },
+  sidebarViews: { gitPanel: true, sessionHistory: true, fileTree: true, activeSessions: true },
   boardCardMetrics: true,
   locale: 'en',
 };
@@ -233,13 +234,14 @@ class AppState {
     this.emit('sidebar-toggled');
   }
 
-  get discussionsLastSeen(): string | undefined {
-    return this.state.discussionsLastSeen;
+  get explorerPanelOpen(): boolean {
+    return this.state.explorerPanelOpen ?? false;
   }
 
-  setDiscussionsLastSeen(timestamp: string): void {
-    this.state.discussionsLastSeen = timestamp;
+  setExplorerPanelOpen(open: boolean): void {
+    this.state.explorerPanelOpen = open;
     this.persist();
+    this.emit('explorer-toggled');
   }
 
   setTerminalPanelOpen(open: boolean): void {

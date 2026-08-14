@@ -389,7 +389,6 @@ export interface Preferences {
   sidebarViews?: {
     gitPanel: boolean;
     sessionHistory: boolean;
-    discussions: boolean;
     fileTree: boolean;
     /** Show the global cross-project "Active Sessions" section in the sidebar. */
     activeSessions: boolean;
@@ -470,10 +469,10 @@ export interface PersistedState {
   preferences: Preferences;
   sidebarWidth?: number;
   sidebarCollapsed?: boolean;
+  explorerPanelOpen?: boolean;
   lastSeenVersion?: string;
   appLaunchCount?: number;
   starPromptDismissed?: boolean;
-  discussionsLastSeen?: string;
   team?: TeamData;
   /** Global, provider-scoped CLI profiles (e.g. Claude work/personal config dirs). */
   profiles?: Profile[];
@@ -672,3 +671,11 @@ export interface TopFile {
 export type TopFilesResult =
   | { ok: true; files: TopFile[]; scanned: number; skipped: number }
   | { ok: false };
+
+/** Result of the Explorer global file search (`fs:searchFiles`). */
+export interface SearchFilesResult {
+  /** Repo-relative paths, sorted case-insensitively ascending, length ≤ SEARCH_FILES_LIMIT. */
+  files: string[];
+  /** True when the total match count exceeded the limit (renderer shows a truncation footnote). */
+  truncated: boolean;
+}

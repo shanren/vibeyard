@@ -32,7 +32,6 @@
         <div id="project-list"></div>
       </div>
       <div id="sidebar-active-sessions"></div>
-      <div id="sidebar-discussions"></div>
     </div>
     <div id="sidebar-resize-handle"></div>
     <div id="main-area">
@@ -51,6 +50,7 @@
             </button>
             <button id="btn-add-session-menu" class="btn-primary new-session-caret" title="New Custom Session" aria-label="New Custom Session">&#x25BE;</button>
           </div>
+          <button id="btn-toggle-explorer" class="icon-btn" title="Toggle Explorer" aria-label="Toggle Explorer"></button>
         </div>
       </div>
       <div id="terminal-container"></div>
@@ -68,6 +68,17 @@
           <div id="project-terminal-sidebar" class="hidden"></div>
         </div>
       </div>
+    </div>
+    <div id="explorer-panel" class="hidden">
+      <div id="explorer-header">
+        <span id="explorer-title" class="explorer-title"></span>
+        <button id="btn-close-explorer" class="icon-btn" title="Close Explorer" aria-label="Close Explorer">&times;</button>
+      </div>
+      <div id="explorer-search">
+        <input id="explorer-search-input" type="text" spellcheck="false" />
+      </div>
+      <div id="explorer-search-results" class="hidden"></div>
+      <div id="explorer-content"></div>
     </div>
     </div>
   </div>

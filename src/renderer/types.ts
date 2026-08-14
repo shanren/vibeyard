@@ -1,5 +1,5 @@
 export type { McpServer, Agent, Skill, Command, ProviderConfig, ClaudeConfig, GitWorktree, GitFileEntry, CostData, McpResult, ProviderId, CliProviderMeta, CliProviderCapabilities, StatsCache, ReadinessResult, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ChromeProfile, ChromeImportOptions, ChromeImportProgress, ChromeImportResult } from '../shared/types.js';
-import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, TopFilesResult, FsChange, DeepSearchResult, ProjectTranscript, ChromeProfile, ChromeImportOptions, ChromeImportProgress, ChromeImportResult, EditAction } from '../shared/types.js';
+import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, ChromeProfile, ChromeImportOptions, ChromeImportProgress, ChromeImportResult, EditAction, ReadFileResult } from '../shared/types.js';
 
 export interface VibeyardApi {
   pty: {
@@ -28,10 +28,13 @@ export interface VibeyardApi {
     expandPath(path: string): Promise<string>;
     listDirs(dirPath: string, prefix?: string): Promise<string[]>;
     browseDirectory(): Promise<string | null>;
+    openInFolder(path: string): Promise<{ ok: boolean; error?: string }>;
     listFiles(cwd: string, query: string): Promise<string[]>;
+    searchFiles(cwd: string, query: string): Promise<SearchFilesResult>;
     topFilesByTokens(cwd: string, limit: number): Promise<TopFilesResult>;
     exists(filePath: string): Promise<boolean>;
-    readFile(filePath: string): Promise<string>;
+    readFile(filePath: string): Promise<ReadFileResult>;
+    writeFile(filePath: string, content: string): Promise<{ ok: boolean; error?: string }>;
     readImage(filePath: string): Promise<{ dataUrl: string } | null>;
     watchDir(dirPath: string): void;
     unwatchDir(dirPath: string): void;

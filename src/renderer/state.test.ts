@@ -630,6 +630,27 @@ describe('toggleSidebar()', () => {
   });
 });
 
+describe('explorerPanelOpen', () => {
+  it('defaults to closed', () => {
+    expect(appState.explorerPanelOpen).toBe(false);
+  });
+
+  it('setExplorerPanelOpen persists and emits', () => {
+    const cb = vi.fn();
+    appState.on('explorer-toggled', cb);
+    appState.setExplorerPanelOpen(true);
+    expect(appState.explorerPanelOpen).toBe(true);
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(mockSave).toHaveBeenCalled();
+  });
+
+  it('can close again', () => {
+    appState.setExplorerPanelOpen(true);
+    appState.setExplorerPanelOpen(false);
+    expect(appState.explorerPanelOpen).toBe(false);
+  });
+});
+
 describe('setTerminalPanelOpen()', () => {
   it('sets terminalPanelOpen on active project and emits', () => {
     addProject();

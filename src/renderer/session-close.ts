@@ -47,6 +47,24 @@ export function closeSessionWithConfirm(projectId: string, sessionId: string): v
   );
 }
 
+/**
+ * Close with a confirmation dialog for EVERY session, including completed/file-reader
+ * ones. Used by accidental-close-prone gestures (e.g. middle-click on a tab) where a
+ * silent close would be destructive.
+ */
+export function closeSessionWithAlwaysConfirm(projectId: string, sessionId: string): void {
+  const session = projectSessions(projectId).find((s) => s.id === sessionId);
+  if (!session) return;
+  showConfirmDialog(
+    'Close session',
+    `'${session.name}' will be closed.`,
+    {
+      confirmLabel: 'Close',
+      onConfirm: () => appState.removeSession(projectId, sessionId),
+    },
+  );
+}
+
 export function closeSessionById(sessionId: string): void {
   const project = appState.projects.find((p) =>
     p.sessions.some((s) => s.id === sessionId),

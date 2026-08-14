@@ -18,7 +18,7 @@ import { createAppMenu } from './menu';
 import { getProvider, getProviderMeta, getAllProviderMetas, getAllProviders } from './providers/registry';
 import { buildHandoffPrompt } from './providers/resume-handoff';
 import { projectTranscripts, searchSessions } from './session-deep-search';
-import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, EditAction } from '../shared/types';
+import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, SearchFilesResult, EditAction } from '../shared/types';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../shared/token-estimate';
 import { analyzeReadiness } from './readiness/analyzer';
 import { isGhAvailable, listPullRequests, listIssues, detectRepo } from './github-cli';
@@ -28,6 +28,7 @@ import { listProfiles as listChromeProfiles, runImport as runChromeImport, clear
 import type { ChromeImportOptions, ChromeImportProgress } from '../shared/types';
 import { shouldWarnStatusLine } from './settings-guard';
 import { buildVibeyardignoreMatcher } from './vibeyardignore';
+import { searchProjectFiles } from './file-search';
 import { setCloseConfirmed } from './close-state';
 import { provisionProfileDir } from './profiles';
 import { getKeychainIsolationStatus } from './claude-keychain';
@@ -632,6 +633,24 @@ export function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('fs:searchFiles', (_event, cwd: string, query: string): SearchFilesResult => {
+    try {
+      // Defensive short-circuit: an empty/blank query never triggers a walk.
+      if (typeof query !== 'string' || query.trim() === '') {
+        return { files: [], truncated: false };
+      }
+      const resolvedCwd = path.resolve(cwd);
+      if (!isWithinKnownProject(resolvedCwd)) {
+        return { files: [], truncated: false };
+      }
+      const files = enumerateProjectFiles(resolvedCwd);
+      return searchProjectFiles(files, query);
+    } catch (err) {
+      console.warn('fs:searchFiles failed:', err);
+      return { files: [], truncated: false };
+    }
+  });
+
   ipcMain.handle('fs:topFilesByTokens', async (_event, cwd: string, limit: number): Promise<TopFilesResult> => {
     try {
       const resolvedCwd = path.resolve(cwd);
@@ -734,6 +753,22 @@ export function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('fs:writeFile', async (_event, filePath: string, content: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resolved = path.resolve(filePath);
+      // Writes are scoped to known projects (never config dirs like ~/.claude).
+      if (!isWithinKnownProject(resolved)) {
+        console.warn(`fs:writeFile blocked: ${resolved} is not within a known project`);
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      await fs.promises.writeFile(resolved, content, 'utf8');
+      return { ok: true };
+    } catch (err) {
+      console.warn('fs:writeFile failed:', err);
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
   const IMAGE_MIME_BY_EXT: Record<string, string> = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
@@ -781,6 +816,24 @@ export function registerIpcHandlers(): void {
       return { ok: true };
     } catch (err) {
       console.warn('fs:trashItem failed:', err);
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle('fs:openPath', async (_event, targetPath: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resolved = path.resolve(targetPath);
+      if (!isWithinKnownProject(resolved)) {
+        console.warn(`fs:openPath blocked: ${resolved} is not within a known project`);
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      // shell.openPath on a directory opens it in the OS file manager
+      // (Explorer/Finder/Nautilus); on a file it opens the default app.
+      const error = await shell.openPath(resolved);
+      if (error) return { ok: false, error };
+      return { ok: true };
+    } catch (err) {
+      console.warn('fs:openPath failed:', err);
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });

@@ -29,7 +29,6 @@
     "fileTree": "Project File Tree",
     "gitPanel": "Git Panel",
     "sessionHistory": "Session History",
-    "discussions": "Discussions",
     "activeSessions": "Active Sessions",
     "activeSessionStatuses": "Active Session Statuses",
     "board": "Board",
@@ -45,6 +44,8 @@
     "sessions": "Sessions",
     "team": "Team",
     "files": "Files",
+    "openFolderTooltip": "Open folder in file explorer",
+    "explorerTitle": "Explorer",
     "git": "Git",
     "newProject": {
       "title": "New Project",
@@ -74,11 +75,6 @@
     },
     "activeSessions": {
       "title": "Active Sessions"
-    },
-    "discussions": {
-      "tooltip": "Vibeyard Discussions",
-      "title": "Vibeyard Discussions",
-      "description": "Join the conversation about coding with AI"
     }
   },
   "tab": {
@@ -516,6 +512,11 @@
     "about": "About",
     "general": "General",
     "appearance": "Appearance"
+  },
+  "explorer": {
+    "searchPlaceholder": "Search files",
+    "searchNoResults": "No files found",
+    "searchTooMany": "500+ matches — refine your query"
   },
   "titleBar": {
     "brand": "Vibeyard",

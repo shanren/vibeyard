@@ -39,6 +39,7 @@ vi.mock('./session-activity.js', () => ({
 import { appState, _resetForTesting } from './state';
 import {
   closeSessionWithConfirm,
+  closeSessionWithAlwaysConfirm,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
   closeSessionsFromRightWithConfirm,
@@ -147,6 +148,50 @@ describe('closeSessionWithConfirm', () => {
 
     expect(mockShowConfirmDialog).not.toHaveBeenCalled();
     expect(project.sessions).toHaveLength(0);
+  });
+});
+
+describe('closeSessionWithAlwaysConfirm', () => {
+  it('always shows the dialog, even for a completed session', () => {
+    const { project, sessions } = seedProject(1);
+    mockGetStatus.mockReturnValue('completed');
+
+    closeSessionWithAlwaysConfirm(project.id, sessions[0].id);
+
+    expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
+    const [title, message, options] = mockShowConfirmDialog.mock.calls[0];
+    expect(title).toBe('Close session');
+    expect(message).toContain('S1');
+    expect(options.confirmLabel).toBe('Close');
+    expect(project.sessions).toHaveLength(1);
+  });
+
+  it('always shows the dialog, even when the confirm preference is off', () => {
+    const { project, sessions } = seedProject(1);
+    appState.setPreference('confirmCloseWorkingSession', false);
+
+    closeSessionWithAlwaysConfirm(project.id, sessions[0].id);
+
+    expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
+    expect(project.sessions).toHaveLength(1);
+  });
+
+  it('confirm removes the session; cancel leaves it', () => {
+    const { project, sessions } = seedProject(1);
+    mockGetStatus.mockReturnValue('idle');
+
+    closeSessionWithAlwaysConfirm(project.id, sessions[0].id);
+    expect(project.sessions).toHaveLength(1);
+
+    const [, , options] = mockShowConfirmDialog.mock.calls[0];
+    options.onConfirm();
+    expect(project.sessions).toHaveLength(0);
+  });
+
+  it('is a no-op for an unknown session', () => {
+    seedProject(1);
+    closeSessionWithAlwaysConfirm('unknown-project', 'unknown-session');
+    expect(mockShowConfirmDialog).not.toHaveBeenCalled();
   });
 });
 

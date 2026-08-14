@@ -3,7 +3,7 @@ import { onChange as onStatusChange } from '../../session-activity.js';
 import { onChange as onGitStatusChange } from '../../git-status.js';
 import { onChange as onUnreadChange } from '../../session-unread.js';
 import { onChange as onGithubUnreadChange } from '../../github-unread.js';
-import { ICON_TERMINAL, ICON_MENU } from '../../icons.js';
+import { ICON_TERMINAL, ICON_MENU, ICON_FILES } from '../../icons.js';
 import { onShareChange } from '../../sharing/share-manager.js';
 import { loadProviderAvailability, hasMultipleAvailableProviders } from '../../provider-availability.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
@@ -16,12 +16,14 @@ const btnAddSession = document.getElementById('btn-add-session')!;
 const btnAddSessionMenu = document.getElementById('btn-add-session-menu')!;
 const btnAddBrowserTab = document.getElementById('btn-add-browser-tab')!;
 const btnMore = document.getElementById('btn-more')!;
+const btnToggleExplorer = document.getElementById('btn-toggle-explorer')!;
 // Terminal toggle is wired in project-terminal.ts; we only own its icon here.
 const btnToggleTerminal = document.getElementById('btn-toggle-terminal')!;
 
 export function initTabBar(): void {
   btnToggleTerminal.innerHTML = ICON_TERMINAL;
   btnMore.innerHTML = ICON_MENU;
+  btnToggleExplorer.innerHTML = ICON_FILES;
   // Browser button keeps its CSS-drawn .toolbar-icon-browser glyph from index.html.
 
   btnAddSession.addEventListener('click', () => quickNewSession());

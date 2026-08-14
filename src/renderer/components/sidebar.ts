@@ -4,11 +4,9 @@ import { showPreferencesModal } from './preferences-modal.js';
 import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
 import { onChange as onActivityChange } from '../session-activity.js';
 import { getProjectStatus, projectInitial } from '../project-status.js';
-import { init as initDiscussionsBadge, getNewCount as getDiscussionsNewCount, markSeen as markDiscussionsSeen, onChange as onDiscussionsChange, DISCUSSIONS_URL } from '../discussions-badge.js';
 import { basename, lastSeparatorIndex } from '../../shared/platform.js';
 import { deriveProjectName } from '../../shared/project-name.js';
 import { esc } from '../dom-utils.js';
-import { renderFileTree, clearProjectState as clearFileTreeState, closeFileTree } from './file-tree.js';
 import {
   renderSessionHistory,
   closeSessionHistory,
@@ -20,7 +18,7 @@ import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js'
 import { ICON_KANBAN, ICON_TEAM, ICON_OVERVIEW, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
-type ProjectPanel = 'history' | 'files' | 'git' | null;
+type ProjectPanel = 'history' | 'git' | null;
 const projectPanelOpen = new Map<string, ProjectPanel>();
 
 const projectListEl = document.getElementById('project-list')!;
@@ -31,13 +29,10 @@ const btnPreferences = document.getElementById('btn-preferences')!;
 const sidebarEl = document.getElementById('sidebar')!;
 const resizeHandle = document.getElementById('sidebar-resize-handle')!;
 
-const sidebarDiscussionsEl = document.getElementById('sidebar-discussions')!;
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar')!;
 
 const SIDEBAR_MIN = 150;
 const SIDEBAR_MAX = 500;
-
-const ICON_DISCUSSIONS = '<svg viewBox="0 -960 960 960" width="14" height="14" fill="currentColor"><path d="m240-240-92 92q-19 19-43.5 8.5T80-177v-623q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240Zm-34-80h594v-480H160v525l46-45Zm-46 0v-480 480Zm120-80h240q17 0 28.5-11.5T560-440q0-17-11.5-28.5T520-480H280q-17 0-28.5 11.5T240-440q0 17 11.5 28.5T280-400Zm0-120h400q17 0 28.5-11.5T720-560q0-17-11.5-28.5T680-600H280q-17 0-28.5 11.5T240-560q0 17 11.5 28.5T280-520Zm0-120h400q17 0 28.5-11.5T720-680q0-17-11.5-28.5T680-720H280q-17 0-28.5 11.5T240-680q0 17 11.5 28.5T280-640Z"/></svg>';
 
 export function toggleSidebar(): void {
   appState.toggleSidebar();
@@ -54,15 +49,6 @@ export function initSidebar(): void {
   btnPreferences.addEventListener('click', () => showPreferencesModal());
   btnToggleSidebar.addEventListener('click', toggleSidebar);
 
-  renderDiscussions();
-  applyDiscussionsVisibility();
-  sidebarDiscussionsEl.addEventListener('click', () => {
-    markDiscussionsSeen();
-    window.vibeyard.app.openExternal(DISCUSSIONS_URL);
-  });
-  initDiscussionsBadge();
-  onDiscussionsChange(renderDiscussions);
-
   initResizeHandle();
   appState.on('state-loaded', () => {
     if (appState.sidebarWidth) {
@@ -76,7 +62,6 @@ export function initSidebar(): void {
   appState.on('project-removed', (id) => {
     if (typeof id === 'string') {
       projectPanelOpen.delete(id);
-      clearFileTreeState(id);
       clearSessionHistoryState(id);
     }
     render();
@@ -118,7 +103,6 @@ export function initSidebar(): void {
     if (dot) dot.className = `project-status ${getProjectStatus(project)}`;
   });
   appState.on('preferences-changed', () => {
-    applyDiscussionsVisibility();
     render();
   });
   // Adding/removing a profile or changing a default flips the badge's
@@ -132,7 +116,6 @@ export function initSidebar(): void {
 }
 
 interface RenderOpts {
-  fileTreeEnabled: boolean;
   historyEnabled: boolean;
   gitEnabled: boolean;
 }
@@ -143,7 +126,6 @@ function render(): void {
   projectListEl.innerHTML = '';
 
   const opts: RenderOpts = {
-    fileTreeEnabled: appState.preferences.sidebarViews?.fileTree ?? true,
     historyEnabled:
       (appState.preferences.sidebarViews?.sessionHistory ?? true) &&
       appState.preferences.sessionHistoryEnabled,
@@ -186,7 +168,7 @@ export function projectProfileLabel(project: ProjectRecord): string | undefined 
 }
 
 function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: RenderOpts): HTMLElement {
-  const { fileTreeEnabled, historyEnabled, gitEnabled } = opts;
+  const { historyEnabled, gitEnabled } = opts;
 
   const wrapper = document.createElement('div');
   // The wrapper carries `.active` so CSS can style the whole row (header + tabs
@@ -298,16 +280,13 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
     // A 'git' panel only stays open while the git view is enabled in prefs.
     let openPanel = projectPanelOpen.get(project.id) ?? null;
     if (openPanel === 'git' && !gitEnabled) openPanel = null;
-    const actions = buildProjectActions(project, openPanel, { fileTreeEnabled, historyEnabled, gitEnabled });
+    const actions = buildProjectActions(project, openPanel, { historyEnabled, gitEnabled });
     wrapper.appendChild(actions);
 
     if (openPanel !== null) {
       const panelContainer = document.createElement('div');
       panelContainer.className = 'project-panel';
-      if (openPanel === 'files') {
-        panelContainer.classList.add('project-panel-files', 'project-file-tree');
-        renderFileTree(project, panelContainer);
-      } else if (openPanel === 'git') {
+      if (openPanel === 'git') {
         panelContainer.classList.add('project-panel-git');
         mountGitPanel(project, panelContainer);
       } else {
@@ -324,7 +303,7 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
 function buildProjectActions(
   project: ProjectRecord,
   openPanel: ProjectPanel,
-  opts: { fileTreeEnabled: boolean; historyEnabled: boolean; gitEnabled: boolean },
+  opts: { historyEnabled: boolean; gitEnabled: boolean },
 ): HTMLElement {
   const actions = document.createElement('div');
   actions.className = 'project-actions';
@@ -363,15 +342,14 @@ function buildProjectActions(
   });
   actions.appendChild(teamBtn);
 
-  if (opts.fileTreeEnabled) {
-    const filesBtn = makeActionButton(t('sidebar.files'), ICON_FILES, openPanel === 'files');
-    filesBtn.classList.add('panel-toggle');
-    filesBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      setProjectPanel(project.id, openPanel === 'files' ? null : 'files');
-    });
-    actions.appendChild(filesBtn);
-  }
+  // Opens the project folder in the OS file explorer (like VSCode's
+  // "Reveal in File Explorer" for a folder).
+  const filesBtn = makeActionButton(t('sidebar.files'), ICON_FILES, false, t('sidebar.openFolderTooltip'));
+  filesBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    void window.vibeyard.fs.openInFolder(project.path);
+  });
+  actions.appendChild(filesBtn);
 
   // Git changes — only for git repos. The badge surfaces the change count so the
   // tab still gives passive awareness without expanding (mirrors the old panel).
@@ -404,7 +382,6 @@ function makeActionButton(label: string, iconSvg: string, active: boolean, hint?
 
 function setProjectPanel(projectId: string, next: ProjectPanel): void {
   const current = projectPanelOpen.get(projectId) ?? null;
-  if (current === 'files' && next !== 'files') closeFileTree(projectId);
   if (current === 'history' && next !== 'history') closeSessionHistory(projectId);
   if (current === 'git' && next !== 'git') closeGitPanel();
   if (next === null) {
@@ -602,11 +579,6 @@ function initResizeHandle(): void {
   });
 }
 
-function applyDiscussionsVisibility(): void {
-  const visible = appState.preferences.sidebarViews?.discussions ?? true;
-  sidebarDiscussionsEl.classList.toggle('hidden', !visible);
-}
-
 function confirmRemoveProject(project: ProjectRecord): void {
   const historyCount = project.sessionHistory?.length ?? 0;
   const taskCount = project.board?.tasks?.length ?? 0;
@@ -772,24 +744,5 @@ function promptProjectSettings(project: ProjectRecord): void {
     appState.setProjectDefaultProfile(project.id, values['profile'] || undefined);
     closeModal();
   });
-}
-
-let lastDiscussionsCount = -1;
-
-function renderDiscussions(): void {
-  const count = getDiscussionsNewCount();
-  if (count === lastDiscussionsCount) return;
-  lastDiscussionsCount = count;
-  // Two unread indicators: dot is shown only when sidebar is collapsed (icon visible),
-  // inline badge is shown only when expanded (text visible). CSS picks one per mode.
-  const dot = count > 0 ? '<span class="discussions-icon-dot"></span>' : '';
-  const inlineBadge = count > 0 ? ` <span class="discussions-badge">${count}</span>` : '';
-  sidebarDiscussionsEl.title = t('sidebar.discussions.tooltip');
-  sidebarDiscussionsEl.innerHTML =
-    `<span class="action-icon" aria-hidden="true">${ICON_DISCUSSIONS}${dot}</span>` +
-    `<div class="discussions-text">` +
-      `<div class="discussions-title">${esc(t('sidebar.discussions.title'))}${inlineBadge}</div>` +
-      `<div class="discussions-desc">${esc(t('sidebar.discussions.description'))}</div>` +
-    `</div>`;
 }
 

@@ -45,6 +45,8 @@
     "sessions": "会话",
     "team": "团队",
     "files": "文件",
+    "openFolderTooltip": "在文件管理器中打开文件夹",
+    "explorerTitle": "资源管理器",
     "git": "Git",
     "newProject": {
       "title": "新建项目",
@@ -516,6 +518,11 @@
     "about": "关于",
     "general": "通用",
     "appearance": "外观"
+  },
+  "explorer": {
+    "searchPlaceholder": "搜索文件",
+    "searchNoResults": "未找到文件",
+    "searchTooMany": "匹配超过 500 条，请细化搜索词"
   },
   "titleBar": {
     "brand": "Vibeyard",
