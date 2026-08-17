@@ -1,8 +1,0 @@
-{
-  "id": "flow-s",
-  "difficulty": "S",
-  "description": "简单需求（单文件/小改动、无新依赖、无架构变化）。分诊后直接开发，不写 spec。",
-  "stages": [
-    { "id": "develop", "agent": "developer", "gates": ["verify"] }
-  ]
-}
