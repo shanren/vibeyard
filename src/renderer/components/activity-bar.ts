@@ -65,8 +65,15 @@ export function getActivityView(): ActivityView {
   return current === 'files' ? 'projects' : current;
 }
 
+/** The view that is actually visible right now, or null when the column is hidden. */
+function visibleView(): ActivityView | null {
+  if (appState.explorerPanelOpen) return 'files';
+  if (appState.sidebarCollapsed) return null;
+  return current;
+}
+
 function applyActive(): void {
-  const active = getActivityView();
+  const active = visibleView();
   for (const [view, btn] of items) {
     btn.classList.toggle('active', view === active);
   }
@@ -119,7 +126,7 @@ function buildItem(def: ViewDef): HTMLButtonElement {
 
   btn.addEventListener('click', () => {
     // Clicking the active view collapses the left column, like VS Code.
-    if (getActivityView() === def.view) {
+    if (visibleView() === def.view) {
       if (def.view === 'files') appState.setExplorerPanelOpen(false);
       else appState.toggleSidebar();
       applyActive();
