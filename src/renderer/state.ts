@@ -20,7 +20,6 @@ import {
   buildDiffViewerSession,
   buildFileReaderSession,
   buildMcpInspectorSession,
-  buildRemoteSession,
 } from './state/session-factory.js';
 import { NavHistory } from './state/nav-history.js';
 import { hydrateLoadedState, serializeForSave } from './state/persistence.js';
@@ -43,7 +42,7 @@ import {
   cycleSessionId,
   reorderSessionInProject,
   sessionIdAtIndex,
-  toggleSwarmMode,
+  toggleSplitMode,
 } from './state/layout-state.js';
 
 export type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession } from '../shared/types.js';
@@ -354,7 +353,7 @@ class AppState {
       profileId: pinnedProfileId,
       envVars: envVars ?? project.defaultEnv,
     });
-    attachSessionToProject(project, session, { addToSwarm: true });
+    attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
   }
@@ -384,16 +383,6 @@ class AppState {
     if (existing) return this.activateExistingSession(project, existing);
 
     const session = buildDiffViewerSession({ name: basename(filePath), filePath, area, worktreePath });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  addRemoteSession(projectId: string, sessionId: string, hostSessionName: string, shareMode: 'readonly' | 'readwrite'): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    const session = buildRemoteSession({ id: sessionId, name: `Remote: ${hostSessionName}`, remoteHostName: hostSessionName, shareMode });
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
@@ -530,7 +519,7 @@ class AppState {
       project.activeSessionId = project.sessions[newIndex]?.id ?? null;
       if (project.activeSessionId) this.pushNav(project.activeSessionId);
     }
-    // Also remove from split/swarm panes
+    // Also remove from split panes
     project.layout.splitPanes = project.layout.splitPanes.filter((id) => id !== sessionId);
     this.persist();
     this.emit('session-removed', { projectId, sessionId });
@@ -604,7 +593,7 @@ class AppState {
     if (existing) return this.activateExistingSession(project, existing);
 
     const session = buildResumedSession(archived);
-    attachSessionToProject(project, session, { addToSwarm: true });
+    attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
   }
@@ -648,7 +637,7 @@ class AppState {
     // reopens against the right config dir; ignore a stale/cross-provider id.
     const validProfileId = profileId && this.profiles.some((p) => p.id === profileId && p.providerId === providerId) ? profileId : undefined;
     const session = buildResumedSessionFromCliId(cliSessionId, name, providerId, validProfileId);
-    attachSessionToProject(project, session, { addToSwarm: true });
+    attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
   }
@@ -686,7 +675,7 @@ class AppState {
       ...buildCliSession({ name: `${resolved.name} (↪ ${targetProviderId})`, providerId: targetProviderId }),
       pendingInitialPrompt: initialPrompt,
     };
-    attachSessionToProject(project, session, { addToSwarm: true });
+    attachSessionToProject(project, session);
     // commitNewSession persist()s before emitting session-added; persist strips
     // the transient pendingInitialPrompt, but split-layout.onSessionAdded reads
     // it from in-memory state synchronously inside the emit.
@@ -783,13 +772,9 @@ class AppState {
   }
 
   toggleSplit(): void {
-    this.toggleSwarm();
-  }
-
-  toggleSwarm(): void {
     const project = this.activeProject;
     if (!project) return;
-    toggleSwarmMode(project);
+    toggleSplitMode(project);
     this.persist();
     this.emit('layout-changed');
   }

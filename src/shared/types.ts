@@ -90,7 +90,7 @@ export type SessionType =
   | 'mcp-inspector'
   | 'diff-viewer'
   | 'file-reader'
-  | 'remote-terminal';
+;
 
 export interface SessionRecord {
   id: string;
@@ -111,8 +111,6 @@ export interface SessionRecord {
   userRenamed?: boolean;
   cost?: CostInfo;
   contextWindow?: ContextWindowInfo;
-  remoteHostName?: string;
-  shareMode?: 'readonly' | 'readwrite';
   /** Persisted, sticky: which Profile backs this session's CLI config dir. Resume must reuse it. */
   profileId?: string;
   /** Transient: initial prompt to inject on first spawn. Not persisted. */
@@ -208,7 +206,7 @@ export interface ProjectRecord {
   sessions: SessionRecord[];
   activeSessionId: string | null;
   layout: {
-    mode: 'tabs' | 'split' | 'swarm';
+    mode: 'tabs' | 'split';
     splitPanes: string[];
     splitDirection: 'horizontal' | 'vertical';
   };

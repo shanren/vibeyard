@@ -29,7 +29,7 @@ export function initKeybindings(): void {
   // only fire on actual menu clicks, not keyboard shortcuts.
   window.vibeyard.menu.onNewProject(promptNewProject);
   window.vibeyard.menu.onNewSession(quickNewSession);
-  window.vibeyard.menu.onToggleSplit(() => appState.toggleSwarm());
+  window.vibeyard.menu.onToggleSplit(() => appState.toggleSplit());
   window.vibeyard.menu.onNextSession(() => appState.cycleSession(1));
   window.vibeyard.menu.onPrevSession(() => appState.cycleSession(-1));
   window.vibeyard.menu.onGotoSession((index) => appState.gotoSession(index));
@@ -48,7 +48,7 @@ export function initKeybindings(): void {
   shortcutManager.registerHandler('tab-back', () => appState.navigateBack());
   shortcutManager.registerHandler('tab-forward', () => appState.navigateForward());
   shortcutManager.registerHandler('toggle-sidebar', toggleSidebar);
-  shortcutManager.registerHandler('toggle-split', () => appState.toggleSwarm());
+  shortcutManager.registerHandler('toggle-split', () => appState.toggleSplit());
   shortcutManager.registerHandler('project-terminal', toggleProjectTerminal);
   shortcutManager.registerHandler('project-terminal-alt', toggleProjectTerminal);
   shortcutManager.registerHandler('git-panel', toggleGitPanel);

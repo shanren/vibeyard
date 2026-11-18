@@ -327,7 +327,6 @@ export function hidePane(sessionId: string): void {
 export function hideAllPanes(): void {
   for (const [, instance] of instances) {
     instance.element.classList.add('hidden');
-    instance.element.classList.remove('swarm-dimmed', 'swarm-unread');
   }
 }
 

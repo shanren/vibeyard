@@ -33,19 +33,6 @@ export function buildDiffViewerSession(opts: BaseOpts & { name: string; filePath
   };
 }
 
-export function buildRemoteSession(opts: BaseOpts & { id: string; name: string; remoteHostName: string; shareMode: 'readonly' | 'readwrite' }): SessionRecord {
-  const { id, name, remoteHostName, shareMode, createdAt = new Date().toISOString() } = opts;
-  return {
-    id,
-    name,
-    type: 'remote-terminal',
-    remoteHostName,
-    shareMode,
-    cliSessionId: null,
-    createdAt,
-  };
-}
-
 export function buildFileReaderSession(opts: BaseOpts & { name: string; filePath: string; lineNumber?: number }): SessionRecord {
   const { name, filePath, lineNumber, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {
@@ -71,19 +58,16 @@ export function buildMcpInspectorSession(opts: BaseOpts & { name: string }): Ses
 }
 
 /**
- * Append a session to a project, mark it active, and (when in swarm mode)
- * add it to the swarm panes. Does not call persist() or emit events — those
- * remain the caller's responsibility.
+ * Append a session to a project and mark it active. Does not call persist() or
+ * emit events — those remain the caller's responsibility.
  */
 export function attachSessionToProject(
   project: ProjectRecord,
   session: SessionRecord,
-  opts: { addToSwarm?: boolean } = {},
 ): SessionRecord {
   project.sessions.push(session);
   project.activeSessionId = session.id;
-  if (opts.addToSwarm && project.layout.mode === 'swarm') {
-    project.layout.splitPanes.push(session.id);
-  }
+  // In split mode every new session joins the visible panes.
+  if (project.layout.mode === 'split') project.layout.splitPanes.push(session.id);
   return session;
 }

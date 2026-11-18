@@ -43,8 +43,8 @@ export function showMoreMenu(x: number, y: number): void {
     menu.appendChild(sep);
   };
 
-  const swarmActive = appState.activeProject?.layout.mode === 'swarm';
-  addItem(swarmActive ? t('tab.moreMenu.swarmLayoutActive') : t('tab.moreMenu.swarmLayout'), () => appState.toggleSwarm());
+  const splitActive = appState.activeProject?.layout.mode === 'split';
+  addItem(splitActive ? t('tab.moreMenu.splitLayoutActive') : t('tab.moreMenu.splitLayout'), () => appState.toggleSplit());
   addItem(t('tab.moreMenu.mcpInspector'), () => addMcpInspector());
 
 

@@ -162,7 +162,7 @@ function buildEditMenu(): HTMLElement {
 
 function buildViewMenu(): HTMLElement {
   const menu = makeMenu();
-  addItem(menu, t('titleBar.view.toggleSplit'), () => appState.toggleSwarm(), keysFor('toggle-split'));
+  addItem(menu, t('titleBar.view.toggleSplit'), () => appState.toggleSplit(), keysFor('toggle-split'));
   addSeparator(menu);
   addItem(menu, t('titleBar.view.toggleInspector'), toggleInspector, keysFor('toggle-inspector'));
   if (appState.preferences.debugMode) {

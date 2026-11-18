@@ -108,8 +108,8 @@
       "defaultName": "会话 {num}"
     },
     "moreMenu": {
-      "swarmLayoutActive": "群组布局 ✓",
-      "swarmLayout": "群组布局",
+      "splitLayoutActive": "分屏布局 ✓",
+      "splitLayout": "分屏布局",
       "mcpInspector": "MCP 检查器",
       "joinRemoteSession": "加入远程会话…"
     },

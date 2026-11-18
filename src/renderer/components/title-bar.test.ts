@@ -21,7 +21,7 @@ const m = vi.hoisted(() => {
     preferences: { debugMode: false },
     activeProject: null as { id: string } | null,
     activeSession: null as { id: string } | null,
-    toggleSwarm: vi.fn(),
+    toggleSplit: vi.fn(),
   };
   return {
     appState: appStateMock,
@@ -177,7 +177,7 @@ describe('title-bar', () => {
     const root = render();
     const items = openItems(buttons(root)[2]);
     items[0].click();
-    expect(appState.toggleSwarm).toHaveBeenCalledTimes(1);
+    expect(appState.toggleSplit).toHaveBeenCalledTimes(1);
 
     const again = openItems(buttons(root)[2]);
     again[1].click();

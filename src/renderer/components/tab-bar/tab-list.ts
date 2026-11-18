@@ -163,7 +163,6 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   }
 
   const isCli = isCliSession(session);
-  const isRemote = session.type === 'remote-terminal';
   const providerCapabilities = getProviderCapabilities(session.providerId || 'claude');
   const canInspect = isCli && providerCapabilities?.hookStatus !== false;
 
@@ -266,17 +265,16 @@ export function render(): void {
     const isMcp = session.type === 'mcp-inspector';
     const isDiff = session.type === 'diff-viewer';
     const isFileReader = session.type === 'file-reader';
-    const isRemoteTab = session.type === 'remote-terminal';
     const unread = !isActive && isUnread(session.id);
-    const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab;
+    const isSpecial = isMcp || isDiff || isFileReader;
     const displayName = session.name;
-    tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '') + (isRemoteTab ? ' tab-remote' : '');
+    tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '');
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : isRemoteTab ? t('tab.tooltip.remote', { name: session.remoteHostName || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId);
+    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
-    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : !isSpecial ? providerIcon : '';
+    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : !isSpecial ? providerIcon : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
       ${statusDot}

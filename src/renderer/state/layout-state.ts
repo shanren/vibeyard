@@ -1,14 +1,14 @@
 import type { ProjectRecord } from '../../shared/types.js';
 import { isCliSession } from '../session-utils.js';
 
-/** Toggle between 'swarm' and 'tabs' layout modes. When entering swarm, reconcile splitPanes with current CLI sessions. */
-export function toggleSwarmMode(project: ProjectRecord): void {
-  if (project.layout.mode === 'swarm') {
+/** Toggle between 'split' and 'tabs' layout modes. When entering split, reconcile splitPanes with current CLI sessions. */
+export function toggleSplitMode(project: ProjectRecord): void {
+  if (project.layout.mode === 'split') {
     project.layout.mode = 'tabs';
     return;
   }
   const cliSessions = project.sessions.filter(isCliSession);
-  project.layout.mode = 'swarm';
+  project.layout.mode = 'split';
   project.layout.splitPanes = project.layout.splitPanes.filter(
     (id) => cliSessions.some((s) => s.id === id),
   );

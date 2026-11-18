@@ -3,17 +3,14 @@ import { restoreCost } from '../session-cost.js';
 import { restoreContext } from '../session-context.js';
 
 /**
- * Session types that no longer exist in the product. Sessions of these types
- * are dropped on load so an old state.json can't resurrect a deleted feature.
- * Kept as plain strings (not `SessionType`) so the literal stays valid while the
- * union members are being removed domain by domain.
+ * Session types the app still knows how to render. Anything else in a loaded
+ * `state.json` is dropped, so a state file written by an older version can't
+ * resurrect a deleted feature or leave a dangling pane.
  */
-export const DROPPED_SESSION_TYPES: ReadonlySet<string> = new Set([
-  'browser-tab',
-  'project-tab',
-  'kanban',
-  'team',
-  'remote-terminal',
+const KEPT_SESSION_TYPES: ReadonlySet<string> = new Set([
+  'file-reader',
+  'diff-viewer',
+  'mcp-inspector',
 ]);
 
 /**
@@ -23,7 +20,7 @@ export const DROPPED_SESSION_TYPES: ReadonlySet<string> = new Set([
 export function hydrateLoadedState(state: PersistedState, defaultPreferences: Preferences): void {
   state.preferences = { ...defaultPreferences, ...state.preferences };
   for (const project of state.projects) {
-    project.sessions = project.sessions.filter((s) => !s.type || !DROPPED_SESSION_TYPES.has(s.type));
+    project.sessions = project.sessions.filter((s) => !s.type || KEPT_SESSION_TYPES.has(s.type));
 
     // Drop references that now point at nothing: a dangling activeSessionId
     // renders an empty pane, and a dangling splitPanes entry crashes layout.
@@ -32,7 +29,8 @@ export function hydrateLoadedState(state: PersistedState, defaultPreferences: Pr
       project.activeSessionId = null;
     }
     project.layout.splitPanes = project.layout.splitPanes.filter((id) => liveIds.has(id));
-    if (project.layout.mode === 'swarm') project.layout.mode = 'tabs';
+    // Older state files may still carry the removed 'swarm' grid mode.
+    if ((project.layout as { mode: string }).mode === 'swarm') project.layout.mode = 'tabs';
 
     for (const session of project.sessions) {
       if (session.cost) restoreCost(session.id, session.cost);

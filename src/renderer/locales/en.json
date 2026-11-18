@@ -102,8 +102,8 @@
       "defaultName": "Session {num}"
     },
     "moreMenu": {
-      "swarmLayoutActive": "Swarm Layout ✓",
-      "swarmLayout": "Swarm Layout",
+      "splitLayoutActive": "Split Layout ✓",
+      "splitLayout": "Split Layout",
       "mcpInspector": "MCP Inspector",
       "joinRemoteSession": "Join Remote Session…"
     },

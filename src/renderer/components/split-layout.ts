@@ -46,13 +46,6 @@ import {
   getFileReaderInstance,
   setFileReaderLine,
 } from './file-reader.js';
-import {
-  getRemoteTerminalInstance,
-  destroyRemoteTerminal,
-  attachRemoteToContainer,
-  showRemotePane,
-  hideAllRemotePanes,
-} from './remote-terminal-pane.js';
 import { quickNewSession } from './tab-bar.js';
 import { isCliSession } from '../session-utils.js';
 
@@ -73,29 +66,11 @@ export function initSplitLayout(): void {
   appState.on('session-changed', renderLayout);
   appState.on('layout-changed', renderLayout);
 
-  onUnreadChange(() => {
-    const project = appState.activeProject;
-    if (project?.layout.mode === 'swarm') updateSwarmPaneStyles(project);
-  });
-
   // Refit on window resize
   window.addEventListener('resize', () => {
     requestAnimationFrame(fitAllVisible);
   });
 
-  // Click delegation for swarm mode: clicking a dimmed pane makes it active
-  container.addEventListener('mousedown', (e) => {
-    const project = appState.activeProject;
-    if (!project || project.layout.mode !== 'swarm') return;
-
-    const paneEl = (e.target as HTMLElement).closest('.terminal-pane') as HTMLElement | null;
-    if (!paneEl) return;
-
-    const sessionId = paneEl.dataset.sessionId;
-    if (sessionId && sessionId !== project.activeSessionId) {
-      appState.setActiveSession(project.id, sessionId);
-    }
-  });
 }
 
 function onSessionAdded(data: unknown): void {
@@ -111,9 +86,6 @@ function onSessionAdded(data: unknown): void {
     renderLayout();
   } else if (session.type === 'mcp-inspector') {
     createInspectorPane(session.id);
-    renderLayout();
-  } else if (session.type === 'remote-terminal') {
-    // Remote terminal pane is created by share-manager before session-added fires
     renderLayout();
   } else {
     // Create and spawn immediately
@@ -143,8 +115,6 @@ function onSessionRemoved(data: unknown): void {
   } else if (getInspectorInstance(sessionId)) {
     disconnectInspector(sessionId);
     destroyInspectorPane(sessionId);
-  } else if (getRemoteTerminalInstance(sessionId)) {
-    destroyRemoteTerminal(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -159,16 +129,12 @@ export function renderLayout(): void {
     hideAllInspectorPanes();
     hideAllFileViewerPanes();
     hideAllFileReaderPanes();
-    hideAllRemotePanes();
     setContainerClass('');
     showEmptyState(project);
     return;
   }
 
   removeEmptyState();
-  container.querySelectorAll('.swarm-grid-wrapper').forEach(el => el.remove());
-  container.querySelectorAll('.swarm-empty-cell').forEach(el => el.remove());
-
   // Ensure all sessions have their respective instances
   for (const session of project.sessions) {
     if (session.type === 'file-reader') {
@@ -183,8 +149,6 @@ export function renderLayout(): void {
       if (!getInspectorInstance(session.id)) {
         createInspectorPane(session.id);
       }
-    } else if (session.type === 'remote-terminal') {
-      // Remote terminal instances are created by share-manager, skip here
     } else {
       if (!getTerminalInstance(session.id)) {
         const cliProviderId = session.providerId || 'claude';
@@ -198,11 +162,8 @@ export function renderLayout(): void {
   hideAllInspectorPanes();
   hideAllFileViewerPanes();
   hideAllFileReaderPanes();
-  hideAllRemotePanes();
 
-  if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
-    renderSwarmMode(project);
-  } else if (project.layout.mode === 'split' && project.layout.splitPanes.length > 1) {
+  if (project.layout.mode === 'split' && project.layout.splitPanes.length > 1) {
     renderSplitMode(project);
   } else {
     renderTabMode(project);
@@ -225,9 +186,6 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'mcp-inspector') {
     attachInspectorToContainer(session.id, target);
     showInspectorPane(session.id, inSplit);
-  } else if (session.type === 'remote-terminal') {
-    attachRemoteToContainer(session.id, target);
-    showRemotePane(session.id, inSplit);
   }
 }
 
@@ -298,87 +256,6 @@ function renderSplitMode(project: ProjectRecord): void {
   container.style.gridTemplateRows = '';
   showPanes(project);
   focusActivePane(project);
-}
-
-function renderSwarmMode(project: ProjectRecord): void {
-  const count = project.layout.splitPanes.length;
-  const cols = Math.ceil(Math.sqrt(count));
-  const rows = Math.ceil(count / cols);
-
-  const activeSession = project.sessions.find(s => s.id === project.activeSessionId);
-  const nonCliSession = (activeSession && !isCliSession(activeSession))
-    ? activeSession
-    : [...project.sessions].reverse().find(s => !isCliSession(s));
-
-  const hasInspector = isInspectorOpen();
-
-  setContainerClass('swarm-mode');
-
-  const needsWrapper = nonCliSession || hasInspector;
-
-  if (needsWrapper) {
-    const colParts: string[] = ['1fr'];
-    if (nonCliSession) colParts.push('1fr');
-    if (hasInspector) colParts.push('var(--inspector-width, 350px)');
-
-    container.style.gridTemplateColumns = colParts.join(' ');
-    container.style.gridTemplateRows = '1fr';
-
-    const gridWrapper = document.createElement('div');
-    gridWrapper.className = 'swarm-grid-wrapper';
-    gridWrapper.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    gridWrapper.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    container.appendChild(gridWrapper);
-
-    showPanes(project, gridWrapper);
-    appendEmptyCells(cols * rows - count, gridWrapper);
-
-    if (nonCliSession) {
-      attachNonCliPane(nonCliSession, container, true);
-    }
-
-    if (hasInspector) {
-      const inspectorEl = container.querySelector('#session-inspector');
-      if (inspectorEl) {
-        container.appendChild(inspectorEl);
-      }
-    }
-  } else {
-    container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    showPanes(project);
-    appendEmptyCells(cols * rows - count, container);
-  }
-
-  updateSwarmPaneStyles(project);
-  focusActivePane(project);
-}
-
-function appendEmptyCells(count: number, target: HTMLElement): void {
-  for (let i = 0; i < count; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'swarm-empty-cell';
-
-    const btn = document.createElement('button');
-    btn.className = 'swarm-empty-add-btn';
-    btn.textContent = '+';
-    btn.title = 'New session';
-    btn.addEventListener('click', () => quickNewSession());
-
-    cell.appendChild(btn);
-    target.appendChild(cell);
-  }
-}
-
-function updateSwarmPaneStyles(project: ProjectRecord): void {
-  for (const paneId of project.layout.splitPanes) {
-    const instance = getTerminalInstance(paneId);
-    if (instance) {
-      const isActive = paneId === project.activeSessionId;
-      instance.element.classList.toggle('swarm-dimmed', !isActive);
-      instance.element.classList.toggle('swarm-unread', !isActive && isUnread(paneId));
-    }
-  }
 }
 
 const plusIcon =

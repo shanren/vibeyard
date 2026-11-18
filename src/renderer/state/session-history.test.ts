@@ -642,14 +642,14 @@ describe('resumeFromHistory()', () => {
     expect(mockSave).toHaveBeenCalled();
   });
 
-  it('adds resumed session to splitPanes when in swarm mode', () => {
+  it('adds resumed session to splitPanes when in split mode', () => {
     const project = addProject();
     const session = appState.addSession(project.id, 'S1')!;
     activateSession(project.id, session.id, 'cli-swarm');
     appState.removeSession(project.id, session.id);
 
-    // Switch to swarm mode
-    project.layout.mode = 'swarm';
+    // Switch to split mode
+    project.layout.mode = 'split';
     project.layout.splitPanes = [];
 
     const archived = appState.getSessionHistory(project.id)[0];
@@ -816,9 +816,9 @@ describe('openCliSession()', () => {
     expect(mockSave).toHaveBeenCalled();
   });
 
-  it('appends to swarm splitPanes when in swarm mode', () => {
+  it('appends to split splitPanes when in split mode', () => {
     const project = addProject();
-    appState.toggleSwarm();
+    appState.toggleSplit();
     const session = appState.openCliSession(project.id, 'cli-swarm', 'S')!;
     expect(appState.activeProject!.layout.splitPanes).toContain(session.id);
   });

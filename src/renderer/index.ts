@@ -31,7 +31,6 @@ import { addEvents as addInspectorEvents } from './session-inspector-state.js';
 import type { InspectorEvent } from '../shared/types.js';
 import { getContext } from './session-context.js';
 import { initSessionInspector } from './components/session-inspector.js';
-import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pane.js';
 import { loadProviderMetas } from './provider-availability.js';
 import { setLocale as setI18nLocale, getLocale } from './i18n.js';
 import { resolveSystemLocale } from './system-locale.js';
@@ -226,7 +225,6 @@ async function main(): Promise<void> {
     document.documentElement.dataset.theme = theme;
     applyThemeToAllTerminals(theme);
     applyThemeToAllShells(theme);
-    applyThemeToAllRemoteTerminals(theme);
 
     const newLocale = appState.preferences.locale;
     if (newLocale && newLocale !== lastLocale) {
