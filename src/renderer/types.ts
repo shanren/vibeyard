@@ -66,14 +66,6 @@ export interface VibeyardApi {
     watchProject(path: string): void;
     onChanged(callback: () => void): () => void;
   };
-  update: {
-    checkNow(): Promise<void>;
-    install(): Promise<void>;
-    onAvailable(cb: (info: { version: string }) => void): () => void;
-    onDownloadProgress(cb: (info: { percent: number }) => void): () => void;
-    onDownloaded(cb: (info: { version: string }) => void): () => void;
-    onError(cb: (info: { message: string }) => void): () => void;
-  };
   app: {
     focus(): void;
     getVersion(): Promise<string>;

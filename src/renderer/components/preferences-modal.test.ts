@@ -243,11 +243,6 @@ describe('showPreferencesModal theme preference', () => {
         },
         menu: { rebuild: vi.fn() },
         app: { getVersion: vi.fn(async () => '0.0.0'), openExternal: vi.fn() },
-        update: {
-          checkNow: vi.fn(async () => {}),
-          onAvailable: vi.fn(() => () => {}),
-          onError: vi.fn(() => () => {}),
-        },
       },
     });
   });

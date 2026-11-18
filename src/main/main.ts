@@ -6,7 +6,6 @@ import { flushState, loadState } from './store';
 import { createAppMenu } from './menu';
 import { restartAndResync } from './hook-status';
 import { initProviders, getAllProviders } from './providers/registry';
-import { initAutoUpdater } from './auto-updater';
 import { stopGitWatcher } from './git-watcher';
 import { stopAllFileWatchers } from './file-watcher';
 import { checkPythonAvailable } from './prerequisites';
@@ -152,7 +151,6 @@ app.whenReady().then(async () => {
     }
   }
 
-  initAutoUpdater();
   mark('main:ready');
 
   if (TIMING) setTimeout(() => app.exit(0), 12000);

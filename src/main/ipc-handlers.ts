@@ -13,7 +13,6 @@ import { getGitStatus, getGitFiles, getGitDiff, getGitWorktrees, gitStageFile, g
 import { startGitWatcher, stopGitWatcher, notifyGitChanged } from './git-watcher';
 import { watchDir, unwatchDir, setFileWatcherWindow } from './file-watcher';
 import { registerMcpHandlers } from './mcp-ipc-handlers';
-import { checkForUpdates, quitAndInstall } from './auto-updater';
 import { createAppMenu } from './menu';
 import { getProvider, getProviderMeta, getAllProviderMetas, getAllProviders } from './providers/registry';
 import { buildHandoffPrompt } from './providers/resume-handoff';
@@ -871,9 +870,6 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('github:listIssues', (_event, repo: string, state: 'open' | 'closed' | 'all', max: number) =>
     listIssues(repo, { state, max })
   );
-
-  ipcMain.handle('update:checkNow', () => checkForUpdates());
-  ipcMain.handle('update:install', () => quitAndInstall());
 
   ipcMain.handle('settings:reinstall', (_event, providerId: ProviderId = 'claude') => {
     try {

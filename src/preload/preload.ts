@@ -88,14 +88,6 @@ export interface VibeyardApi {
     watchProject(path: string): void;
     onChanged(callback: () => void): () => void;
   };
-  update: {
-    checkNow(): Promise<void>;
-    install(): Promise<void>;
-    onAvailable(cb: (info: { version: string }) => void): () => void;
-    onDownloadProgress(cb: (info: { percent: number }) => void): () => void;
-    onDownloaded(cb: (info: { version: string }) => void): () => void;
-    onError(cb: (info: { message: string }) => void): () => void;
-  };
   app: {
     focus(): void;
     getVersion(): Promise<string>;
@@ -283,14 +275,6 @@ const api: VibeyardApi = {
     createBranch: (path: string, branch: string) => ipcRenderer.invoke('git:createBranch', path, branch),
     watchProject: (path: string) => ipcRenderer.send('git:watchProject', path),
     onChanged: (callback: () => void) => onChannel('git:changed', callback),
-  },
-  update: {
-    checkNow: () => ipcRenderer.invoke('update:checkNow'),
-    install: () => ipcRenderer.invoke('update:install'),
-    onAvailable: (cb) => onChannel('update:available', (info) => cb(info as { version: string })),
-    onDownloadProgress: (cb) => onChannel('update:download-progress', (info) => cb(info as { percent: number })),
-    onDownloaded: (cb) => onChannel('update:downloaded', (info) => cb(info as { version: string })),
-    onError: (cb) => onChannel('update:error', (info) => cb(info as { message: string })),
   },
   app: {
     focus: () => { ipcRenderer.send('app:focus'); },

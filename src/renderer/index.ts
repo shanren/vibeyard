@@ -20,7 +20,7 @@ import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initActiveSessions } from './components/active-sessions-panel.js';
 import { disconnectInspector } from './components/mcp-inspector.js';
-import { initUpdateBanner } from './components/update-banner.js';
+import { initFilePrompt } from './components/file-prompt.js';
 import { initSessionHistory } from './components/session-history.js';
 import { captureInitialContext } from './session-insights.js';
 import { initInsightAlert } from './components/insight-alert.js';
@@ -29,15 +29,12 @@ import { initToolAlert } from './components/tool-alert.js';
 import { initLargeFileDetector } from './tools/large-file-detector.js';
 import { initLargeFileAlert } from './components/large-file-alert.js';
 import { initSettingsGuard } from './components/settings-guard-ui.js';
-import { checkWhatsNew } from './components/whats-new-dialog.js';
 import { initShareManager, forwardPtyData, endShare, cleanupAllShares } from './sharing/share-manager.js';
 import { isSharing } from './sharing/peer-host.js';
-import { checkStarPrompt } from './components/star-prompt-dialog.js';
 import { addEvents as addInspectorEvents } from './session-inspector-state.js';
 import type { InspectorEvent } from '../shared/types.js';
 import { getContext } from './session-context.js';
 import { initSessionInspector } from './components/session-inspector.js';
-import { initFilePrompt } from './components/file-prompt.js';
 import { applyThemeToAllRemoteTerminals } from './components/remote-terminal-pane.js';
 import { loadProviderMetas } from './provider-availability.js';
 import { setLocale as setI18nLocale, getLocale } from './i18n.js';
@@ -199,7 +196,6 @@ async function main(): Promise<void> {
   initGitPanel();
   initActiveSessions();
   initSessionHistory();
-  initUpdateBanner();
   initInsightAlert();
   initToolDetector();
   initToolAlert();
@@ -279,8 +275,6 @@ async function main(): Promise<void> {
     promptNewProject();
   }
 
-  checkWhatsNew();
-  checkStarPrompt();
   mark('renderer:ready');
 }
 
