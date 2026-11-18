@@ -99,8 +99,6 @@ export interface VibeyardApi {
     callTool(id: string, name: string, args: Record<string, unknown>): Promise<{ success: boolean; data?: unknown; error?: string }>;
     readResource(id: string, uri: string): Promise<{ success: boolean; data?: unknown; error?: string }>;
     getPrompt(id: string, name: string, args: Record<string, string>): Promise<{ success: boolean; data?: unknown; error?: string }>;
-    addServer(name: string, config: unknown, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
-    removeServer(name: string, filePath: string, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
   };
   settings: {
     onWarning(callback: (data: SettingsWarningData) => void): () => void;
@@ -258,8 +256,6 @@ const api: VibeyardApi = {
     callTool: (id: string, name: string, args: Record<string, unknown>) => ipcRenderer.invoke('mcp:callTool', id, name, args),
     readResource: (id: string, uri: string) => ipcRenderer.invoke('mcp:readResource', id, uri),
     getPrompt: (id: string, name: string, args: Record<string, string>) => ipcRenderer.invoke('mcp:getPrompt', id, name, args),
-    addServer: (name: string, config: unknown, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:addServer', name, config, scope, projectPath),
-    removeServer: (name: string, filePath: string, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:removeServer', name, filePath, scope, projectPath),
   },
   settings: {
     onWarning: (cb) => onChannel('settings:warning', (data) => cb(data as SettingsWarningData)),

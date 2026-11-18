@@ -158,11 +158,6 @@ class AppState {
       hydrateLoadedState(this.state, defaultPreferences);
     }
 
-    if (!this.state.starPromptDismissed) {
-      this.state.appLaunchCount = (this.state.appLaunchCount ?? 0) + 1;
-      this.persist();
-    }
-
     this.emit('state-loaded');
   }
 
@@ -229,28 +224,6 @@ class AppState {
     const project = this.activeProject;
     if (!project) return;
     project.terminalPanelHeight = height;
-    this.persist();
-  }
-
-  get lastSeenVersion(): string | undefined {
-    return this.state.lastSeenVersion;
-  }
-
-  setLastSeenVersion(version: string): void {
-    this.state.lastSeenVersion = version;
-    this.persist();
-  }
-
-  get appLaunchCount(): number {
-    return this.state.appLaunchCount ?? 0;
-  }
-
-  get starPromptDismissed(): boolean {
-    return this.state.starPromptDismissed ?? false;
-  }
-
-  dismissStarPrompt(): void {
-    this.state.starPromptDismissed = true;
     this.persist();
   }
 

@@ -289,52 +289,11 @@ export interface PersistedState {
   sidebarWidth?: number;
   sidebarCollapsed?: boolean;
   explorerPanelOpen?: boolean;
-  lastSeenVersion?: string;
-  appLaunchCount?: number;
-  starPromptDismissed?: boolean;
   /** Global, provider-scoped CLI profiles (e.g. Claude work/personal config dirs). */
   profiles?: Profile[];
 }
 
-// --- AI Readiness ---
 
-export type ReadinessCheckStatus = 'pass' | 'fail' | 'warning';
-
-export type ReadinessEffort = 'low' | 'medium' | 'high';
-
-export interface ReadinessCheck {
-  id: string;
-  name: string;
-  status: ReadinessCheckStatus;
-  description: string;
-  score: number;
-  maxScore: number;
-  fixPrompt?: string;
-  providerIds?: ProviderId[];
-  effort?: ReadinessEffort;
-  impact?: number;
-  rationale?: string;
-}
-
-export interface ReadinessCategory {
-  id: string;
-  name: string;
-  weight: number;
-  score: number;
-  checks: ReadinessCheck[];
-}
-
-export interface ReadinessResult {
-  overallScore: number;
-  categories: ReadinessCategory[];
-  scannedAt: string;
-}
-
-export interface ReadinessSnapshot {
-  timestamp: string;
-  overallScore: number;
-  categoryScores: Record<string, number>;
-}
 
 // --- Cost / Context ---
 
@@ -444,19 +403,6 @@ export interface StatsModelUsage {
   cacheReadInputTokens: number;
   cacheCreationInputTokens: number;
   webSearchRequests: number;
-}
-
-export interface StatsCache {
-  version: number;
-  lastComputedDate: string;
-  dailyActivity: StatsDailyActivity[];
-  dailyModelTokens: { date: string; tokensByModel: Record<string, number> }[];
-  modelUsage: Record<string, StatsModelUsage>;
-  totalSessions: number;
-  totalMessages: number;
-  longestSession: { sessionId: string; duration: number; messageCount: number; timestamp: string };
-  firstSessionDate: string;
-  hourCounts: Record<string, number>;
 }
 
 // --- Filesystem IPC ---

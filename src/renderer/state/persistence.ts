@@ -18,7 +18,7 @@ const KEPT_SESSION_TYPES: ReadonlySet<string> = new Set([
  * them, and because hydrate merges rather than replaces, they would otherwise be
  * written straight back on the next save.
  */
-const STALE_TOP_LEVEL_FIELDS = ['team'] as const;
+const STALE_TOP_LEVEL_FIELDS = ['team', 'lastSeenVersion', 'appLaunchCount', 'starPromptDismissed'] as const;
 const STALE_PROJECT_FIELDS = [
   'board',
   'overviewLayout',
