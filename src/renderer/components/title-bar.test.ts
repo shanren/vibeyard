@@ -9,7 +9,6 @@ import { promptNewProject } from './sidebar.js';
 import { quickNewSession } from './tab-bar/session-menu.js';
 import { closeSessionWithConfirm } from '../session-close.js';
 import { toggleInspector } from './session-inspector.js';
-import { toggleDebugPanel } from './debug-panel.js';
 import { hideTabContextMenu } from './tab-bar/menu.js';
 
 // title-bar.ts pulls in a wide module graph (state, sidebar, session-menu, …)
@@ -30,7 +29,6 @@ const m = vi.hoisted(() => {
     quickNewSession: vi.fn(),
     closeSessionWithConfirm: vi.fn(),
     toggleInspector: vi.fn(),
-    toggleDebugPanel: vi.fn(),
     shortcutManager: {
       getKeys: (id: string) =>
         ({
@@ -39,7 +37,6 @@ const m = vi.hoisted(() => {
           'close-session': 'Ctrl+W',
           'toggle-split': 'Ctrl+\\',
           'toggle-inspector': 'Ctrl+Shift+I',
-          'debug-panel': 'Ctrl+Shift+D',
         } as Record<string, string>)[id],
     },
     displayKeys: (acc: string) => acc,
@@ -51,7 +48,6 @@ vi.mock('./sidebar.js', () => ({ promptNewProject: m.promptNewProject }));
 vi.mock('./tab-bar/session-menu.js', () => ({ quickNewSession: m.quickNewSession }));
 vi.mock('../session-close.js', () => ({ closeSessionWithConfirm: m.closeSessionWithConfirm }));
 vi.mock('./session-inspector.js', () => ({ toggleInspector: m.toggleInspector }));
-vi.mock('./debug-panel.js', () => ({ toggleDebugPanel: m.toggleDebugPanel }));
 vi.mock('../shortcuts.js', () => ({
   shortcutManager: m.shortcutManager,
   displayKeys: m.displayKeys,
@@ -195,20 +191,15 @@ describe('title-bar', () => {
     expect(items.map(itemLabel)).toEqual([
       'Toggle Split Mode',
       'Toggle Session Inspector',
-      'Toggle Debug Panel',
       'Toggle DevTools',
       'Reload Main Window',
     ]);
 
     items[2].click();
-    expect(toggleDebugPanel).toHaveBeenCalledTimes(1);
+    expect((window as any).vibeyard.menu.toggleDevTools).toHaveBeenCalledTimes(1);
 
     const again = openItems(buttons(root)[2]);
     again[3].click();
-    expect((window as any).vibeyard.menu.toggleDevTools).toHaveBeenCalledTimes(1);
-
-    const third = openItems(buttons(root)[2]);
-    third[4].click();
     expect((window as any).vibeyard.menu.reloadMainWindow).toHaveBeenCalledTimes(1);
   });
 

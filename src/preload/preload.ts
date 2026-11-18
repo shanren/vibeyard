@@ -144,7 +144,6 @@ export interface VibeyardApi {
     onNextSession(callback: () => void): () => void;
     onPrevSession(callback: () => void): () => void;
     onGotoSession(callback: (index: number) => void): () => void;
-    onToggleDebug(callback: () => void): () => void;
     onToggleInspector(callback: () => void): () => void;
     onCloseSession(callback: () => void): () => void;
     rebuild(debugMode: boolean): Promise<void>;
@@ -328,7 +327,6 @@ const api: VibeyardApi = {
     onNextSession: (cb) => onChannel('menu:next-session', cb),
     onPrevSession: (cb) => onChannel('menu:prev-session', cb),
     onGotoSession: (cb) => onChannel('menu:goto-session', (index) => cb(index as number)),
-    onToggleDebug: (cb) => onChannel('menu:toggle-debug', cb),
     onToggleInspector: (cb) => onChannel('menu:toggle-inspector', cb),
     onCloseSession: (cb) => onChannel('menu:close-session', cb),
     rebuild: (debugMode) => ipcRenderer.invoke('menu:rebuild', debugMode),

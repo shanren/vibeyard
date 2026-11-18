@@ -3,7 +3,6 @@ import { closeSessionWithConfirm } from './session-close.js';
 import { promptNewProject, toggleSidebar, toggleGitPanel } from './components/sidebar.js';
 import { quickNewSession } from './components/tab-bar.js';
 import { toggleProjectTerminal } from './components/project-terminal.js';
-import { toggleDebugPanel } from './components/debug-panel.js';
 import { showPreferencesModal } from './components/preferences-modal.js';
 import { getFocusedSessionId } from './components/terminal-pane.js';
 import { showSearchBar, TerminalSearchBackend, ShellTerminalSearchBackend } from './components/search-bar.js';
@@ -35,7 +34,6 @@ export function initKeybindings(): void {
   window.vibeyard.menu.onNextSession(() => appState.cycleSession(1));
   window.vibeyard.menu.onPrevSession(() => appState.cycleSession(-1));
   window.vibeyard.menu.onGotoSession((index) => appState.gotoSession(index));
-  window.vibeyard.menu.onToggleDebug(toggleDebugPanel);
   window.vibeyard.menu.onToggleInspector(toggleInspector);
   window.vibeyard.menu.onCloseSession(handleCloseSession);
 
@@ -54,7 +52,6 @@ export function initKeybindings(): void {
   shortcutManager.registerHandler('toggle-split', () => appState.toggleSwarm());
   shortcutManager.registerHandler('project-terminal', toggleProjectTerminal);
   shortcutManager.registerHandler('project-terminal-alt', toggleProjectTerminal);
-  shortcutManager.registerHandler('debug-panel', toggleDebugPanel);
   shortcutManager.registerHandler('git-panel', toggleGitPanel);
   shortcutManager.registerHandler('quick-open', showQuickOpen);
   shortcutManager.registerHandler('session-search', showSessionSearchPalette);

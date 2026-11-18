@@ -70,7 +70,6 @@
   --radius-md: 10px;
   --radius-lg: 13px;
 
-  --debug-panel-height: 300px;
 }
 
 [data-theme="dark"] {
@@ -228,9 +227,6 @@ html, body {
   min-height: 0;
 }
 
-body.debug-panel-open #app {
-  height: calc(100vh - var(--debug-panel-height));
-}
 
 /* Empty state */
 .empty-state {

@@ -89,12 +89,6 @@ export function createAppMenu(debugMode = false): void {
           click: () => sendToRenderer('menu:toggle-inspector'),
         },
         ...(debugMode ? [
-          {
-            label: 'Toggle Debug Panel',
-            accelerator: 'CmdOrCtrl+Shift+D',
-            registerAccelerator: false,
-            click: () => sendToRenderer('menu:toggle-debug'),
-          },
           { type: 'separator' as const },
           { role: 'toggleDevTools' as const },
           {

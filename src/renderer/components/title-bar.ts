@@ -10,7 +10,6 @@ import { promptNewProject } from './sidebar.js';
 import { quickNewSession } from './tab-bar/session-menu.js';
 import { closeSessionWithConfirm } from '../session-close.js';
 import { toggleInspector } from './session-inspector.js';
-import { toggleDebugPanel } from './debug-panel.js';
 import { shortcutManager, displayKeys } from '../shortcuts.js';
 import { getActiveContextMenu, hideTabContextMenu, setActiveContextMenu, positionMenu } from './tab-bar/menu.js';
 import type { EditAction } from '../../shared/types.js';
@@ -167,8 +166,6 @@ function buildViewMenu(): HTMLElement {
   addSeparator(menu);
   addItem(menu, t('titleBar.view.toggleInspector'), toggleInspector, keysFor('toggle-inspector'));
   if (appState.preferences.debugMode) {
-    addSeparator(menu);
-    addItem(menu, t('titleBar.view.toggleDebugPanel'), toggleDebugPanel, keysFor('debug-panel'));
     addSeparator(menu);
     addItem(menu, t('titleBar.view.toggleDevTools'), () => void window.vibeyard.menu.toggleDevTools());
     addItem(menu, t('titleBar.view.reloadMainWindow'), () => void window.vibeyard.menu.reloadMainWindow());

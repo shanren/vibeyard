@@ -16,7 +16,6 @@ import { init as initSessionUnread } from './session-unread.js';
 import { init as initGithubUnread } from './github-unread.js';
 import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSessionId, applyThemeToAllShells } from './components/project-terminal.js';
 import { startPolling as startGitPolling } from './git-status.js';
-import { initDebugPanel, logDebugEvent } from './components/debug-panel.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initActiveSessions } from './components/active-sessions-panel.js';
 import { disconnectInspector } from './components/mcp-inspector.js';
@@ -97,7 +96,6 @@ async function main(): Promise<void> {
 
   window.vibeyard.session.onCostData((sessionId, costData) => {
     if (!appState.hasSession(sessionId)) return;
-    logDebugEvent('costData', sessionId, costData);
     setCostData(sessionId, costData);
     const contextBefore = getContext(sessionId);
     setContextData(sessionId, costData.context_window);
@@ -137,18 +135,15 @@ async function main(): Promise<void> {
 
   window.vibeyard.session.onHookStatus((sessionId, status, hookName) => {
     if (!appState.hasSession(sessionId)) return;
-    logDebugEvent('hookStatus', sessionId, hookName ? `${hookName}: ${status}` : status);
     setHookStatus(sessionId, status, hookName);
   });
 
   window.vibeyard.session.onInspectorEvents((sessionId, events) => {
     if (!appState.hasSession(sessionId)) return;
-    logDebugEvent('inspectorEvents', sessionId, { count: events.length });
     addInspectorEvents(sessionId, events);
   });
 
   window.vibeyard.session.onCliSessionId((sessionId, cliSessionId) => {
-    logDebugEvent('cliSessionId', sessionId, cliSessionId);
     // Find the project containing this session and persist the CLI session ID
     const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
     if (project) {
@@ -158,7 +153,6 @@ async function main(): Promise<void> {
   });
 
   window.vibeyard.pty.onExit((sessionId, exitCode) => {
-    logDebugEvent('ptyExit', sessionId, { exitCode });
     if (isShellSessionId(sessionId)) {
       handleShellPtyExit(sessionId, exitCode);
     } else if (!isMcpSession(sessionId) && !isQuitting) {
@@ -192,7 +186,6 @@ async function main(): Promise<void> {
   initNotificationSound();
   initNotificationDesktop();
   initProjectTerminal();
-  initDebugPanel();
   initGitPanel();
   initActiveSessions();
   initSessionHistory();
@@ -227,7 +220,6 @@ async function main(): Promise<void> {
   ] as const;
   for (const evt of stateEvents) {
     appState.on(evt as Parameters<typeof appState.on>[0], (data) => {
-      logDebugEvent('stateEvent', evt, data);
     });
   }
 
