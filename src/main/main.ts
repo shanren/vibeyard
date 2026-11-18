@@ -15,6 +15,16 @@ import { isCloseConfirmed, setCloseConfirmed } from './close-state';
 
 let mainWindow: BrowserWindow | null = null;
 
+// Startup timing instrumentation. Enable with VIBEYARD_TIMING=1; every mark
+// prints "[startup] <label> <ms since process start>" so cold-start work can be
+// attributed to a phase. Used as the verification instrument for the
+// fast-startup effort; harmless when disabled.
+const TIMING = !!process.env.VIBEYARD_TIMING;
+function mark(label: string): void {
+  if (TIMING) console.log(`[startup] ${label} ${Math.round(process.uptime() * 1000)}ms`);
+}
+mark('main:module-loaded');
+
 function requestConfirmClose(): void {
   const win = BrowserWindow.getAllWindows()[0];
   if (win && !win.isDestroyed()) {
@@ -50,7 +60,17 @@ function createWindow(): void {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, '..', '..', 'renderer', 'index.html'));
+  mainWindow.loadFile(
+    path.join(__dirname, '..', '..', 'renderer', 'index.html'),
+    TIMING ? { query: { timing: '1' } } : undefined,
+  );
+
+  if (TIMING) {
+    mainWindow.webContents.on('did-finish-load', () => mark('main:did-finish-load'));
+    mainWindow.webContents.on('console-message', (_e, _level, message) => {
+      if (message.startsWith('[startup]')) console.log(message);
+    });
+  }
 
   // Open external links in default browser instead of inside the app
   const isHttpUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://');
@@ -103,10 +123,15 @@ app.whenReady().then(async () => {
     return;
   }
 
+  mark('main:providers-ready');
+
   registerIpcHandlers();
+  mark('main:ipc-registered');
   const state = loadState();
+  mark('main:state-loaded');
   createAppMenu(state.preferences?.debugMode ?? false);
   createWindow();
+  mark('main:window-created');
 
   // Warn if Python is missing on Windows (hooks depend on it)
   const pythonWarning = checkPythonAvailable();
@@ -128,6 +153,9 @@ app.whenReady().then(async () => {
   }
 
   initAutoUpdater();
+  mark('main:ready');
+
+  if (TIMING) setTimeout(() => app.exit(0), 12000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

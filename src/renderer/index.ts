@@ -45,6 +45,14 @@ import { resolveSystemLocale } from './system-locale.js';
 import { rerenderOpenPreferencesModal } from './components/preferences-modal.js';
 import type { Locale } from '../shared/types.js';
 
+// Startup timing (see the matching instrumentation in src/main/main.ts).
+// Enabled by main passing ?timing=1 when VIBEYARD_TIMING is set.
+const TIMING = new URLSearchParams(location.search).has('timing');
+function mark(label: string): void {
+  if (TIMING) console.log(`[startup] ${label} ${Math.round(performance.now())}ms`);
+}
+mark('renderer:module-loaded');
+
 function initI18n(): void {
   const saved = appState.preferences.locale;
   const initial: Locale = saved ?? resolveSystemLocale(navigator.language);
@@ -173,6 +181,7 @@ async function main(): Promise<void> {
 
   // Load provider metadata before components so capabilities are available synchronously
   await loadProviderMetas();
+  mark('renderer:provider-metas');
 
   // Initialize components
   initSessionUnread();
@@ -204,6 +213,7 @@ async function main(): Promise<void> {
   initTeamView();
   initFilePrompt();
   startGitPolling();
+  mark('renderer:components-init');
 
   function isMcpSession(sessionId: string): boolean {
     for (const project of appState.projects) {
@@ -227,6 +237,7 @@ async function main(): Promise<void> {
 
   // Load persisted state
   await appState.load();
+  mark('renderer:state-loaded');
 
   // Initialize the UI locale before anything else renders strings.
   // Persisted choice wins; otherwise fall back to the OS language and persist
@@ -270,6 +281,7 @@ async function main(): Promise<void> {
 
   checkWhatsNew();
   checkStarPrompt();
+  mark('renderer:ready');
 }
 
 main().catch(console.error);
