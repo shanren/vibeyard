@@ -197,13 +197,5 @@ describe('renameSession()', () => {
     expect(kanban.name).toBe('My Project - Kanban');
     expect(kanban.userRenamed).toBeUndefined();
   });
-
-  it('refuses to rename a project-tab session', () => {
-    const project = addProject('My Project');
-    const overview = appState.openProjectTab(project.id)!;
-    appState.renameSession(project.id, overview.id, 'Custom', true);
-    expect(overview.name).toBe('My Project - Overview');
-    expect(overview.userRenamed).toBeUndefined();
-  });
 });
 

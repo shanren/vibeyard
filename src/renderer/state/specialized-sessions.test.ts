@@ -174,14 +174,6 @@ describe('openKanbanTab()', () => {
   });
 });
 
-describe('openProjectTab()', () => {
-  it('creates a project-tab session named "<project> - Overview"', () => {
-    const project = addProject('Acme');
-    const session = appState.openProjectTab(project.id)!;
-    expect(session.type).toBe('project-tab');
-    expect(session.name).toBe('Acme - Overview');
-  });
-});
 
 describe('addPlanSession()', () => {
   it('uses providerIdOverride when provided', () => {

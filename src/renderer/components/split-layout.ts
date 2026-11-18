@@ -55,14 +55,6 @@ import {
   hideAllRemotePanes,
 } from './remote-terminal-pane.js';
 import {
-  createProjectTabPane,
-  destroyProjectTabPane,
-  showProjectTabPane,
-  hideAllProjectTabPanes,
-  attachProjectTabToContainer,
-  getProjectTabInstance,
-} from './project-tab/pane.js';
-import {
   createKanbanPane,
   destroyKanbanPane,
   showKanbanPane,
@@ -140,9 +132,6 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'remote-terminal') {
     // Remote terminal pane is created by share-manager before session-added fires
     renderLayout();
-  } else if (session.type === 'project-tab') {
-    createProjectTabPane(session.id, projectId);
-    renderLayout();
   } else if (session.type === 'kanban') {
     createKanbanPane(session.id, projectId);
     renderLayout();
@@ -183,8 +172,6 @@ function onSessionRemoved(data: unknown): void {
     destroyInspectorPane(sessionId);
   } else if (getRemoteTerminalInstance(sessionId)) {
     destroyRemoteTerminal(sessionId);
-  } else if (getProjectTabInstance(sessionId)) {
-    destroyProjectTabPane(sessionId);
   } else if (getKanbanInstance(sessionId)) {
     destroyKanbanPane(sessionId);
   } else if (getTeamInstance(sessionId)) {
@@ -204,7 +191,6 @@ export function renderLayout(): void {
     hideAllFileViewerPanes();
     hideAllFileReaderPanes();
     hideAllRemotePanes();
-    hideAllProjectTabPanes();
     hideAllKanbanPanes();
     hideAllTeamPanes();
     setContainerClass('');
@@ -232,10 +218,6 @@ export function renderLayout(): void {
       }
     } else if (session.type === 'remote-terminal') {
       // Remote terminal instances are created by share-manager, skip here
-    } else if (session.type === 'project-tab') {
-      if (!getProjectTabInstance(session.id)) {
-        createProjectTabPane(session.id, project.id);
-      }
     } else if (session.type === 'kanban') {
       if (!getKanbanInstance(session.id)) {
         createKanbanPane(session.id, project.id);
@@ -258,7 +240,6 @@ export function renderLayout(): void {
   hideAllFileViewerPanes();
   hideAllFileReaderPanes();
   hideAllRemotePanes();
-  hideAllProjectTabPanes();
   hideAllKanbanPanes();
   hideAllTeamPanes();
 
@@ -290,9 +271,6 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'remote-terminal') {
     attachRemoteToContainer(session.id, target);
     showRemotePane(session.id, inSplit);
-  } else if (session.type === 'project-tab') {
-    attachProjectTabToContainer(session.id, target);
-    showProjectTabPane(session.id, inSplit);
   } else if (session.type === 'kanban') {
     attachKanbanToContainer(session.id, target);
     showKanbanPane(session.id, inSplit);

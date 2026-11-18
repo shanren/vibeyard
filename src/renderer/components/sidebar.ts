@@ -15,7 +15,7 @@ import {
 import { attachHoverCard } from './hover-card.js';
 import { mountGitPanel, closeGitPanel } from './git-panel.js';
 import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
-import { ICON_KANBAN, ICON_TEAM, ICON_OVERVIEW, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
+import { ICON_KANBAN, ICON_TEAM, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
 type ProjectPanel = 'history' | 'git' | null;
@@ -70,7 +70,6 @@ export function initSidebar(): void {
   appState.on('session-added', render);
   appState.on('session-removed', render);
   appState.on('layout-changed', render);
-  appState.on('readiness-changed', render);
 
   onUnreadChange(render);
   // Keep the active project's Git tab badge in sync. Surgical when the button is
@@ -311,13 +310,6 @@ function buildProjectActions(
   // Only the panel toggles (Files, Sessions) reflect a selected state, derived
   // from openPanel below. The tab buttons (Overview, Kanban, Team) never mark
   // themselves selected from the open tab — opening a tab leaves them inert.
-  const overviewBtn = makeActionButton(t('sidebar.overview'), ICON_OVERVIEW, false);
-  overviewBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    appState.openProjectTab(project.id);
-  });
-  actions.appendChild(overviewBtn);
-
   const kanbanBtn = makeActionButton(t('sidebar.kanban'), ICON_KANBAN, false);
   kanbanBtn.addEventListener('click', (e) => {
     e.stopPropagation();

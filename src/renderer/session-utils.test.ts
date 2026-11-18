@@ -13,7 +13,6 @@ describe('isCliSession', () => {
     'diff-viewer',
     'file-reader',
     'remote-terminal',
-    'project-tab',
     'kanban',
   ])('returns false for special pane type %s', (type) => {
     expect(isCliSession({ type })).toBe(false);

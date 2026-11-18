@@ -1,5 +1,5 @@
 import type { VibeyardApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, ReadinessResult, ReadinessSnapshot, TeamMember, TeamData, Profile, OverviewLayout } from '../shared/types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, TeamMember, TeamData, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename, isAbsolutePath } from '../shared/platform.js';
 import { isCliSession } from './session-utils.js';
@@ -21,7 +21,6 @@ import {
   buildFileReaderSession,
   buildKanbanSession,
   buildMcpInspectorSession,
-  buildProjectTabSession,
   buildRemoteSession,
   buildTeamSession,
 } from './state/session-factory.js';
@@ -50,7 +49,6 @@ import {
   addInsightSnapshot as addInsightSnapshotPure,
   dismissInsight as dismissInsightPure,
   isInsightDismissed as isInsightDismissedPure,
-  setProjectReadiness as setProjectReadinessPure,
 } from './state/insights-state.js';
 import {
   collectRemovalIds,
@@ -83,14 +81,12 @@ type EventType =
   | 'terminal-panel-changed'
   | 'history-changed'
   | 'insights-changed'
-  | 'readiness-changed'
   | 'sidebar-toggled'
   | 'explorer-toggled'
   | 'cli-session-cleared'
   | 'board-changed'
   | 'team-changed'
   | 'profiles-changed'
-  | 'overview-layout-changed'
   | 'github-unread-changed'
   | 'state-loaded';
 
@@ -106,7 +102,6 @@ const defaultPreferences: Preferences = {
   confirmCloseWorkingSession: true,
   copyOnSelect: false,
   zoomFactor: 1.0,
-  readinessExcludedProviders: [],
   sidebarViews: { gitPanel: true, sessionHistory: true, fileTree: true, activeSessions: true },
   boardCardMetrics: true,
   locale: 'en',
@@ -417,21 +412,6 @@ class AppState {
     if (!project) return undefined;
 
     const session = buildRemoteSession({ id: sessionId, name: `Remote: ${hostSessionName}`, remoteHostName: hostSessionName, shareMode });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  openProjectTab(projectId: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    if (this.state.activeProjectId !== projectId) this.setActiveProject(projectId);
-
-    const existing = findExistingTabByType(project, 'project-tab');
-    if (existing) return this.activateExistingSession(project, existing);
-
-    const session = buildProjectTabSession({ projectName: project.name });
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
@@ -913,7 +893,7 @@ class AppState {
     if (!project) return;
     const session = project.sessions.find((s) => s.id === sessionId);
     if (!session) return;
-    if (session.type === 'kanban' || session.type === 'project-tab') return;
+    if (session.type === 'kanban') return;
     session.name = name.slice(0, MAX_SESSION_NAME_LENGTH);
     if (userRenamed) session.userRenamed = true;
     // Keep history entry in sync if this session was resumed from history
@@ -1010,14 +990,6 @@ class AppState {
     return isInsightDismissedPure(this.state.projects.find((p) => p.id === projectId), insightId);
   }
 
-  setProjectReadiness(projectId: string, result: ReadinessResult): void {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    setProjectReadinessPure(project, result);
-    this.persist();
-    this.emit('readiness-changed', projectId);
-  }
-
   reorderProject(fromIndex: number, toIndex: number): void {
     if (fromIndex === toIndex) return;
     if (fromIndex < 0 || fromIndex >= this.state.projects.length) return;
@@ -1026,14 +998,6 @@ class AppState {
     this.state.projects.splice(toIndex, 0, project);
     this.persist();
     this.emit('project-changed');
-  }
-
-  setProjectOverviewLayout(projectId: string, layout: OverviewLayout): void {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    project.overviewLayout = layout;
-    this.persist();
-    this.emit('overview-layout-changed', projectId);
   }
 
   setGithubItemSeen(projectId: string, itemId: string, isoTimestamp: string): void {

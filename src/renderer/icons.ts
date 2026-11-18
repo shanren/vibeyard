@@ -11,7 +11,6 @@ const STROKE_ICON = (body: string): string =>
   `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 
 // Project menu — exact glyphs from the Studio design system.
-export const ICON_OVERVIEW = STROKE_ICON('<rect x="4" y="4" width="16" height="16" rx="2.4"/><path d="M4 11h16M11 11v9"/>');
 
 export const ICON_KANBAN = STROKE_ICON('<rect x="4" y="4" width="16" height="16" rx="2.4"/><path d="M9 7v6M15 7v9"/>');
 

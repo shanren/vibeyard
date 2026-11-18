@@ -12,13 +12,6 @@ export function areaLabel(area: string): string {
   return AREA_LABELS[area] || area;
 }
 
-/** Return a CSS color for a 0-100 readiness score. */
-export function scoreColor(score: number): string {
-  if (score >= 70) return '#34a853';
-  if (score >= 40) return '#f4b400';
-  return '#e94560';
-}
-
 /** Create a labeled checkbox row using the `inspect-attach-dims-row` class. */
 export function createPlanModeRow(labelText: string = 'Plan mode', checked = true): { row: HTMLLabelElement; checkbox: HTMLInputElement } {
   const row = document.createElement('label');

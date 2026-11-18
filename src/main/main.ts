@@ -66,7 +66,7 @@ function createWindow(): void {
   if (TIMING) {
     mainWindow.webContents.on('did-finish-load', () => mark('main:did-finish-load'));
     mainWindow.webContents.on('console-message', (_e, _level, message) => {
-      if (message.startsWith('[startup]')) console.log(message);
+      console.log(`[renderer] ${message}`);
     });
   }
 

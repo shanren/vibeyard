@@ -46,17 +46,6 @@ export function buildRemoteSession(opts: BaseOpts & { id: string; name: string; 
   };
 }
 
-export function buildProjectTabSession(opts: BaseOpts & { projectName: string }): SessionRecord {
-  const { projectName, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
-  return {
-    id,
-    name: `${projectName} - Overview`,
-    type: 'project-tab',
-    cliSessionId: null,
-    createdAt,
-  };
-}
-
 export function buildKanbanSession(opts: BaseOpts & { projectName: string }): SessionRecord {
   const { projectName, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {

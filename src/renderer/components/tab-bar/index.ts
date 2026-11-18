@@ -55,7 +55,6 @@ export function initTabBar(): void {
   appState.on('session-removed', render);
   appState.on('session-changed', render);
   appState.on('layout-changed', render);
-  onShareChange(render);
 
   onStatusChange(updateTabStatus);
 

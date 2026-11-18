@@ -94,7 +94,6 @@ export type SessionType =
   | 'diff-viewer'
   | 'file-reader'
   | 'remote-terminal'
-  | 'project-tab'
   | 'kanban'
   | 'team';
 
@@ -293,39 +292,7 @@ export interface ProjectRecord {
   defaultEnv?: string;
   terminalPanelOpen?: boolean;
   terminalPanelHeight?: number;
-  readiness?: ReadinessResult;
-  readinessHistory?: ReadinessSnapshot[];
-  overviewLayout?: OverviewLayout;
   githubLastSeen?: Record<string, string>;
-}
-
-// --- Overview Widgets ---
-
-export type OverviewWidgetType =
-  | 'readiness'
-  | 'provider-tools'
-  | 'github-prs'
-  | 'github-issues'
-  | 'team'
-  | 'kanban'
-  | 'sessions'
-  | 'favorite-sessions'
-  | 'usage-stats'
-  | 'top-files-by-tokens';
-
-export interface OverviewWidget {
-  id: string;
-  type: OverviewWidgetType;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  config?: Record<string, unknown>;
-}
-
-export interface OverviewLayout {
-  gridVersion: 1;
-  widgets: OverviewWidget[];
 }
 
 // --- GitHub ---

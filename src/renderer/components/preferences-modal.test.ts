@@ -14,8 +14,6 @@ const mockState = vi.hoisted(() => ({
       configSections: true,
       gitPanel: true,
       sessionHistory: true,
-      readinessSection: true,
-      discussions: true,
     },
     boardCardMetrics: true,
   },
