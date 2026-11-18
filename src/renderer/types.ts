@@ -1,5 +1,5 @@
-export type { McpServer, Agent, Skill, Command, ProviderConfig, ClaudeConfig, GitWorktree, GitFileEntry, CostData, McpResult, ProviderId, CliProviderMeta, CliProviderCapabilities, StatsCache, ReadinessResult, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus, ChromeProfile, ChromeImportOptions, ChromeImportProgress, ChromeImportResult } from '../shared/types.js';
-import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, ChromeProfile, ChromeImportOptions, ChromeImportProgress, ChromeImportResult, EditAction, ReadFileResult } from '../shared/types.js';
+export type { McpServer, Agent, Skill, Command, ProviderConfig, ClaudeConfig, GitWorktree, GitFileEntry, CostData, McpResult, ProviderId, CliProviderMeta, CliProviderCapabilities, StatsCache, ReadinessResult, ReadinessCategory, ReadinessCheck, ReadinessCheckStatus } from '../shared/types.js';
+import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliProviderMeta, StatsCache, ReadinessResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction, ReadFileResult } from '../shared/types.js';
 
 export interface VibeyardApi {
   pty: {
@@ -71,13 +71,6 @@ export interface VibeyardApi {
     getVersion(): Promise<string>;
     openExternal(url: string): Promise<void>;
     onQuitting(callback: () => void): () => void;
-  };
-  chromeImport: {
-    listProfiles(): Promise<ChromeProfile[]>;
-    run(options: ChromeImportOptions): Promise<ChromeImportResult>;
-    onProgress(callback: (progress: ChromeImportProgress) => void): () => void;
-    summary(): Promise<{ cookieCount: number; lastImportedAt: number }>;
-    clearCookies(): Promise<void>;
   };
   mcp: {
     connect(id: string, url: string): Promise<McpResult>;

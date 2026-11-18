@@ -1,7 +1,6 @@
 import { appState } from '../../state.js';
 import { shortcutManager, displayKeys } from '../../shortcuts.js';
 import { BROWSER_DEFAULT_PARTITION } from '../../../shared/types.js';
-import { showChromeImportModal } from '../chrome-import-modal.js';
 import {
   VIEWPORT_PRESETS,
   type BrowserTabInstance,
@@ -563,7 +562,6 @@ export function createBrowserTabPane(sessionId: string, url?: string): void {
     if (parent) attachBrowserTabToContainer(sessionId, parent);
     showBrowserTabPane(sessionId, wasSplit);
   });
-  importBtn.addEventListener('click', () => { showChromeImportModal(); });
   drawClearBtn.addEventListener('click', () => clearDrawing(instance));
   drawSubmitBtn.addEventListener('click', () => { void sendDrawToNewSession(instance); });
   drawCustomBtn.addEventListener('click', () => {

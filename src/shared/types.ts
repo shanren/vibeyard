@@ -404,41 +404,6 @@ export interface Preferences {
     completed: boolean;
   };
   boardCardMetrics?: boolean;
-  chromeImport?: ChromeImportSummary;
-}
-
-// --- Chrome Import ---
-
-export interface ChromeProfile {
-  id: string;
-  displayName: string;
-}
-
-export interface ChromeImportSummary {
-  lastImportedAt: number;
-  profileId: string;
-  cookieCount: number;
-  skippedV11: number;
-}
-
-export interface ChromeImportProgress {
-  stage: 'starting' | 'copy' | 'cookies' | 'done' | 'error';
-  done?: number;
-  total?: number;
-  skippedV11?: number;
-  errors?: number;
-  message?: string;
-}
-
-export interface ChromeImportOptions {
-  profileId: string;
-}
-
-export interface ChromeImportResult {
-  ok: boolean;
-  cookieCount: number;
-  skippedV11: number;
-  errors: string[];
 }
 
 export const BROWSER_DEFAULT_PARTITION = 'persist:vibeyard-browser';

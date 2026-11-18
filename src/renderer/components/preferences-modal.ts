@@ -5,7 +5,6 @@ import { t } from '../i18n.js';
 import type { PreferencesContext, Section, SectionController } from './preferences/section.js';
 import { createGeneralSection } from './preferences/general-section.js';
 import { createAppearanceSection } from './preferences/appearance-section.js';
-import { createBrowserSection } from './preferences/browser-section.js';
 import { createShortcutsSection } from './preferences/shortcuts-section.js';
 import { createProfilesSection } from './preferences/profiles-section.js';
 import { createSetupSection, updateSetupBadge } from './preferences/setup-section.js';
@@ -19,7 +18,6 @@ let openModal: (() => void) | null = null;
 const SECTIONS: { id: Section; labelKey: string; create: (ctx: PreferencesContext) => SectionController }[] = [
   { id: 'general', labelKey: 'preferencesNav.general', create: createGeneralSection },
   { id: 'appearance', labelKey: 'preferencesNav.appearance', create: createAppearanceSection },
-  { id: 'browser', labelKey: 'preferencesNav.browser', create: createBrowserSection },
   { id: 'shortcuts', labelKey: 'preferencesNav.shortcuts', create: createShortcutsSection },
   { id: 'profiles', labelKey: 'preferencesNav.profiles', create: createProfilesSection },
   { id: 'setup', labelKey: 'preferencesNav.setup', create: createSetupSection },
