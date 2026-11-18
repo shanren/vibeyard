@@ -2,7 +2,6 @@ import { appState } from '../../state.js';
 import { onChange as onStatusChange } from '../../session-activity.js';
 import { onChange as onGitStatusChange } from '../../git-status.js';
 import { onChange as onUnreadChange } from '../../session-unread.js';
-import { onChange as onGithubUnreadChange } from '../../github-unread.js';
 import { ICON_TERMINAL, ICON_MENU, ICON_FILES } from '../../icons.js';
 import { loadProviderAvailability, hasMultipleAvailableProviders } from '../../provider-availability.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
@@ -59,7 +58,6 @@ export function initTabBar(): void {
   onStatusChange(updateTabStatus);
 
   onUnreadChange(render);
-  onGithubUnreadChange(render);
 
   onGitStatusChange((projectId) => {
     if (projectId === appState.activeProjectId) renderGitStatus();

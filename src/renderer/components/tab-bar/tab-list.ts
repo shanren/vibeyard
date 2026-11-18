@@ -2,7 +2,6 @@ import { appState, MAX_SESSION_NAME_LENGTH, type ProjectRecord, type SessionReco
 import type { ProviderId } from '../../../shared/types.js';
 import { getStatus, type SessionStatus } from '../../session-activity.js';
 import { isUnread } from '../../session-unread.js';
-import { hasUnreadInProject as hasGithubUnread } from '../../github-unread.js';
 import { ICON_KANBAN, ICON_TEAM } from '../../icons.js';
 import { openInspector, isInspectorOpen, getInspectedSessionId, closeInspector } from '../session-inspector.js';
 import { hasMultipleAvailableProviders, getProviderCapabilities } from '../../provider-availability.js';

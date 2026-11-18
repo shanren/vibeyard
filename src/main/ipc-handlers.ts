@@ -19,7 +19,6 @@ import { buildHandoffPrompt } from './providers/resume-handoff';
 import { projectTranscripts, searchSessions } from './session-deep-search';
 import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, SearchFilesResult, EditAction } from '../shared/types';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../shared/token-estimate';
-import { isGhAvailable, listPullRequests, listIssues, detectRepo } from './github-cli';
 import { expandUserPath, isBinaryBuffer, isLikelyBinaryFile, BINARY_SNIFF_BYTES } from './fs-utils';
 import { isMac, isWin } from './platform';
 import { shouldWarnStatusLine } from './settings-guard';
@@ -757,14 +756,6 @@ export function registerIpcHandlers(): void {
   });
 
 
-  ipcMain.handle('github:isAvailable', () => isGhAvailable());
-  ipcMain.handle('github:detectRepo', (_event, projectPath: string) => detectRepo(projectPath));
-  ipcMain.handle('github:listPRs', (_event, repo: string, state: 'open' | 'closed' | 'all', max: number) =>
-    listPullRequests(repo, { state, max })
-  );
-  ipcMain.handle('github:listIssues', (_event, repo: string, state: 'open' | 'closed' | 'all', max: number) =>
-    listIssues(repo, { state, max })
-  );
 
   ipcMain.handle('settings:reinstall', (_event, providerId: ProviderId = 'claude') => {
     try {

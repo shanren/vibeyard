@@ -292,39 +292,8 @@ export interface ProjectRecord {
   defaultEnv?: string;
   terminalPanelOpen?: boolean;
   terminalPanelHeight?: number;
-  githubLastSeen?: Record<string, string>;
 }
 
-// --- GitHub ---
-
-export interface GithubItem {
-  number: number;
-  title: string;
-  state: 'open' | 'closed';
-  user: { login: string; avatar_url: string } | null;
-  html_url: string;
-  created_at: string;
-  updated_at: string;
-  closed_at: string | null;
-  /** Present on issues that are PRs (Issues API includes PRs); absent on real issues. */
-  pull_request?: { url: string };
-  /** Optional PR-only fields populated when fetching from /pulls. */
-  draft?: boolean;
-  merged_at?: string | null;
-  comments?: number;
-  labels?: { name: string; color: string }[];
-}
-
-export interface GithubFetchResult {
-  ok: boolean;
-  items?: GithubItem[];
-  error?: string;
-}
-
-export interface GithubRepo {
-  owner: string;
-  repo: string;
-}
 
 export interface Preferences {
   soundOnSessionWaiting: boolean;

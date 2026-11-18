@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron';
-import type { CostData, ProviderId, CliProviderMeta, StatsCache, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, GithubFetchResult, GithubRepo, EditAction } from '../shared/types';
+import type { CostData, ProviderId, CliProviderMeta, StatsCache, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction } from '../shared/types';
 import { ZOOM_MIN, ZOOM_MAX } from '../shared/types';
 
 export type { CostData } from '../shared/types';
@@ -107,12 +107,6 @@ export interface VibeyardApi {
     getPrompt(id: string, name: string, args: Record<string, string>): Promise<{ success: boolean; data?: unknown; error?: string }>;
     addServer(name: string, config: unknown, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
     removeServer(name: string, filePath: string, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
-  };
-  github: {
-    isAvailable(): Promise<boolean>;
-    detectRepo(projectPath: string): Promise<GithubRepo | null>;
-    listPRs(repo: string, state: 'open' | 'closed' | 'all', max: number): Promise<GithubFetchResult>;
-    listIssues(repo: string, state: 'open' | 'closed' | 'all', max: number): Promise<GithubFetchResult>;
   };
   stats: {
     getCache(): Promise<StatsCache | null>;
@@ -280,12 +274,6 @@ const api: VibeyardApi = {
     getPrompt: (id: string, name: string, args: Record<string, string>) => ipcRenderer.invoke('mcp:getPrompt', id, name, args),
     addServer: (name: string, config: unknown, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:addServer', name, config, scope, projectPath),
     removeServer: (name: string, filePath: string, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:removeServer', name, filePath, scope, projectPath),
-  },
-  github: {
-    isAvailable: () => ipcRenderer.invoke('github:isAvailable'),
-    detectRepo: (projectPath: string) => ipcRenderer.invoke('github:detectRepo', projectPath),
-    listPRs: (repo: string, state: 'open' | 'closed' | 'all', max: number) => ipcRenderer.invoke('github:listPRs', repo, state, max),
-    listIssues: (repo: string, state: 'open' | 'closed' | 'all', max: number) => ipcRenderer.invoke('github:listIssues', repo, state, max),
   },
   stats: {
     getCache: () => ipcRenderer.invoke('stats:getCache'),
