@@ -14,12 +14,33 @@ const KEPT_SESSION_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Fields that belonged to features removed in 0.0.1. An old `state.json` carries
+ * them, and because hydrate merges rather than replaces, they would otherwise be
+ * written straight back on the next save.
+ */
+const STALE_TOP_LEVEL_FIELDS = ['team'] as const;
+const STALE_PROJECT_FIELDS = [
+  'board',
+  'overviewLayout',
+  'readiness',
+  'readinessHistory',
+  'githubLastSeen',
+] as const;
+const STALE_PREFERENCE_FIELDS = ['chromeImport', 'readinessExcludedProviders'] as const;
+
+/**
  * Apply forward-compat migrations and runtime priming to a freshly-loaded state.
  * Mutates `state` in place.
  */
 export function hydrateLoadedState(state: PersistedState, defaultPreferences: Preferences): void {
   state.preferences = { ...defaultPreferences, ...state.preferences };
+  for (const field of STALE_TOP_LEVEL_FIELDS) delete (state as Record<string, unknown>)[field];
+  for (const field of STALE_PREFERENCE_FIELDS) {
+    delete (state.preferences as unknown as Record<string, unknown>)[field];
+  }
   for (const project of state.projects) {
+    for (const field of STALE_PROJECT_FIELDS) delete (project as unknown as Record<string, unknown>)[field];
+
     project.sessions = project.sessions.filter((s) => !s.type || KEPT_SESSION_TYPES.has(s.type));
 
     // Drop references that now point at nothing: a dangling activeSessionId

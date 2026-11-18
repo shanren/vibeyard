@@ -43,7 +43,6 @@ vi.mock('./session-context.js', () => ({
 vi.mock('./provider-availability.js', () => ({
   getProviderCapabilities: vi.fn(() => null),
   getProviderAvailabilitySnapshot: vi.fn(() => null),
-  getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
 // Avoid pulling in the full session-activity dependency graph; git-status only

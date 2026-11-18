@@ -82,6 +82,34 @@ describe('hydrateLoadedState', () => {
     expect(state.projects[0].layout.splitPanes).toEqual(['keep']);
     expect(state.projects[0].layout.mode).toBe('tabs');
   });
+
+  it('drops fields that belonged to removed features', () => {
+    const state = baseState({});
+    const stale = state as unknown as Record<string, unknown>;
+    const staleProject = state.projects[0] as unknown as Record<string, unknown>;
+    const stalePrefs = state.preferences as unknown as Record<string, unknown>;
+    stale.team = { members: [] };
+    staleProject.board = { columns: [], tasks: [] };
+    staleProject.overviewLayout = { gridVersion: 1, widgets: [] };
+    staleProject.readiness = { overallScore: 1 };
+    staleProject.readinessHistory = [{ timestamp: 't', overallScore: 1, categoryScores: {} }];
+    staleProject.githubLastSeen = { 'pr:1': '2026-01-01' };
+    stalePrefs.chromeImport = { lastImportedAt: 1 };
+    stalePrefs.readinessExcludedProviders = ['claude'];
+
+    hydrateLoadedState(state, prefs);
+
+    expect(stale.team).toBeUndefined();
+    expect(staleProject.board).toBeUndefined();
+    expect(staleProject.overviewLayout).toBeUndefined();
+    expect(staleProject.readiness).toBeUndefined();
+    expect(staleProject.readinessHistory).toBeUndefined();
+    expect(staleProject.githubLastSeen).toBeUndefined();
+    // hydrate replaces the preferences object with a merged copy, so re-read it
+    const prefsAfter = state.preferences as unknown as Record<string, unknown>;
+    expect(prefsAfter.chromeImport).toBeUndefined();
+    expect(prefsAfter.readinessExcludedProviders).toBeUndefined();
+  });
 });
 
 describe('serializeForSave', () => {

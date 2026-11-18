@@ -12,8 +12,6 @@ describe('isCliSession', () => {
     'mcp-inspector',
     'diff-viewer',
     'file-reader',
-    'remote-terminal',
-    'kanban',
   ])('returns false for special pane type %s', (type) => {
     expect(isCliSession({ type })).toBe(false);
   });

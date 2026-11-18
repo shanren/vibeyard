@@ -162,7 +162,7 @@ describe('explorer-panel', () => {
     initExplorerPanel();
     expect(getById('btn-toggle-explorer').classList.contains('hidden')).toBe(false);
     appState.setPreference('sidebarViews', {
-      gitPanel: true, sessionHistory: true, discussions: true, fileTree: false, activeSessions: true,
+      gitPanel: true, sessionHistory: true, fileTree: false, activeSessions: true,
     });
     expect(getById('btn-toggle-explorer').classList.contains('hidden')).toBe(true);
   });

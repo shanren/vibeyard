@@ -1,5 +1,5 @@
 // Shared SVG icons used by both the sidebar project actions and the tab bar, so
-// the same concept (Overview / Kanban / Sessions / Team / Files) renders
+// the same concept (Sessions / Files) renders
 // identically in both places. Single source of truth — edit here, not in
 // sidebar.ts.
 //

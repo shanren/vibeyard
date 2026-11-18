@@ -26,7 +26,6 @@ vi.mock('../session-context.js', () => ({
 vi.mock('../provider-availability.js', () => ({
   getProviderCapabilities: vi.fn(() => null),
   getProviderAvailabilitySnapshot: vi.fn(() => null),
-  getTeamChatProviderMetas: vi.fn(() => []),
 }));
 
 import { appState, _resetForTesting } from '../state';

@@ -6,7 +6,7 @@ vi.mock('../state.js', () => ({
   appState: { addFileReaderSession: vi.fn() },
 }));
 vi.mock('./modal.js', () => ({ showConfirmModal: vi.fn(), showPropertiesDialog: vi.fn() }));
-vi.mock('./board/board-context-menu.js', () => ({ showContextMenu: vi.fn() }));
+vi.mock('./context-menu.js', () => ({ showContextMenu: vi.fn() }));
 vi.mock('../file-url.js', () => ({ pathToFileURL: (p: string) => `file://${p}` }));
 
 import { renderFileTree, _resetForTesting, DirEntry, isExpanded } from './file-tree.js';

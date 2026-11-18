@@ -308,8 +308,6 @@ function buildProjectActions(
   actions.className = 'project-actions';
 
   // Only the panel toggles (Files, Sessions) reflect a selected state, derived
-  // from openPanel below. The tab buttons (Overview, Kanban, Team) never mark
-  // themselves selected from the open tab — opening a tab leaves them inert.
   if (opts.historyEnabled) {
     const historyBtn = makeActionButton(t('sidebar.sessions'), ICON_SESSIONS, openPanel === 'history');
     historyBtn.classList.add('panel-toggle');

@@ -1,0 +1,37 @@
+/* Generic context menu used by the file tree (see components/context-menu.ts).
+   Moved out of the deleted kanban stylesheet; class names kept as-is. */
+.board-context-menu {
+  position: fixed;
+  z-index: 1001;
+  min-width: 160px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.board-context-menu-item {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.board-context-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.board-context-menu-item.danger {
+  color: #e94560;
+}
+
+.board-context-menu-item.danger:hover {
+  background: rgba(233, 69, 96, 0.15);
+}
+
+.board-context-menu-item.disabled {
+  color: var(--text-muted);
+  cursor: default;
+  pointer-events: none;
+}

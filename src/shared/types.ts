@@ -243,7 +243,6 @@ export interface Preferences {
   copyOnSelect?: boolean;
   keybindings?: Record<string, string>;
   theme?: 'dark' | 'light';
-  readinessExcludedProviders?: ProviderId[];
   sidebarViews?: {
     gitPanel: boolean;
     sessionHistory: boolean;

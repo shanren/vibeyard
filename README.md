@@ -34,23 +34,18 @@
 
 ## Why Vibeyard?
 
-Running AI coding agents in a bare terminal gets messy fast. Vibeyard gives you a proper workspace — a customizable project dashboard, a kanban task board, multi-session management, split panes, swarm mode, cost tracking, and session resume — so you can focus on building, not juggling terminals.
+Running AI coding agents in a bare terminal gets messy fast. Vibeyard gives you a lean workspace — multi-session management, split panes, cost tracking, and session resume — that opens instantly, so you can focus on building, not juggling terminals.
 
 ## Highlights
 
-- **Customizable project overview** — drag-and-drop dashboard per project with widgets for AI Readiness, Kanban, Team, Sessions, Provider Tools, and live GitHub PRs/Issues — pick what matters and arrange it your way
-- **Kanban task board** — plan work on a per-project board with drag-and-drop, search, and tag filtering; each card can spawn or resume a CLI session in one click, and tasks auto-move to Done when their session completes
-- **P2P session sharing** — share live terminal sessions with teammates over encrypted peer-to-peer connections (WebRTC), with read-only or read-write modes and PIN-based authentication
-- **Multi-session management** — run multiple agent sessions per project, each in its own PTY; use swarm mode for a grid view of all sessions at once and spin up new ones with `Cmd+\`
+- **Multi-session management** — run multiple agent sessions per project, each in its own PTY; split the view side by side and spin up new sessions with `Cmd+\`
 - **Multiple Claude profiles** — run separate Claude Code logins side by side (e.g. work and personal licenses), each session backed by its own isolated config directory so credentials, settings, and history never mix; pick a profile per session or set a per-project / global default
 - **Cost & context tracking** — real-time spend, token usage, and context window monitoring per session
 - **Session inspector** — real-time session telemetry with timeline, cost breakdown, tool usage stats, and context window monitoring (`Cmd+Shift+I`)
-- **AI Readiness Score** — see how well-prepared your project is for AI-assisted coding, with one-click fixes
 - **Session resume** — pick up where you left off, even after restarting the app
 - **Light and dark themes** — switch the app appearance from Preferences, including live re-theming of open terminals
 - **Smart alerts** — detects missing tools, context bloat, and session health issues
 - **Session status indicators** — color-coded dots on each tab show real-time session state (working, waiting, input needed, completed), with optional desktop notifications
-- **Embedded browser tab** — open any URL (e.g. `localhost:3000`) in a session tab, toggle element inspection to click any DOM element, and send AI editing instructions with the exact selector, text content, and page URL as context
 - **Keyboard-driven** — full shortcut support, built for speed
 
 > Supports Claude Code, OpenAI Codex CLI, and Gemini CLI. More AI CLI providers coming soon.

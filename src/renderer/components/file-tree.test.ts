@@ -10,7 +10,7 @@ vi.mock('./modal.js', () => ({
   showConfirmModal: vi.fn(),
 }));
 
-vi.mock('./board/board-context-menu.js', () => ({
+vi.mock('./context-menu.js', () => ({
   showContextMenu: vi.fn(),
 }));
 

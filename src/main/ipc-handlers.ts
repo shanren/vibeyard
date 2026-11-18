@@ -314,11 +314,6 @@ export function registerIpcHandlers(): void {
   });
 
   // Backward compatibility alias
-  ipcMain.handle('claude:getConfig', async (_event, projectPath: string) => {
-    const provider = getProvider('claude');
-    return provider.getConfig(projectPath);
-  });
-
   ipcMain.on('config:watchProject', (_event, providerId: ProviderId, projectPath: string) => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return;
@@ -725,16 +720,6 @@ export function registerIpcHandlers(): void {
   ipcMain.on('fs:unwatchDir', (_event, dirPath: string) => {
     const resolved = path.resolve(dirPath);
     unwatchDir(resolved);
-  });
-
-  ipcMain.handle('stats:getCache', () => {
-    try {
-      const statsPath = path.join(os.homedir(), '.claude', 'stats-cache.json');
-      const raw = fs.readFileSync(statsPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
   });
 
 

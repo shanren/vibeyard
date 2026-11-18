@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron';
-import type { CostData, ProviderId, CliProviderMeta, StatsCache, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction } from '../shared/types';
+import type { CostData, ProviderId, CliProviderMeta, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction } from '../shared/types';
 import { ZOOM_MIN, ZOOM_MAX } from '../shared/types';
 
 export type { CostData } from '../shared/types';
@@ -66,10 +66,6 @@ export interface VibeyardApi {
     watchProject(providerId: ProviderId, projectPath: string): void;
     onConfigChanged(callback: () => void): () => void;
   };
-  /** @deprecated Use provider namespace instead */
-  claude: {
-    getConfig(projectPath: string): Promise<ProviderConfig>;
-  };
   git: {
     getStatus(path: string): Promise<unknown>;
     getFiles(path: string): Promise<unknown>;
@@ -105,9 +101,6 @@ export interface VibeyardApi {
     getPrompt(id: string, name: string, args: Record<string, string>): Promise<{ success: boolean; data?: unknown; error?: string }>;
     addServer(name: string, config: unknown, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
     removeServer(name: string, filePath: string, scope: 'user' | 'project', projectPath?: string): Promise<{ success: boolean; error?: string }>;
-  };
-  stats: {
-    getCache(): Promise<StatsCache | null>;
   };
   settings: {
     onWarning(callback: (data: SettingsWarningData) => void): () => void;
@@ -224,9 +217,6 @@ const api: VibeyardApi = {
     watchProject: (providerId, projectPath) => ipcRenderer.send('config:watchProject', providerId, projectPath),
     onConfigChanged: (callback) => onChannel('config:changed', callback),
   },
-  claude: {
-    getConfig: (projectPath) => ipcRenderer.invoke('claude:getConfig', projectPath),
-  },
   store: {
     load: () => ipcRenderer.invoke('store:load'),
     save: (state) => ipcRenderer.invoke('store:save', state),
@@ -270,9 +260,6 @@ const api: VibeyardApi = {
     getPrompt: (id: string, name: string, args: Record<string, string>) => ipcRenderer.invoke('mcp:getPrompt', id, name, args),
     addServer: (name: string, config: unknown, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:addServer', name, config, scope, projectPath),
     removeServer: (name: string, filePath: string, scope: 'user' | 'project', projectPath?: string) => ipcRenderer.invoke('mcp:removeServer', name, filePath, scope, projectPath),
-  },
-  stats: {
-    getCache: () => ipcRenderer.invoke('stats:getCache'),
   },
   settings: {
     onWarning: (cb) => onChannel('settings:warning', (data) => cb(data as SettingsWarningData)),

@@ -29,12 +29,12 @@ describe('selectActiveSessions', () => {
   it('excludes non-CLI sessions (those with a type set)', () => {
     const projects = [project('p1', 'Alpha', [
       { id: 'cli' },
-      { id: 'kanban', type: 'kanban' },
-      { id: 'team', type: 'team' },
+      { id: 'mcp', type: 'mcp-inspector' },
+      { id: 'diff', type: 'diff-viewer' },
     ])];
     const rows = selectActiveSessions(
       projects,
-      statusMap({ cli: 'working', kanban: 'working', team: 'working' }),
+      statusMap({ cli: 'working', mcp: 'working', diff: 'working' }),
       new Set<SessionStatus>(['working']),
     );
     expect(rows.map((r) => r.sessionId)).toEqual(['cli']);
