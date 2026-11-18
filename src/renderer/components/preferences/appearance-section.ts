@@ -16,7 +16,6 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
   let zoomPrefUnsub: (() => void) | null = null;
   let sidebarCheckboxes: Record<keyof SidebarViews, HTMLInputElement> | null = null;
   let statusCheckboxes: Record<keyof ActiveStatuses, HTMLInputElement> | null = null;
-  let boardCardMetricsCheckbox: HTMLInputElement | null = null;
 
   function unsubZoom() {
     zoomPrefUnsub?.();
@@ -101,14 +100,6 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       }
       statusCheckboxes = statusBoxes;
 
-      const boardHeading = document.createElement('div');
-      boardHeading.className = 'preferences-subheading';
-      boardHeading.textContent = t('appearance.board');
-      container.appendChild(boardHeading);
-
-      const boardMetrics = toggleRow('pref-board-card-metrics', t('appearance.showMetricsOnCards'), appState.preferences.boardCardMetrics ?? true);
-      boardCardMetricsCheckbox = boardMetrics.checkbox;
-      container.appendChild(boardMetrics.row);
     },
 
     save() {
@@ -128,9 +119,6 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
           input: statusCheckboxes.input.checked,
           completed: statusCheckboxes.completed.checked,
         });
-      }
-      if (boardCardMetricsCheckbox && boardCardMetricsCheckbox.checked !== (appState.preferences.boardCardMetrics ?? true)) {
-        appState.setPreference('boardCardMetrics', boardCardMetricsCheckbox.checked);
       }
     },
 

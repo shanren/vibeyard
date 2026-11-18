@@ -19,12 +19,11 @@ import {
   buildCliSession,
   buildDiffViewerSession,
   buildFileReaderSession,
-  buildKanbanSession,
   buildMcpInspectorSession,
   buildRemoteSession,
 } from './state/session-factory.js';
 import { NavHistory } from './state/nav-history.js';
-import { createDefaultBoard, ensureProjectDefaults, hydrateLoadedState, serializeForSave } from './state/persistence.js';
+import { hydrateLoadedState, serializeForSave } from './state/persistence.js';
 import {
   buildPlanSessionArgs,
   findExistingDiffViewer,
@@ -73,7 +72,6 @@ type EventType =
   | 'sidebar-toggled'
   | 'explorer-toggled'
   | 'cli-session-cleared'
-  | 'board-changed'
   | 'profiles-changed'
   | 'state-loaded';
 
@@ -90,7 +88,6 @@ const defaultPreferences: Preferences = {
   copyOnSelect: false,
   zoomFactor: 1.0,
   sidebarViews: { gitPanel: true, sessionHistory: true, fileTree: true, activeSessions: true },
-  boardCardMetrics: true,
   locale: 'en',
 };
 
@@ -162,7 +159,6 @@ class AppState {
       this.state = loaded;
       hydrateLoadedState(this.state, defaultPreferences);
     }
-    ensureProjectDefaults(this.state);
 
     if (!this.state.starPromptDismissed) {
       this.state.appLaunchCount = (this.state.appLaunchCount ?? 0) + 1;
@@ -292,7 +288,6 @@ class AppState {
       sessions: [],
       activeSessionId: null,
       layout: { mode: 'tabs', splitPanes: [], splitDirection: 'horizontal' },
-      board: createDefaultBoard(),
       defaultProfileId,
     };
     this.state.projects.push(project);
@@ -399,23 +394,6 @@ class AppState {
     if (!project) return undefined;
 
     const session = buildRemoteSession({ id: sessionId, name: `Remote: ${hostSessionName}`, remoteHostName: hostSessionName, shareMode });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  openKanbanTab(projectId: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    if (!project.board) project.board = createDefaultBoard();
-
-    if (this.state.activeProjectId !== projectId) this.setActiveProject(projectId);
-
-    const existing = findExistingTabByType(project, 'kanban');
-    if (existing) return this.activateExistingSession(project, existing);
-
-    const session = buildKanbanSession({ projectName: project.name });
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
@@ -804,11 +782,6 @@ class AppState {
     this.emit('session-changed');
   }
 
-  notifyBoardChanged(): void {
-    this.persist();
-    this.emit('board-changed');
-  }
-
   toggleSplit(): void {
     this.toggleSwarm();
   }
@@ -904,8 +877,6 @@ class AppState {
     this.emit('session-changed');
   }
 }
-
-export { createDefaultBoard };
 
 /** @internal Test-only: reset all module state */
 export function _resetForTesting(): void {

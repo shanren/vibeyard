@@ -56,8 +56,6 @@ function initI18n(): void {
     appState.setPreference('locale', initial);
   }
 }
-import { initBoard } from './components/board/board-view.js';
-import { initBoardSessionSync } from './board-session-sync.js';
 import { getZoomFactor } from './zoom.js';
 import { confirmAppClose } from './session-close.js';
 
@@ -182,8 +180,6 @@ async function main(): Promise<void> {
   initLargeFileAlert();
   initSettingsGuard();
   initSessionInspector();
-  initBoard();
-  initBoardSessionSync();
   initFilePrompt();
   startGitPolling();
   mark('renderer:components-init');

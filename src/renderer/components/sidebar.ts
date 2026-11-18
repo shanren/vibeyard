@@ -15,7 +15,7 @@ import {
 import { attachHoverCard } from './hover-card.js';
 import { mountGitPanel, closeGitPanel } from './git-panel.js';
 import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
-import { ICON_KANBAN, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
+import { ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
 type ProjectPanel = 'history' | 'git' | null;
@@ -310,13 +310,6 @@ function buildProjectActions(
   // Only the panel toggles (Files, Sessions) reflect a selected state, derived
   // from openPanel below. The tab buttons (Overview, Kanban, Team) never mark
   // themselves selected from the open tab — opening a tab leaves them inert.
-  const kanbanBtn = makeActionButton(t('sidebar.kanban'), ICON_KANBAN, false);
-  kanbanBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    appState.openKanbanTab(project.id);
-  });
-  actions.appendChild(kanbanBtn);
-
   if (opts.historyEnabled) {
     const historyBtn = makeActionButton(t('sidebar.sessions'), ICON_SESSIONS, openPanel === 'history');
     historyBtn.classList.add('panel-toggle');
@@ -566,7 +559,6 @@ function initResizeHandle(): void {
 
 function confirmRemoveProject(project: ProjectRecord): void {
   const historyCount = project.sessionHistory?.length ?? 0;
-  const taskCount = project.board?.tasks?.length ?? 0;
 
   const parts: string[] = [];
   if (historyCount > 0) {
@@ -574,12 +566,6 @@ function confirmRemoveProject(project: ProjectRecord): void {
       ? t('sidebar.removeConfirm.sessionsHistoryNounSingular')
       : t('sidebar.removeConfirm.sessionsHistoryNounPlural');
     parts.push(t('sidebar.removeConfirm.sessionsHistory', { count: historyCount, noun }));
-  }
-  if (taskCount > 0) {
-    const noun = taskCount === 1
-      ? t('sidebar.removeConfirm.kanbanTasksNounSingular')
-      : t('sidebar.removeConfirm.kanbanTasksNounPlural');
-    parts.push(t('sidebar.removeConfirm.kanbanTasks', { count: taskCount, noun }));
   }
 
   const message = parts.length > 0

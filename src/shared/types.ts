@@ -90,8 +90,7 @@ export type SessionType =
   | 'mcp-inspector'
   | 'diff-viewer'
   | 'file-reader'
-  | 'remote-terminal'
-  | 'kanban';
+  | 'remote-terminal';
 
 export interface SessionRecord {
   id: string;
@@ -202,46 +201,6 @@ export interface ProjectInsightsData {
 
 // --- Board ---
 
-export type ColumnBehavior = 'inbox' | 'active' | 'terminal' | 'none';
-
-export interface BoardColumn {
-  id: string;
-  title: string;
-  order: number;
-  behavior: ColumnBehavior;
-  color?: string;
-  locked?: boolean;
-}
-
-export interface BoardTask {
-  id: string;
-  title: string;
-  prompt: string;
-  notes?: string;
-  columnId: string;
-  order: number;
-  sessionId?: string;
-  cliSessionId?: string;
-  providerId?: ProviderId;
-  /** Profile (CLI config dir) to run this task under; falls back to project/global default when unset. */
-  profileId?: string;
-  planMode?: boolean;
-  tags?: string[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface TagDefinition {
-  name: string;
-  color: string;
-}
-
-export interface BoardData {
-  columns: BoardColumn[];
-  tasks: BoardTask[];
-  tags?: TagDefinition[];
-}
-
 export interface ProjectRecord {
   id: string;
   name: string;
@@ -253,7 +212,6 @@ export interface ProjectRecord {
     splitPanes: string[];
     splitDirection: 'horizontal' | 'vertical';
   };
-  board?: BoardData;
   sessionHistory?: ArchivedSession[];
   insights?: ProjectInsightsData;
   defaultArgs?: string;
@@ -305,7 +263,6 @@ export interface Preferences {
     input: boolean;
     completed: boolean;
   };
-  boardCardMetrics?: boolean;
 }
 
 // --- Settings Validation ---

@@ -156,24 +156,6 @@ describe('addMcpInspectorSession()', () => {
   });
 });
 
-describe('openKanbanTab()', () => {
-  it('creates a kanban session with locked name', () => {
-    const project = addProject('Acme');
-    const session = appState.openKanbanTab(project.id)!;
-    expect(session.type).toBe('kanban');
-    expect(session.name).toBe('Acme - Kanban');
-    expect(project.activeSessionId).toBe(session.id);
-  });
-
-  it('reuses an existing kanban session instead of creating a duplicate', () => {
-    const project = addProject('Acme');
-    const first = appState.openKanbanTab(project.id)!;
-    const second = appState.openKanbanTab(project.id)!;
-    expect(second.id).toBe(first.id);
-    expect(project.sessions.filter((s) => s.type === 'kanban')).toHaveLength(1);
-  });
-});
-
 
 describe('addPlanSession()', () => {
   it('uses providerIdOverride when provided', () => {

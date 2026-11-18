@@ -53,14 +53,6 @@ import {
   showRemotePane,
   hideAllRemotePanes,
 } from './remote-terminal-pane.js';
-import {
-  createKanbanPane,
-  destroyKanbanPane,
-  showKanbanPane,
-  hideAllKanbanPanes,
-  attachKanbanToContainer,
-  getKanbanInstance,
-} from './kanban/pane.js';
 import { quickNewSession } from './tab-bar.js';
 import { isCliSession } from '../session-utils.js';
 
@@ -123,9 +115,6 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'remote-terminal') {
     // Remote terminal pane is created by share-manager before session-added fires
     renderLayout();
-  } else if (session.type === 'kanban') {
-    createKanbanPane(session.id, projectId);
-    renderLayout();
   } else {
     // Create and spawn immediately
     const cliProviderId = (session.providerId as ProviderId) || 'claude';
@@ -156,8 +145,6 @@ function onSessionRemoved(data: unknown): void {
     destroyInspectorPane(sessionId);
   } else if (getRemoteTerminalInstance(sessionId)) {
     destroyRemoteTerminal(sessionId);
-  } else if (getKanbanInstance(sessionId)) {
-    destroyKanbanPane(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -173,7 +160,6 @@ export function renderLayout(): void {
     hideAllFileViewerPanes();
     hideAllFileReaderPanes();
     hideAllRemotePanes();
-    hideAllKanbanPanes();
     setContainerClass('');
     showEmptyState(project);
     return;
@@ -199,10 +185,6 @@ export function renderLayout(): void {
       }
     } else if (session.type === 'remote-terminal') {
       // Remote terminal instances are created by share-manager, skip here
-    } else if (session.type === 'kanban') {
-      if (!getKanbanInstance(session.id)) {
-        createKanbanPane(session.id, project.id);
-      }
     } else {
       if (!getTerminalInstance(session.id)) {
         const cliProviderId = session.providerId || 'claude';
@@ -217,7 +199,6 @@ export function renderLayout(): void {
   hideAllFileViewerPanes();
   hideAllFileReaderPanes();
   hideAllRemotePanes();
-  hideAllKanbanPanes();
 
   if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
     renderSwarmMode(project);
@@ -247,9 +228,6 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'remote-terminal') {
     attachRemoteToContainer(session.id, target);
     showRemotePane(session.id, inSplit);
-  } else if (session.type === 'kanban') {
-    attachKanbanToContainer(session.id, target);
-    showKanbanPane(session.id, inSplit);
   }
 }
 

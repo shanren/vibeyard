@@ -46,17 +46,6 @@ export function buildRemoteSession(opts: BaseOpts & { id: string; name: string; 
   };
 }
 
-export function buildKanbanSession(opts: BaseOpts & { projectName: string }): SessionRecord {
-  const { projectName, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
-  return {
-    id,
-    name: `${projectName} - Kanban`,
-    type: 'kanban',
-    cliSessionId: null,
-    createdAt,
-  };
-}
-
 export function buildFileReaderSession(opts: BaseOpts & { name: string; filePath: string; lineNumber?: number }): SessionRecord {
   const { name, filePath, lineNumber, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {

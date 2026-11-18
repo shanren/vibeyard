@@ -12,8 +12,6 @@ const STROKE_ICON = (body: string): string =>
 
 // Project menu — exact glyphs from the Studio design system.
 
-export const ICON_KANBAN = STROKE_ICON('<rect x="4" y="4" width="16" height="16" rx="2.4"/><path d="M9 7v6M15 7v9"/>');
-
 export const ICON_SESSIONS = STROKE_ICON('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/>');
 
 export const ICON_FILES = STROKE_ICON('<path d="M4 6a1.5 1.5 0 0 1 1.5-1.5H9l2 2h6.5A1.5 1.5 0 0 1 19 8v9.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 4 17.5z"/>');

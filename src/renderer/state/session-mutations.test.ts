@@ -190,12 +190,5 @@ describe('renameSession()', () => {
     expect(appState.activeSession!.name).toBe('A'.repeat(MAX_SESSION_NAME_LENGTH));
   });
 
-  it('refuses to rename a kanban session', () => {
-    const project = addProject('My Project');
-    const kanban = appState.openKanbanTab(project.id)!;
-    appState.renameSession(project.id, kanban.id, 'Custom', true);
-    expect(kanban.name).toBe('My Project - Kanban');
-    expect(kanban.userRenamed).toBeUndefined();
-  });
 });
 

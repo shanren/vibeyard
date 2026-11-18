@@ -1,6 +1,6 @@
 import { appState, ProjectRecord } from '../state.js';
 import { pathToFileURL } from '../file-url.js';
-import { showContextMenu, MenuOption } from './board/board-context-menu.js';
+import { showContextMenu, MenuOption } from './context-menu.js';
 import { showConfirmModal, showPropertiesDialog } from './modal.js';
 import { FILE_PATH_DRAG_TYPE } from '../drag-types.js';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../../shared/token-estimate.js';
