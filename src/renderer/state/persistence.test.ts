@@ -3,8 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('../session-cost.js', () => ({ restoreCost: vi.fn() }));
 vi.mock('../session-context.js', () => ({ restoreContext: vi.fn() }));
 
-import { serializeForSave } from './persistence.js';
-import type { PersistedState, SessionRecord } from '../../shared/types.js';
+import { hydrateLoadedState, serializeForSave } from './persistence.js';
+import type { PersistedState, ProjectRecord, SessionRecord } from '../../shared/types.js';
 
 function baseState(session: Partial<SessionRecord>): PersistedState {
   return {
@@ -23,6 +23,66 @@ function baseState(session: Partial<SessionRecord>): PersistedState {
     ],
   };
 }
+
+describe('hydrateLoadedState', () => {
+  const prefs = {} as PersistedState['preferences'];
+
+  function stateWithSessions(sessions: SessionRecord[], patch: Partial<ProjectRecord> = {}): PersistedState {
+    const state = baseState({});
+    state.projects[0].sessions = sessions;
+    Object.assign(state.projects[0], patch);
+    return state;
+  }
+
+  it('drops sessions whose type was removed from the product', () => {
+    const state = stateWithSessions([
+      { id: 'keep', name: 'CLI', cliSessionId: null, createdAt: '0' },
+      { id: 'gone', name: 'Board', cliSessionId: null, createdAt: '0', type: 'kanban' },
+    ]);
+
+    hydrateLoadedState(state, prefs);
+
+    expect(state.projects[0].sessions.map((s) => s.id)).toEqual(['keep']);
+  });
+
+  it('keeps every session type that survived', () => {
+    const types = [undefined, 'file-reader', 'diff-viewer', 'mcp-inspector'] as const;
+    const sessions = types.map((type, i) => ({
+      id: `s${i}`, name: `S${i}`, cliSessionId: null, createdAt: '0', ...(type ? { type } : {}),
+    })) as SessionRecord[];
+
+    const state = stateWithSessions(sessions);
+    hydrateLoadedState(state, prefs);
+
+    expect(state.projects[0].sessions).toHaveLength(types.length);
+  });
+
+  it('clears activeSessionId when it pointed at a dropped session', () => {
+    const state = stateWithSessions(
+      [{ id: 'gone', name: 'Team', cliSessionId: null, createdAt: '0', type: 'team' }],
+      { activeSessionId: 'gone' },
+    );
+
+    hydrateLoadedState(state, prefs);
+
+    expect(state.projects[0].activeSessionId).toBeNull();
+  });
+
+  it('drops dangling splitPanes and demotes swarm mode to tabs', () => {
+    const state = stateWithSessions(
+      [
+        { id: 'keep', name: 'CLI', cliSessionId: null, createdAt: '0' },
+        { id: 'gone', name: 'Browser', cliSessionId: null, createdAt: '0', type: 'browser-tab' },
+      ],
+      { layout: { mode: 'swarm', splitPanes: ['keep', 'gone'], splitDirection: 'horizontal' } },
+    );
+
+    hydrateLoadedState(state, prefs);
+
+    expect(state.projects[0].layout.splitPanes).toEqual(['keep']);
+    expect(state.projects[0].layout.mode).toBe('tabs');
+  });
+});
 
 describe('serializeForSave', () => {
   it('preserves the sticky profileId on sessions (resume must reuse the config dir)', () => {
