@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FsChange } from '../../shared/types';
 
 vi.mock('../state.js', () => ({
-  appState: { addFileReaderSession: vi.fn(), addBrowserTabSession: vi.fn() },
+  appState: { addFileReaderSession: vi.fn() },
 }));
 vi.mock('./modal.js', () => ({ showConfirmModal: vi.fn(), showPropertiesDialog: vi.fn() }));
 vi.mock('./board/board-context-menu.js', () => ({ showContextMenu: vi.fn() }));

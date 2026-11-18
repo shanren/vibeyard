@@ -16,7 +16,6 @@ import { DomSearchBackend } from './components/dom-search-backend.js';
 import { CodeMirrorSearchBackend } from './components/code-editor-search.js';
 import { toggleInspector } from './components/session-inspector.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
-import { getBrowserTabInstance } from './components/browser-tab/instance.js';
 
 export function initKeybindings(): void {
   const handleCloseSession = () => {
@@ -106,16 +105,6 @@ export function initKeybindings(): void {
   shortcutManager.registerHandler('zoom-in', zoomIn);
   shortcutManager.registerHandler('zoom-out', zoomOut);
   shortcutManager.registerHandler('zoom-reset', zoomReset);
-  shortcutManager.registerHandler('browser-reload', () => {
-    const session = appState.activeSession;
-    if (session?.type !== 'browser-tab') return;
-    getBrowserTabInstance(session.id)?.webview.reload();
-  });
-  shortcutManager.registerHandler('browser-hard-reload', () => {
-    const session = appState.activeSession;
-    if (session?.type !== 'browser-tab') return;
-    getBrowserTabInstance(session.id)?.webview.reloadIgnoringCache();
-  });
 
   document.addEventListener('keydown', (e) => {
     shortcutManager.matchEvent(e);

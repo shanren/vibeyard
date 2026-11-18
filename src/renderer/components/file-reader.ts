@@ -291,20 +291,6 @@ export function createFileReaderPane(sessionId: string, filePath: string, target
     void saveFileReader(sessionId);
   });
 
-  if (isHtmlFile(filePath)) {
-    const openBtn = document.createElement('button');
-    openBtn.className = 'search-toggle-btn file-reader-open-browser';
-    openBtn.textContent = 'Open in Browser';
-    openBtn.title = 'Open this file in the embedded browser';
-    openBtn.addEventListener('click', () => {
-      const project = appState.activeProject;
-      if (project) {
-        appState.addBrowserTabSession(project.id, pathToFileURL(resolveFilePath(instance)));
-      }
-    });
-    header.insertBefore(openBtn, saveBtn);
-  }
-
   if (isMd) {
     const toggleGroup = document.createElement('div');
     toggleGroup.className = 'file-reader-view-toggle';

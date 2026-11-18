@@ -56,10 +56,6 @@ export function findExistingDiffViewer(
   );
 }
 
-export function findExistingBrowserTab(project: ProjectRecord, url: string): SessionRecord | undefined {
-  return project.sessions.find((s) => s.type === 'browser-tab' && s.browserTabUrl === url);
-}
-
 export function findExistingFileReader(project: ProjectRecord, filePath: string): SessionRecord | undefined {
   return project.sessions.find((s) => s.type === 'file-reader' && s.fileReaderPath === filePath);
 }
@@ -71,8 +67,3 @@ export function findExistingTabByType(
   return project.sessions.find((s) => s.type === type);
 }
 
-/** Try to derive a tab title from a URL hostname; fall back to the raw URL or 'Browser'. */
-export function browserTabNameFromUrl(url: string | undefined): string {
-  if (!url) return 'Browser';
-  try { return new URL(url).hostname || url; } catch { return url; }
-}

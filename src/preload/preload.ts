@@ -92,13 +92,9 @@ export interface VibeyardApi {
     focus(): void;
     getVersion(): Promise<string>;
     openExternal(url: string): Promise<void>;
-    getBrowserPreloadPath(): Promise<string>;
     onQuitting(callback: () => void): () => void;
     onConfirmClose(callback: () => void): () => void;
     closeConfirmed(): void;
-  };
-  browser: {
-    saveScreenshot(sessionId: string, dataUrl: string): Promise<string>;
   };
   mcp: {
     connect(id: string, url: string): Promise<{ success: boolean; data?: unknown; error?: string }>;
@@ -272,14 +268,9 @@ const api: VibeyardApi = {
     focus: () => { ipcRenderer.send('app:focus'); },
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
-    getBrowserPreloadPath: () => ipcRenderer.invoke('app:getBrowserPreloadPath'),
     onQuitting: (cb: () => void) => onChannel('app:quitting', cb),
     onConfirmClose: (cb: () => void) => onChannel('app:confirmClose', cb),
     closeConfirmed: () => { ipcRenderer.send('app:closeConfirmed'); },
-  },
-  browser: {
-    saveScreenshot: (sessionId: string, dataUrl: string) =>
-      ipcRenderer.invoke('browser:saveScreenshot', sessionId, dataUrl),
   },
   mcp: {
     connect: (id: string, url: string) => ipcRenderer.invoke('mcp:connect', id, url),

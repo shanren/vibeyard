@@ -273,12 +273,6 @@ function createEntry(projectId: string, depth: number, entry: DirEntry): HTMLEle
     e.stopPropagation();
     showContextMenu(e.clientX, e.clientY, [
       {
-        label: 'Open in Browser',
-        action: () => {
-          appState.addBrowserTabSession(projectId, pathToFileURL(entry.path));
-        },
-      },
-      {
         label: 'Properties',
         action: () => { showFileProperties(entry); },
       },

@@ -94,7 +94,6 @@ export type SessionType =
   | 'diff-viewer'
   | 'file-reader'
   | 'remote-terminal'
-  | 'browser-tab'
   | 'project-tab'
   | 'kanban'
   | 'team';
@@ -120,9 +119,6 @@ export interface SessionRecord {
   contextWindow?: ContextWindowInfo;
   remoteHostName?: string;
   shareMode?: 'readonly' | 'readwrite';
-  browserTabUrl?: string;
-  /** When true, the browser-tab webview uses an isolated partition that doesn't see imported cookies/passwords. */
-  browserIsolated?: boolean;
   /** Persisted: identifies which TeamMember spawned this session, if any. */
   teamMemberId?: string;
   /** Persisted, sticky: which Profile backs this session's CLI config dir. Resume must reuse it. */
@@ -405,8 +401,6 @@ export interface Preferences {
   };
   boardCardMetrics?: boolean;
 }
-
-export const BROWSER_DEFAULT_PARTITION = 'persist:vibeyard-browser';
 
 // --- Settings Validation ---
 

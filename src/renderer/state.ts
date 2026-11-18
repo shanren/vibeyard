@@ -16,7 +16,6 @@ import {
 } from './state/session-history.js';
 import {
   attachSessionToProject,
-  buildBrowserTabSession,
   buildCliSession,
   buildDiffViewerSession,
   buildFileReaderSession,
@@ -39,9 +38,7 @@ import {
   syncAgentInstall as syncAgentInstallPure,
 } from './state/team-state.js';
 import {
-  browserTabNameFromUrl,
   buildPlanSessionArgs,
-  findExistingBrowserTab,
   findExistingDiffViewer,
   findExistingFileReader,
   findExistingTabByType,
@@ -420,21 +417,6 @@ class AppState {
     if (!project) return undefined;
 
     const session = buildRemoteSession({ id: sessionId, name: `Remote: ${hostSessionName}`, remoteHostName: hostSessionName, shareMode });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  addBrowserTabSession(projectId: string, url?: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    if (url) {
-      const existing = findExistingBrowserTab(project, url);
-      if (existing) return this.activateExistingSession(project, existing);
-    }
-
-    const session = buildBrowserTabSession({ name: browserTabNameFromUrl(url), url });
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;
@@ -923,21 +905,6 @@ class AppState {
     const session = this.findSessionById(sessionId);
     if (!session) return;
     session.contextWindow = { ...context };
-    this.persist();
-  }
-
-  updateSessionBrowserTabUrl(sessionId: string, url: string): void {
-    const session = this.findSessionById(sessionId);
-    if (!session || session.browserTabUrl === url) return;
-    session.browserTabUrl = url;
-    this.persist();
-  }
-
-  setSessionBrowserIsolated(sessionId: string, isolated: boolean): void {
-    const session = this.findSessionById(sessionId);
-    if (!session) return;
-    if (!!session.browserIsolated === isolated) return;
-    session.browserIsolated = isolated || undefined;
     this.persist();
   }
 

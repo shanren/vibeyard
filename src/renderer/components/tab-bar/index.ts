@@ -13,7 +13,6 @@ import { showMoreMenu, promptNewSession, quickNewSession } from './session-menu.
 
 const btnAddSession = document.getElementById('btn-add-session')!;
 const btnAddSessionMenu = document.getElementById('btn-add-session-menu')!;
-const btnAddBrowserTab = document.getElementById('btn-add-browser-tab')!;
 const btnMore = document.getElementById('btn-more')!;
 const btnToggleExplorer = document.getElementById('btn-toggle-explorer')!;
 // Terminal toggle is wired in project-terminal.ts; we only own its icon here.
@@ -23,7 +22,6 @@ export function initTabBar(): void {
   btnToggleTerminal.innerHTML = ICON_TERMINAL;
   btnMore.innerHTML = ICON_MENU;
   btnToggleExplorer.innerHTML = ICON_FILES;
-  // Browser button keeps its CSS-drawn .toolbar-icon-browser glyph from index.html.
 
   btnAddSession.addEventListener('click', () => quickNewSession());
   btnAddSession.addEventListener('contextmenu', (e) => {
@@ -43,10 +41,6 @@ export function initTabBar(): void {
     }
     const rect = btnMore.getBoundingClientRect();
     showMoreMenu(rect.left, rect.bottom + 4);
-  });
-  btnAddBrowserTab.addEventListener('click', () => {
-    const project = appState.activeProject;
-    if (project) appState.addBrowserTabSession(project.id);
   });
   gitStatusEl.addEventListener('click', (e) => showBranchContextMenu(e));
 

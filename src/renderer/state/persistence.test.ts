@@ -72,7 +72,7 @@ describe('hydrateLoadedState', () => {
     const state = stateWithSessions(
       [
         { id: 'keep', name: 'CLI', cliSessionId: null, createdAt: '0' },
-        { id: 'gone', name: 'Browser', cliSessionId: null, createdAt: '0', type: 'browser-tab' },
+        { id: 'gone', name: 'Browser', cliSessionId: null, createdAt: '0', type: 'team' },
       ],
       { layout: { mode: 'swarm', splitPanes: ['keep', 'gone'], splitDirection: 'horizontal' } },
     );

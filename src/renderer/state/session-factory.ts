@@ -46,18 +46,6 @@ export function buildRemoteSession(opts: BaseOpts & { id: string; name: string; 
   };
 }
 
-export function buildBrowserTabSession(opts: BaseOpts & { name: string; url?: string }): SessionRecord {
-  const { name, url, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
-  return {
-    id,
-    name,
-    type: 'browser-tab',
-    browserTabUrl: url,
-    cliSessionId: null,
-    createdAt,
-  };
-}
-
 export function buildProjectTabSession(opts: BaseOpts & { projectName: string }): SessionRecord {
   const { projectName, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {
