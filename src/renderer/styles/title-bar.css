@@ -5,11 +5,12 @@
   display: none;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  min-height: 36px;
-  padding: 0 10px;
-  background: var(--tab-inactive);
-  border-bottom: 1px solid var(--border);
+  height: var(--app-titlebar-height);
+  min-height: var(--app-titlebar-height);
+  padding: 0 var(--app-space-2);
+  background: var(--vscode-titleBar-activeBackground);
+  color: var(--vscode-titleBar-activeForeground);
+  border-bottom: var(--app-line-width) solid var(--vscode-titleBar-border);
   -webkit-app-region: drag;
   user-select: none;
 }
@@ -58,5 +59,4 @@
 .titlebar-menu {
   min-width: 190px;
   border-radius: var(--radius-sm);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }

@@ -1,164 +1,379 @@
 /* ============================================================================
-   Vibeyard — "Studio" foundation tokens
-   The chosen design direction (Claude Design handoff): calm cool-slate surfaces,
-   a single iris accent (replacing the generic coral), hairline alpha borders,
-   softer radii, and a real type system — Hanken Grotesk (UI) + JetBrains Mono.
-   These map onto the app's existing variable names, so every surface that reads
-   them is re-themed automatically.
+   Vibeyard — design tokens (VS Code language)
+
+   Three layers, in this order:
+     L1  --vscode-*   1:1 with VS Code color ids (so a value can be checked
+                      against the upstream theme files by name)
+     L2  --app-*      this app's semantics, referencing L1 only
+     L3  --bg-* etc   the historical variable names, now aliases of L2, kept so
+                      the existing component CSS re-themes without a rewrite.
+                      Migration path: move files to L1/L2, then delete L3.
+
+   Values verified against VS Code `extensions/theme-defaults/themes/dark_modern.json`
+   and `light_modern.json`, plus `activitybarpart.css` (48px) and
+   `statusbarpart.css` (22px / 12px / 0 5px).
+   Spec: specs/2026-11-18-vscode-design-tokens.md
    ============================================================================ */
 
-/* Self-hosted variable fonts (CSP is font-src 'self' — no external @import). */
-@font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('../assets/fonts/hanken-grotesk.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'JetBrains Mono';
-  font-style: normal;
-  font-weight: 400 500;
-  font-display: swap;
-  src: url('../assets/fonts/jetbrains-mono.woff2') format('woff2');
-}
-
+/* ---------- L1: dark (VS Code Dark Modern) ---------- */
 :root {
-  /* surfaces — toned cool-slate instead of pure #000 for depth */
-  --bg-primary: #0e0f13;   /* main canvas            */
-  --bg-secondary: #101116; /* sidebar                */
-  --bg-tertiary: #171922;  /* cards / raised panels  */
-  --bg-hover: #1b1d27;
+  --vscode-foreground: #cccccc;
+  --vscode-descriptionForeground: #9d9d9d;
+  --vscode-disabledForeground: #6e7681;
+  --vscode-errorForeground: #f85149;
+  --vscode-icon-foreground: #cccccc;
+  --vscode-focusBorder: #0078d4;
 
-  /* text */
-  --text-primary: #e9eaf1;
-  --text-secondary: #969aac;
-  --text-muted: #5d6172;
+  --vscode-editor-background: #1f1f1f;
+  --vscode-editor-foreground: #cccccc;
+  --vscode-editorLineNumber-foreground: #6e7681;
 
-  /* accent — iris replaces the generic coral #e94560 */
-  --accent: #8588f2;
-  --accent-dim: #6d70e6;
-  --accent-soft: rgba(133, 136, 242, 0.15); /* tints, active fills */
-  --accent-fg: #ffffff;   /* text/icons on an accent fill */
-  --accent-text: #ffffff;
+  --vscode-sideBar-background: #181818;
+  --vscode-sideBar-foreground: #cccccc;
+  --vscode-sideBar-border: #2b2b2b;
+  --vscode-sideBarSectionHeader-background: #181818;
+  --vscode-sideBarSectionHeader-foreground: #cccccc;
 
-  /* borders — hairline alpha rather than a solid #333 slab */
-  --border: rgba(255, 255, 255, 0.10);
-  --border-subtle: rgba(255, 255, 255, 0.055); /* inner dividers */
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --vscode-activityBar-background: #181818;
+  --vscode-activityBar-foreground: #d7d7d7;
+  --vscode-activityBar-inactiveForeground: #868686;
+  --vscode-activityBar-border: #2b2b2b;
+  --vscode-activityBarBadge-background: #0078d4;
+  --vscode-activityBarBadge-foreground: #ffffff;
 
-  /* status / semantic (harmonised with the Studio palette) */
-  --status-working: var(--accent); /* single source of truth for the "working" state */
-  --status-waiting: #f4b400;
-  --status-input: #e67e22;
-  --status-completed: #34a853;
-  --bookmark: #e8a317;
-  --color-warning: #e2b65f;
-  --color-critical: #f0656b;
+  --vscode-titleBar-activeBackground: #181818;
+  --vscode-titleBar-activeForeground: #cccccc;
+  --vscode-titleBar-border: #2b2b2b;
 
-  --tab-active: #0e0f13;
-  --tab-inactive: #101116;
-  --pane-focus: var(--accent);
-  --pane-unfocus: var(--border);
+  --vscode-statusBar-background: #181818;
+  --vscode-statusBar-foreground: #cccccc;
+  --vscode-statusBar-border: #2b2b2b;
 
-  /* type system — a real UI sans + the mono the app already half-uses */
-  --font-ui: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --vscode-editorGroupHeader-tabsBackground: #181818;
+  --vscode-tab-activeBackground: #1f1f1f;
+  --vscode-tab-activeForeground: #ffffff;
+  --vscode-tab-inactiveBackground: #181818;
+  --vscode-tab-inactiveForeground: #9d9d9d;
+  --vscode-tab-activeBorderTop: #0078d4;
+  --vscode-tab-border: #2b2b2b;
 
-  /* radii — softer, consistent */
-  --radius-sm: 7px;
-  --radius-md: 10px;
-  --radius-lg: 13px;
+  --vscode-panel-background: #181818;
+  --vscode-panel-border: #2b2b2b;
+  --vscode-panelTitle-activeBorder: #0078d4;
 
+  --vscode-editorWidget-background: #202020;
+  --vscode-widget-border: #313131;
+
+  --vscode-input-background: #313131;
+  --vscode-input-foreground: #cccccc;
+  --vscode-input-border: #3c3c3c;
+  --vscode-dropdown-background: #313131;
+  --vscode-dropdown-foreground: #cccccc;
+  --vscode-dropdown-border: #3c3c3c;
+
+  --vscode-button-background: #0078d4;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #026ec1;
+  --vscode-button-secondaryBackground: transparent;
+  --vscode-button-secondaryForeground: #cccccc;
+
+  --vscode-badge-background: #616161;
+  --vscode-badge-foreground: #f8f8f8;
+
+  --vscode-menu-background: #1f1f1f;
+  --vscode-menu-foreground: #cccccc;
+  --vscode-menu-selectionBackground: #0078d4;
+  --vscode-menu-selectionForeground: #ffffff;
+
+  --vscode-quickInput-background: #222222;
+  --vscode-quickInput-foreground: #cccccc;
+
+  --vscode-textLink-foreground: #4daafc;
+  --vscode-terminal-foreground: #cccccc;
+
+  /* List/tree interaction surfaces (VS Code Dark+ derived defaults). */
+  --vscode-list-hoverBackground: #2a2d2e;
+  --vscode-list-inactiveSelectionBackground: #37373d;
+  --vscode-list-activeSelectionBackground: #04395e;
+  --vscode-list-activeSelectionForeground: #ffffff;
+  --vscode-list-highlightForeground: #2aaaff;
+
+  /* Chart palette — the app's session-status colors. */
+  --vscode-charts-blue: #3794ff;
+  --vscode-charts-yellow: #cca700;
+  --vscode-charts-orange: #d18616;
+  --vscode-charts-green: #89d185;
+  --vscode-charts-red: #f85149;
+  --vscode-charts-purple: #b180d7;
+
+  /* Editor token colors (VS Code Dark+). */
+  --vscode-syntax-comment: #6a9955;
+  --vscode-syntax-keyword: #569cd6;
+  --vscode-syntax-string: #ce9178;
+  --vscode-syntax-regexp: #d16969;
+  --vscode-syntax-number: #b5cea8;
+  --vscode-syntax-function: #dcdcaa;
+  --vscode-syntax-type: #4ec9b0;
+  --vscode-syntax-variable: #9cdcfe;
+  --vscode-syntax-property: #9cdcfe;
+  --vscode-syntax-operator: #d4d4d4;
+  --vscode-syntax-tag: #569cd6;
+  --vscode-syntax-link: #4daafc;
 }
 
-[data-theme="dark"] {
-  --bg-primary: #0e0f13;
-  --bg-secondary: #101116;
-  --bg-tertiary: #171922;
-  --bg-hover: #1b1d27;
-  --text-primary: #e9eaf1;
-  --text-secondary: #969aac;
-  --text-muted: #5d6172;
-  --accent: #8588f2;
-  --accent-dim: #6d70e6;
-  --accent-soft: rgba(133, 136, 242, 0.15);
-  --accent-fg: #ffffff;
-  --accent-text: #ffffff;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-subtle: rgba(255, 255, 255, 0.055);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --status-working: var(--accent);
-  --status-waiting: #f4b400;
-  --status-input: #e67e22;
-  --status-completed: #34a853;
-  --bookmark: #e8a317;
-  --color-warning: #e2b65f;
-  --color-critical: #f0656b;
-  --tab-active: #0e0f13;
-  --tab-inactive: #101116;
-  --pane-focus: var(--accent);
-  --pane-unfocus: var(--border);
-
-  /* code syntax (CodeMirror file reader) */
-  --syntax-comment: #5d6172;
-  --syntax-keyword: #b3a5ff;
-  --syntax-string: #8fd6a0;
-  --syntax-regexp: #e8a3c0;
-  --syntax-number: #e8b87e;
-  --syntax-function: #86b3f0;
-  --syntax-type: #7fc4d8;
-  --syntax-variable: #e9eaf1;
-  --syntax-property: #b0b5c7;
-  --syntax-operator: #969aac;
-  --syntax-tag: #b3a5ff;
-  --syntax-link: #86b3f0;
-  --syntax-selection: rgba(133, 136, 242, 0.35);
-}
-
-/* Light theme — same hues, inverted lightness. */
+/* ---------- L1: light (VS Code Light Modern) ---------- */
 [data-theme="light"] {
-  --bg-primary: #f7f7fb;
-  --bg-secondary: #f0f1f6;
-  --bg-tertiary: #ffffff;
-  --bg-hover: #e9eaf2;
-  --text-primary: #1c1e26;
-  --text-secondary: #5c6072;
-  --text-muted: #9498aa;
-  --accent: #5a5ee6;
-  --accent-dim: #4a4ed6;
-  --accent-soft: rgba(90, 94, 230, 0.12);
-  --accent-fg: #ffffff;
-  --accent-text: #ffffff;
-  --border: rgba(20, 22, 40, 0.12);
-  --border-subtle: rgba(20, 22, 40, 0.07);
-  --border-strong: rgba(20, 22, 40, 0.20);
-  --status-working: var(--accent);
-  --status-waiting: #f4b400;
-  --status-input: #e67e22;
-  --status-completed: #34a853;
-  --bookmark: #c98a13;
-  --color-warning: #c5912f;
-  --color-critical: #d6454a;
-  --tab-active: #f7f7fb;
-  --tab-inactive: #f0f1f6;
-  --pane-focus: var(--accent);
-  --pane-unfocus: var(--border);
+  --vscode-foreground: #3b3b3b;
+  --vscode-descriptionForeground: #3b3b3b;
+  --vscode-disabledForeground: #bdbdbd;
+  --vscode-errorForeground: #e51400;
+  --vscode-icon-foreground: #3b3b3b;
+  --vscode-focusBorder: #005fb8;
 
-  /* code syntax (CodeMirror file reader) */
-  --syntax-comment: #9498aa;
-  --syntax-keyword: #5a4fd8;
-  --syntax-string: #2e7d4f;
-  --syntax-regexp: #b04a72;
-  --syntax-number: #a05e0f;
-  --syntax-function: #2e5aa8;
-  --syntax-type: #15718f;
-  --syntax-variable: #1c1e26;
-  --syntax-property: #44485a;
-  --syntax-operator: #5c6072;
-  --syntax-tag: #5a4fd8;
-  --syntax-link: #2e5aa8;
-  --syntax-selection: rgba(90, 94, 230, 0.28);
+  --vscode-editor-background: #ffffff;
+  --vscode-editor-foreground: #3b3b3b;
+  --vscode-editorLineNumber-foreground: #6e7681;
+
+  --vscode-sideBar-background: #f8f8f8;
+  --vscode-sideBar-foreground: #3b3b3b;
+  --vscode-sideBar-border: #e5e5e5;
+  --vscode-sideBarSectionHeader-background: #f8f8f8;
+  --vscode-sideBarSectionHeader-foreground: #3b3b3b;
+
+  --vscode-activityBar-background: #f8f8f8;
+  --vscode-activityBar-foreground: #1f1f1f;
+  --vscode-activityBar-inactiveForeground: #616161;
+  --vscode-activityBar-border: #e5e5e5;
+  --vscode-activityBarBadge-background: #005fb8;
+  --vscode-activityBarBadge-foreground: #ffffff;
+
+  --vscode-titleBar-activeBackground: #f8f8f8;
+  --vscode-titleBar-activeForeground: #1e1e1e;
+  --vscode-titleBar-border: #e5e5e5;
+
+  --vscode-statusBar-background: #f8f8f8;
+  --vscode-statusBar-foreground: #3b3b3b;
+  --vscode-statusBar-border: #e5e5e5;
+
+  --vscode-editorGroupHeader-tabsBackground: #f8f8f8;
+  --vscode-tab-activeBackground: #ffffff;
+  --vscode-tab-activeForeground: #3b3b3b;
+  --vscode-tab-inactiveBackground: #f8f8f8;
+  --vscode-tab-inactiveForeground: #616161;
+  --vscode-tab-activeBorderTop: #005fb8;
+  --vscode-tab-border: #e5e5e5;
+
+  --vscode-panel-background: #f8f8f8;
+  --vscode-panel-border: #e5e5e5;
+  --vscode-panelTitle-activeBorder: #005fb8;
+
+  --vscode-editorWidget-background: #f8f8f8;
+  --vscode-widget-border: #cecece;
+
+  --vscode-input-background: #ffffff;
+  --vscode-input-foreground: #3b3b3b;
+  --vscode-input-border: #cecece;
+  --vscode-dropdown-background: #ffffff;
+  --vscode-dropdown-foreground: #3b3b3b;
+  --vscode-dropdown-border: #cecece;
+
+  --vscode-button-background: #005fb8;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #0258a8;
+  --vscode-button-secondaryBackground: transparent;
+  --vscode-button-secondaryForeground: #3b3b3b;
+
+  --vscode-badge-background: #cccccc;
+  --vscode-badge-foreground: #3b3b3b;
+
+  --vscode-menu-background: #ffffff;
+  --vscode-menu-foreground: #3b3b3b;
+  --vscode-menu-selectionBackground: #005fb8;
+  --vscode-menu-selectionForeground: #ffffff;
+
+  --vscode-quickInput-background: #f8f8f8;
+  --vscode-quickInput-foreground: #3b3b3b;
+
+  --vscode-textLink-foreground: #005fb8;
+  --vscode-terminal-foreground: #3b3b3b;
+
+  --vscode-list-hoverBackground: #f0f0f0;
+  --vscode-list-inactiveSelectionBackground: #e8e8e8;
+  --vscode-list-activeSelectionBackground: #e8e8e8;
+  --vscode-list-activeSelectionForeground: #000000;
+  --vscode-list-highlightForeground: #0066bf;
+
+  --vscode-charts-blue: #0066bf;
+  --vscode-charts-yellow: #bf8803;
+  --vscode-charts-orange: #ab5a00;
+  --vscode-charts-green: #388a34;
+  --vscode-charts-red: #e51400;
+  --vscode-charts-purple: #652d90;
+
+  --vscode-syntax-comment: #008000;
+  --vscode-syntax-keyword: #0000ff;
+  --vscode-syntax-string: #a31515;
+  --vscode-syntax-regexp: #811f3f;
+  --vscode-syntax-number: #098658;
+  --vscode-syntax-function: #795e26;
+  --vscode-syntax-type: #267f99;
+  --vscode-syntax-variable: #001080;
+  --vscode-syntax-property: #001080;
+  --vscode-syntax-operator: #3b3b3b;
+  --vscode-syntax-tag: #800000;
+  --vscode-syntax-link: #005fb8;
+}
+
+/* ---------- L2 + L3 + typography + geometry + interaction ---------- */
+:root {
+  /* Three surfaces. VS Code needs no more: panel / canvas / raised. */
+  --app-surface-canvas: var(--vscode-editor-background);
+  --app-surface-panel: var(--vscode-sideBar-background);
+  --app-surface-raised: var(--vscode-editorWidget-background);
+  --app-surface-input: var(--vscode-input-background);
+
+  --app-text: var(--vscode-foreground);
+  --app-text-secondary: var(--vscode-descriptionForeground);
+  --app-text-disabled: var(--vscode-disabledForeground);
+  --app-text-on-accent: var(--vscode-button-foreground);
+
+  --app-line: var(--vscode-panel-border);
+  --app-line-subtle: var(--vscode-tab-border);
+  --app-line-input: var(--vscode-input-border);
+
+  --app-accent: var(--vscode-focusBorder);
+  --app-accent-hover: var(--vscode-button-hoverBackground);
+  --app-accent-fill: var(--vscode-button-background);
+  --app-selection-bg: var(--vscode-list-activeSelectionBackground);
+  --app-selection-fg: var(--vscode-list-activeSelectionForeground);
+  --app-hover-bg: var(--vscode-list-hoverBackground);
+
+  --app-status-working: var(--vscode-charts-blue);
+  --app-status-waiting: var(--vscode-charts-yellow);
+  --app-status-input: var(--vscode-charts-orange);
+  --app-status-completed: var(--vscode-charts-green);
+  --app-status-idle: var(--vscode-disabledForeground);
+
+  --app-danger: var(--vscode-errorForeground);
+  --app-warning: var(--vscode-charts-yellow);
+
+  /* Typography — system stacks, nothing bundled. */
+  --app-font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
+    Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --app-font-mono: 'SF Mono', Monaco, Menlo, Consolas, 'Ubuntu Mono',
+    'Liberation Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
+  --app-font-size-base: 13px;
+  --app-font-size-sm: 12px;
+  --app-font-size-xs: 11px;
+  --app-font-size-lg: 16px;
+  --app-font-size-terminal: 13px;
+  --app-line-height-base: 1.4;
+  --app-line-height-tight: 1.2;
+  --app-font-weight-normal: 400;
+  --app-font-weight-medium: 500;
+  --app-font-weight-bold: 600;
+
+  /* Geometry — VS Code's fixed vertical rhythm. */
+  --app-activitybar-width: 48px;
+  --app-statusbar-height: 22px;
+  --app-titlebar-height: 35px;
+  --app-tab-height: 35px;
+  --app-row-height: 22px;
+  --app-section-header-height: 22px;
+  --app-toolbar-height: 35px;
+  --app-sidebar-default-width: 300px;
+  --app-sidebar-min-width: 170px;
+
+  --app-space-1: 2px;
+  --app-space-2: 4px;
+  --app-space-3: 6px;
+  --app-space-4: 8px;
+  --app-space-5: 12px;
+  --app-space-6: 16px;
+  --app-space-7: 24px;
+
+  --app-pad-row: 0 8px;
+  --app-pad-control: 4px 8px;
+  --app-pad-menu-item: 4px 10px;
+  --app-pad-panel: 8px;
+
+  --app-radius-part: 0;
+  --app-radius-control: 2px;
+  --app-radius-overlay: 6px;
+  --app-line-width: 1px;
+
+  --app-scrollbar-size: 10px;
+  --app-scrollbar-thumb: rgba(121, 121, 121, 0.4);
+  --app-scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
+
+  --app-z-sticky: 10;
+  --app-z-dropdown: 100;
+  --app-z-modal: 1000;
+  --app-z-toast: 1100;
+
+  /* VS Code barely animates: color only, and it is fast. */
+  --app-duration-color: 100ms;
+  --app-ease: ease-in-out;
+  --app-focus: 1px solid var(--vscode-focusBorder);
+  --app-focus-offset: -1px;
+}
+
+/* ---------- L3: legacy aliases (delete once components are migrated) ---------- */
+:root {
+  --bg-primary: var(--app-surface-canvas);
+  --bg-secondary: var(--app-surface-panel);
+  --bg-tertiary: var(--app-surface-raised);
+  --bg-hover: var(--app-hover-bg);
+  --bg-input: var(--app-surface-input);
+
+  --text-primary: var(--app-text);
+  --text-secondary: var(--app-text-secondary);
+  --text-muted: var(--app-text-disabled);
+
+  --accent: var(--app-accent-fill);
+  --accent-dim: var(--app-accent-hover);
+  --accent-soft: color-mix(in srgb, var(--vscode-focusBorder) 24%, transparent);
+  --accent-fg: var(--app-text-on-accent);
+  --accent-text: var(--app-text-on-accent);
+
+  --border: var(--app-line);
+  --border-subtle: var(--app-line-subtle);
+  --border-strong: var(--vscode-widget-border);
+
+  --status-working: var(--app-status-working);
+  --status-waiting: var(--app-status-waiting);
+  --status-input: var(--app-status-input);
+  --status-completed: var(--app-status-completed);
+  --color-warning: var(--app-warning);
+  --color-critical: var(--app-danger);
+  --bookmark: var(--vscode-charts-yellow);
+
+  --tab-active: var(--vscode-tab-activeBackground);
+  --tab-inactive: var(--vscode-tab-inactiveBackground);
+  --pane-focus: var(--vscode-focusBorder);
+  --pane-unfocus: var(--app-line);
+
+  /* Legacy geometry names, re-pointed at the new scale. */
+  --radius-sm: var(--app-radius-control);
+  --radius-md: var(--app-radius-control);
+  --radius-lg: var(--app-radius-overlay);
+  --font-ui: var(--app-font-ui);
+  --font-mono: var(--app-font-mono);
+
+  /* Editor token colors, kept under their existing names. */
+  --syntax-comment: var(--vscode-syntax-comment);
+  --syntax-keyword: var(--vscode-syntax-keyword);
+  --syntax-string: var(--vscode-syntax-string);
+  --syntax-regexp: var(--vscode-syntax-regexp);
+  --syntax-number: var(--vscode-syntax-number);
+  --syntax-function: var(--vscode-syntax-function);
+  --syntax-type: var(--vscode-syntax-type);
+  --syntax-variable: var(--vscode-syntax-variable);
+  --syntax-property: var(--vscode-syntax-property);
+  --syntax-operator: var(--vscode-syntax-operator);
+  --syntax-tag: var(--vscode-syntax-tag);
+  --syntax-link: var(--vscode-syntax-link);
+  --syntax-selection: color-mix(in srgb, var(--vscode-focusBorder) 35%, transparent);
 }
 
 * {
@@ -170,25 +385,27 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--text-primary);
-  background: var(--bg-primary);
+  font-family: var(--app-font-ui);
+  font-size: var(--app-font-size-base);
+  line-height: var(--app-line-height-base);
+  color: var(--app-text);
+  background: var(--app-surface-canvas);
   -webkit-font-smoothing: antialiased;
 }
 
-/* App-wide slim themed scrollbar — replaces the native browser/OS scrollbar
-   everywhere. The thumb is transparent by default and only paints while the
-   scrollable area is hovered, mimicking the macOS overlay auto-hide behaviour.
-   Per-component ::-webkit-scrollbar rules still override this. */
+:focus-visible {
+  outline: var(--app-focus);
+  outline-offset: var(--app-focus-offset);
+}
+
+/* Overlay scrollbars, VS Code style: thin, thumb only while hovering. */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: var(--app-scrollbar-size);
+  height: var(--app-scrollbar-size);
 }
 
 ::-webkit-scrollbar-thumb {
   background: transparent;
-  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-track,
@@ -197,11 +414,11 @@ html, body {
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--app-scrollbar-thumb);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--app-scrollbar-thumb-hover);
 }
 
 /* Paths, costs, branch & git status ride the mono face. */
@@ -209,24 +426,23 @@ html, body {
 .project-path,
 .git-group-header,
 .git-file-badge {
-  font-family: var(--font-mono);
+  font-family: var(--app-font-mono);
 }
 
 #app {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: var(--app-surface-panel);
 }
 
-/* Custom in-app title bar (Windows) sits above the sidebar + main area,
-   which live in a row under it. */
+/* Windows custom title bar sits above the workbench row. */
 #app-body {
   display: flex;
   flex-direction: row;
   flex: 1;
   min-height: 0;
 }
-
 
 /* Empty state */
 .empty-state {
@@ -235,80 +451,78 @@ html, body {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-muted);
-  gap: 12px;
+  color: var(--app-text-secondary);
+  gap: var(--app-space-5);
 }
 
 .empty-state-title {
-  color: var(--text-primary);
-  font-size: 18px;
-  font-weight: 700;
+  color: var(--app-text);
+  font-size: var(--app-font-size-lg);
+  font-weight: var(--app-font-weight-bold);
 }
 
 .empty-state .hint {
-  font-size: 13px;
+  font-size: var(--app-font-size-base);
 }
 
 .empty-state-project {
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
+  font-family: var(--app-font-mono);
+  color: var(--app-text-secondary);
 }
 
 .empty-state-cta {
-  margin-top: 4px;
-  padding: 10px 20px;
-  font-size: 14px;
-  border-radius: var(--radius-lg);
+  margin-top: var(--app-space-2);
+  padding: var(--app-pad-control);
+  font-size: var(--app-font-size-base);
+  border-radius: var(--app-radius-control);
 }
 
-/* Shared primary button — canonical look from the kanban "New task" (.board-add-task).
-   .btn-sm / .btn-xs = compact variants for dense card/row contexts. */
+/* Primary button — VS Code: one blue, normal weight, 2px radius. */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--accent);
-  color: var(--accent-fg);
-  font-size: 13px;
-  font-weight: 600;
+  gap: var(--app-space-3);
+  padding: 3px 11px;
+  min-height: 26px;
+  border: var(--app-line-width) solid transparent;
+  border-radius: var(--app-radius-control);
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  font-size: var(--app-font-size-base);
+  font-weight: var(--app-font-weight-normal);
+  font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+
 }
-.btn-primary:hover:not(:disabled) { background: var(--accent-dim); }
-.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { background-color: var(--vscode-button-hoverBackground); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Single-class (0,1,0) so a context's geometry class — same specificity, later in
-   source order — still wins for padding/font-size on split-button chevrons. */
-.btn-sm { gap: 4px; padding: 4px 10px; font-size: 12px; border-radius: var(--radius-sm); }
-.btn-xs { gap: 4px; padding: 2px 8px;  font-size: 11px; border-radius: var(--radius-sm); }
+.btn-sm { gap: var(--app-space-2); padding: 1px 8px; min-height: 22px; font-size: var(--app-font-size-sm); }
+.btn-xs { gap: var(--app-space-2); padding: 0 6px;  min-height: 20px; font-size: var(--app-font-size-xs); }
 
-/* Shared secondary button — neutral/bordered counterpart to .btn-primary, same box.
-   Normal weight (not 600). Works with the same .btn-sm / .btn-xs modifiers. */
+/* Secondary button — transparent with a 1px line, VS Code's default control. */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
+  gap: var(--app-space-3);
+  padding: 3px 11px;
+  min-height: 26px;
+  border: var(--app-line-width) solid var(--app-line-input);
+  border-radius: var(--app-radius-control);
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  font-size: var(--app-font-size-base);
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background var(--app-duration-color) var(--app-ease);
 }
-.btn-secondary:hover:not(:disabled) { background: var(--bg-hover); }
-.btn-secondary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-secondary:hover:not(:disabled) { background: var(--app-hover-bg); }
+.btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Danger variant — red text + red-tint hover (absorbs the old .modal-btn.danger
-   and .team-card-btn-danger destructive treatments into one rule). */
-.btn-secondary.danger { color: #ff6b6b; }
+.btn-secondary.danger { color: var(--app-danger); }
 .btn-secondary.danger:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.1);
-  border-color: rgba(255, 107, 107, 0.4);
+  background: color-mix(in srgb, var(--app-danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--app-danger) 55%, transparent);
 }

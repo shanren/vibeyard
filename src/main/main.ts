@@ -48,7 +48,7 @@ function createWindow(): void {
     // to match the dark UI so there's no white system-bar seam.
     ...(isWin ? {
       titleBarStyle: 'hidden' as const,
-      titleBarOverlay: { color: '#101116', symbolColor: '#e9eaf1', height: 36 },
+      titleBarOverlay: { color: '#181818', symbolColor: '#cccccc', height: 35 },
     } : {}),
     webPreferences: {
       preload: path.join(__dirname, '..', '..', 'preload', 'preload', 'preload.js'),

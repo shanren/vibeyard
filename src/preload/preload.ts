@@ -85,6 +85,7 @@ export interface VibeyardApi {
   app: {
     focus(): void;
     getVersion(): Promise<string>;
+    setTitleBarOverlay(options: { color: string; symbolColor: string; height?: number }): Promise<void>;
     openExternal(url: string): Promise<void>;
     onQuitting(callback: () => void): () => void;
     onConfirmClose(callback: () => void): () => void;
@@ -242,6 +243,7 @@ const api: VibeyardApi = {
   app: {
     focus: () => { ipcRenderer.send('app:focus'); },
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
+    setTitleBarOverlay: (options) => ipcRenderer.invoke('app:setTitleBarOverlay', options),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
     onQuitting: (cb: () => void) => onChannel('app:quitting', cb),
     onConfirmClose: (cb: () => void) => onChannel('app:confirmClose', cb),

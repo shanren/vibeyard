@@ -23,7 +23,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border: 2px solid transparent;
+  border: var(--app-line-width) solid transparent;
   border-radius: 0;
   overflow: hidden;
   display: flex;
@@ -136,7 +136,7 @@
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   cursor: pointer;
   font-size: 13px;
 }
@@ -325,8 +325,8 @@
   position: relative;
   width: 130px;
   height: 5px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--app-text) 7%, transparent);
   overflow: hidden;
   flex: none;
 }
@@ -334,9 +334,8 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 0;
-  border-radius: 99px;
+  border-radius: var(--app-radius-control);
   background: var(--accent);
-  box-shadow: 0 0 8px -1px var(--accent);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s, box-shadow 0.3s;
 }
 .ssl-pct {
@@ -367,8 +366,8 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--app-radius-control);
+  background: color-mix(in srgb, var(--app-text) 5%, transparent);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   font-size: 11px;
@@ -383,22 +382,20 @@
 /* Interactive segments lighten on hover (model / cost / io) */
 .session-status-bar .seg {
   padding: 2px 4px;
-  border-radius: 6px;
+  border-radius: var(--app-radius-overlay);
   transition: background 0.15s, color 0.15s;
 }
 .session-status-bar .seg:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--app-text) 5%, transparent);
   color: var(--text-primary);
 }
 
 /* Context-fill states — the meter + % shift hue as the window fills */
 .session-status-bar[data-state="warn"] .ssl-meter-fill {
   background: var(--color-warning);
-  box-shadow: 0 0 8px -1px var(--color-warning);
 }
 .session-status-bar[data-state="warn"] .ssl-pct { color: var(--color-warning); }
 .session-status-bar[data-state="crit"] .ssl-meter-fill {
   background: var(--color-critical);
-  box-shadow: 0 0 9px -1px var(--color-critical);
 }
 .session-status-bar[data-state="crit"] .ssl-pct { color: var(--color-critical); }

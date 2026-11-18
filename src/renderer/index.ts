@@ -1,6 +1,8 @@
 import { appState } from './state.js';
 import { initSidebar, promptNewProject } from './components/sidebar.js';
 import { initTitleBar } from './components/title-bar.js';
+import { initActivityBar } from './components/activity-bar.js';
+import { initStatusBar } from './components/status-bar.js';
 import { initTabBar } from './components/tab-bar.js';
 import { initExplorerPanel } from './components/explorer-panel.js';
 import { initSplitLayout } from './components/split-layout.js';
@@ -160,7 +162,9 @@ async function main(): Promise<void> {
 
   // Initialize components
   initSessionUnread();
+  initActivityBar();
   initSidebar();
+  initStatusBar();
   initTitleBar();
   initTabBar();
   initExplorerPanel();
@@ -212,8 +216,19 @@ async function main(): Promise<void> {
   initI18n();
 
   // Apply theme from loaded preferences
+  // Windows title-bar overlay must follow the theme (VS Code does the same).
+  const syncTitleBarOverlay = (theme: 'dark' | 'light') => {
+    const dark = theme !== 'light';
+    void window.vibeyard.app.setTitleBarOverlay({
+      color: dark ? '#181818' : '#f8f8f8',
+      symbolColor: dark ? '#cccccc' : '#1e1e1e',
+      height: 35,
+    });
+  };
+
   const initialTheme = appState.preferences.theme ?? 'dark';
   document.documentElement.dataset.theme = initialTheme;
+  syncTitleBarOverlay(initialTheme);
 
   // Re-apply theme (and re-theme terminals) whenever preferences change.
   // Also handles locale change: re-translate the open preferences modal in
@@ -223,6 +238,7 @@ async function main(): Promise<void> {
   appState.on('preferences-changed', () => {
     const theme = appState.preferences.theme ?? 'dark';
     document.documentElement.dataset.theme = theme;
+    syncTitleBarOverlay(theme);
     applyThemeToAllTerminals(theme);
     applyThemeToAllShells(theme);
 

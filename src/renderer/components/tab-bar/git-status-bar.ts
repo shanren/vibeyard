@@ -1,45 +1,9 @@
 import { appState } from '../../state.js';
-import { esc } from '../../dom-utils.js';
 import { getGitStatus, getActiveGitPath, refreshGitStatus } from '../../git-status.js';
 import { showModal, closeModal, setModalError } from '../modal.js';
 import { hideTabContextMenu, getActiveContextMenu, setActiveContextMenu, positionMenu } from './menu.js';
-import { gitStatusEl } from './dom.js';
 
-export function renderGitStatus(): void {
-  const project = appState.activeProject;
-  if (!project) {
-    gitStatusEl.innerHTML = '';
-    return;
-  }
-
-  const status = getGitStatus(project.id);
-  if (!status || !status.isGitRepo) {
-    gitStatusEl.innerHTML = '';
-    return;
-  }
-
-  const parts: string[] = [];
-
-  if (status.branch) {
-    parts.push(`<span class="git-branch">⎇ ${esc(status.branch)}</span>`);
-  }
-
-  const ab: string[] = [];
-  if (status.ahead > 0) ab.push(`↑${status.ahead}`);
-  if (status.behind > 0) ab.push(`↓${status.behind}`);
-  if (ab.length) {
-    parts.push(`<span class="git-ahead-behind">${ab.join(' ')}</span>`);
-  }
-
-  if (status.staged > 0) parts.push(`<span class="git-staged">+${status.staged}</span>`);
-  if (status.modified > 0) parts.push(`<span class="git-modified">~${status.modified}</span>`);
-  if (status.untracked > 0) parts.push(`<span class="git-untracked">?${status.untracked}</span>`);
-  if (status.conflicted > 0) parts.push(`<span class="git-conflicted">!${status.conflicted}</span>`);
-
-  gitStatusEl.innerHTML = parts.join(' ');
-}
-
-export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
+export async function showBranchContextMenu(e: MouseEvent, anchorEl?: HTMLElement): Promise<void> {
   e.stopPropagation();
   hideTabContextMenu();
 
@@ -54,10 +18,17 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
   const menu = document.createElement('div');
   menu.className = 'tab-context-menu';
 
-  // Position below the git status element
-  const elRect = gitStatusEl.getBoundingClientRect();
-  menu.style.left = `${elRect.left}px`;
-  menu.style.top = `${elRect.bottom + 4}px`;
+  // Position above the element that opened the menu (the status-bar branch item).
+  const anchor = anchorEl ?? (e.currentTarget as HTMLElement | null);
+  if (anchor) {
+    const elRect = anchor.getBoundingClientRect();
+    menu.style.left = `${elRect.left}px`;
+    menu.style.top = `${elRect.top - 4}px`;
+  } else {
+    menu.style.left = `${e.clientX}px`;
+    menu.style.top = `${e.clientY - 4}px`;
+  }
+  menu.style.transform = 'translateY(-100%)';
 
   // Show loading
   const loadingItem = document.createElement('div');

@@ -9,10 +9,11 @@
 .file-tree-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: var(--app-space-2);
+  height: var(--app-row-height);
+  padding: var(--app-pad-row);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--app-font-size-base);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;

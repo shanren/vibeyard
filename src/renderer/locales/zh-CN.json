@@ -289,5 +289,21 @@
       "toggleDevTools": "开发者工具",
       "reloadMainWindow": "重新加载主窗口"
     }
+  },
+  "activityBar": {
+    "projects": "项目",
+    "files": "文件",
+    "git": "源代码管理",
+    "sessions": "会话",
+    "settings": "设置"
+  },
+  "statusBar": {
+    "branchTooltip": "当前分支：{branch}",
+    "costTooltip": "本次会话花费",
+    "status": {
+      "working": "进行中",
+      "waiting": "等待中",
+      "input": "等待输入"
+    }
   }
 }

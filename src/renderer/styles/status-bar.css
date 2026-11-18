@@ -1,0 +1,68 @@
+/* Status Bar — VS Code's 22px bottom strip: branch on the left, session
+   telemetry on the right, everything 12px, items separated by 1px lines. */
+
+#status-bar {
+  display: flex;
+  align-items: stretch;
+  height: var(--app-statusbar-height);
+  min-height: var(--app-statusbar-height);
+  background: var(--vscode-statusBar-background);
+  color: var(--vscode-statusBar-foreground);
+  border-top: var(--app-line-width) solid var(--vscode-statusBar-border);
+  font-size: var(--app-font-size-sm);
+  line-height: var(--app-statusbar-height);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.status-bar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-2);
+  padding: 0 5px;
+  white-space: nowrap;
+  color: inherit;
+  background: transparent;
+  border: none;
+  font-size: var(--app-font-size-sm);
+  font-family: inherit;
+}
+
+button.status-bar-item {
+  cursor: pointer;
+}
+
+button.status-bar-item:hover {
+  background: var(--app-hover-bg);
+}
+
+.status-bar-item.hidden {
+  display: none;
+}
+
+.status-bar-spacer {
+  flex: 1;
+}
+
+/* Right-hand cluster sits flush against the window edge, like VS Code. */
+.status-bar-right {
+  display: flex;
+  align-items: stretch;
+}
+
+.status-bar-branch {
+  font-family: var(--app-font-mono);
+  font-size: var(--app-font-size-sm);
+}
+
+.status-bar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-bar-dot.working { background: var(--app-status-working); }
+.status-bar-dot.waiting { background: var(--app-status-waiting); }
+.status-bar-dot.input { background: var(--app-status-input); }
+.status-bar-dot.completed { background: var(--app-status-completed); }

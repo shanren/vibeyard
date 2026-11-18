@@ -27,11 +27,10 @@
 #modal, .modal-box {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--app-radius-overlay);
   padding: 20px;
   min-width: 380px;
   max-width: 500px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 #modal-title, .modal-title {
@@ -69,7 +68,7 @@
   padding: 8px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
@@ -84,7 +83,7 @@
   padding: 8px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
@@ -107,7 +106,7 @@
   padding: 8px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
@@ -146,8 +145,7 @@
   overflow-y: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: var(--app-radius-control);
   z-index: 310;
   margin-top: 2px;
 }
@@ -187,7 +185,7 @@
 
 .custom-select-dropdown::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 .modal-field-row {
@@ -204,7 +202,7 @@
   padding: 8px 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   cursor: pointer;
@@ -258,8 +256,7 @@
   overflow-y: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: var(--app-radius-control);
   z-index: 310;
   margin-top: 2px;
 }
@@ -289,7 +286,7 @@
 
 .path-autocomplete-dropdown::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 #modal-actions, .modal-actions {
@@ -381,7 +378,7 @@
   padding: 0;
   margin-left: 4px;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   background: transparent;
   color: var(--text-muted);
   font-size: 14px;
@@ -432,7 +429,7 @@
   flex-shrink: 0;
   font-size: 9px;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -444,7 +441,7 @@
 }
 
 .scope-badge.project {
-  background: rgba(233, 69, 96, 0.15);
+  background: color-mix(in srgb, var(--app-danger) 15%, transparent);
   color: var(--accent);
 }
 
@@ -454,7 +451,7 @@
   height: 18px;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   background: transparent;
   color: var(--text-muted);
   font-size: 14px;
@@ -509,7 +506,7 @@
   padding: 6px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-size: 12px;
@@ -542,7 +539,7 @@
 .statusline-conflict-command {
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   padding: 10px 12px;
 }
 

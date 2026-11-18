@@ -1,0 +1,84 @@
+/* Activity Bar — VS Code's 48px icon rail. Owns view switching:
+   Projects (project list) · Files (explorer) · Git · Sessions.
+   Settings lives pinned at the bottom, like VS Code's gear. */
+
+#activity-bar {
+  display: flex;
+  flex-direction: column;
+  width: var(--app-activitybar-width);
+  min-width: var(--app-activitybar-width);
+  background: var(--vscode-activityBar-background);
+  border-right: var(--app-line-width) solid var(--vscode-activityBar-border);
+  flex-shrink: 0;
+}
+
+.activity-bar-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--app-activitybar-width);
+  height: var(--app-activitybar-width);
+  border: none;
+  background: transparent;
+  color: var(--vscode-activityBar-inactiveForeground);
+  cursor: pointer;
+  padding: 0;
+}
+
+.activity-bar-item:hover {
+  color: var(--vscode-activityBar-foreground);
+}
+
+.activity-bar-item.active {
+  color: var(--vscode-activityBar-foreground);
+}
+
+/* VS Code marks the active view with a 2px accent bar on the leading edge. */
+.activity-bar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--vscode-focusBorder);
+}
+
+.activity-bar-item svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* Badge — VS Code's activity bar badge (top-right corner of the icon). */
+.activity-bar-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--app-radius-control);
+  background: var(--vscode-activityBarBadge-background);
+  color: var(--vscode-activityBarBadge-foreground);
+  font-size: var(--app-font-size-xs);
+  font-weight: var(--app-font-weight-normal);
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.activity-bar-badge.hidden {
+  display: none;
+}
+
+.activity-bar-spacer {
+  flex: 1;
+}
+
+/* Bottom cluster (settings) gets the same treatment as VS Code: a full-width
+   hit area with no accent bar. */
+.activity-bar-bottom {
+  padding-bottom: var(--app-space-2);
+}

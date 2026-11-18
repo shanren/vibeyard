@@ -414,6 +414,18 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('app:getVersion', () => app.getVersion());
 
+  // Windows draws the system min/max/close buttons in an overlay that must match
+  // the active theme; the renderer re-tints it whenever the theme changes.
+  ipcMain.handle('app:setTitleBarOverlay', (_event, options: { color: string; symbolColor: string; height?: number }) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (!win || win.isDestroyed()) return;
+    try {
+      win.setTitleBarOverlay({ color: options.color, symbolColor: options.symbolColor, height: options.height ?? 35 });
+    } catch {
+      // Not a titleBarOverlay window (macOS/Linux) — nothing to do.
+    }
+  });
+
   ipcMain.handle('app:openExternal', (_event, url: string) => {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {

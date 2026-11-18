@@ -10,10 +10,10 @@
 #tab-bar {
   display: flex;
   align-items: center;
-  background: var(--tab-inactive);
-  border-bottom: 1px solid var(--border);
-  height: 36px;
-  min-height: 36px;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: var(--app-line-width) solid var(--vscode-tab-border);
+  height: var(--app-tab-height);
+  min-height: var(--app-tab-height);
   user-select: none;
 }
 
@@ -36,14 +36,14 @@
 .tab-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 14px;
+  gap: var(--app-space-3);
+  padding: 0 10px;
   height: 100%;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 12px;
+  color: var(--vscode-tab-inactiveForeground);
+  font-size: var(--app-font-size-base);
   white-space: nowrap;
-  border-right: 1px solid var(--border);
+  border-right: var(--app-line-width) solid var(--vscode-tab-border);
   position: relative;
 }
 
@@ -52,22 +52,23 @@
 }
 
 .tab-item.active {
-  background: var(--tab-active);
-  color: var(--text-primary);
+  background: var(--vscode-tab-activeBackground);
+  color: var(--vscode-tab-activeForeground);
 }
 
 .tab-item.unread .tab-name {
   color: var(--accent);
 }
 
-.tab-item.active::after {
+/* VS Code's active-tab marker is a 1px accent line on the TOP edge. */
+.tab-item.active::before {
   content: '';
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--accent);
+  height: var(--app-line-width);
+  background: var(--vscode-tab-activeBorderTop);
 }
 
 /* Session status indicator */
@@ -169,11 +170,11 @@
 }
 
 #git-status .git-staged {
-  color: #34a853;
+  color: var(--vscode-charts-green);
 }
 
 #git-status .git-modified {
-  color: #f4b400;
+  color: var(--vscode-charts-yellow);
 }
 
 #git-status .git-untracked {
@@ -202,7 +203,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
 }
 
 .icon-btn:hover {
@@ -216,7 +217,7 @@
    github-row .icon-btn users keep their own treatment. */
 #tab-actions .icon-btn {
   width: 32px;
-  height: 32px;
+  height: var(--app-toolbar-height);
   border: none;
   border-radius: var(--radius-md);
 }
@@ -247,7 +248,7 @@
 .toolbar-icon-browser {
   box-sizing: border-box;
   border: 1px solid currentColor;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 .toolbar-icon-browser::before {
@@ -287,7 +288,7 @@
   height: 26px;
   padding: 0 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--app-font-weight-normal);
 }
 
 .new-session-main {
@@ -307,28 +308,29 @@
   font-size: 11px;
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   /* hairline divider between label and caret without breaking the fill */
-  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.18);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--app-text) 18%, transparent);
 }
 
 /* Tab context menu */
 .tab-context-menu {
   position: fixed;
-  z-index: 200;
-  min-width: 140px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: var(--app-z-dropdown);
+  min-width: 160px;
+  background: var(--vscode-menu-background);
+  color: var(--vscode-menu-foreground);
+  border: var(--app-line-width) solid var(--vscode-widget-border);
+  border-radius: var(--app-radius-control);
+  padding: var(--app-space-1) 0;
 }
 
 .tab-context-menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 14px;
-  font-size: 12px;
-  color: var(--text-primary);
+  height: var(--app-row-height);
+  padding: var(--app-pad-menu-item);
+  font-size: var(--app-font-size-base);
+  color: inherit;
   cursor: pointer;
 }
 
@@ -347,11 +349,11 @@
 }
 
 .tab-context-menu-item.danger {
-  color: #e94560;
+  color: var(--app-danger);
 }
 
 .tab-context-menu-item.danger:hover {
-  background: rgba(233, 69, 96, 0.15);
+  background: color-mix(in srgb, var(--app-danger) 15%, transparent);
 }
 
 .tab-context-menu-separator {
@@ -374,7 +376,7 @@
   padding: 4px 8px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
@@ -401,7 +403,7 @@
 
 .branch-list-container::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 /* Keyboard navigation highlight */
@@ -427,7 +429,7 @@
   width: 14px;
   height: 14px;
   vertical-align: middle;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   margin-right: 2px;
   position: relative;
   top: -1px;

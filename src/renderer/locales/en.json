@@ -289,5 +289,21 @@
       "toggleDevTools": "Toggle DevTools",
       "reloadMainWindow": "Reload Main Window"
     }
+  },
+  "activityBar": {
+    "projects": "Projects",
+    "files": "Files",
+    "git": "Source Control",
+    "sessions": "Sessions",
+    "settings": "Settings"
+  },
+  "statusBar": {
+    "branchTooltip": "Current branch: {branch}",
+    "costTooltip": "Session cost so far",
+    "status": {
+      "working": "Working",
+      "waiting": "Waiting",
+      "input": "Needs input"
+    }
   }
 }

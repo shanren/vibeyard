@@ -46,7 +46,7 @@
   font-size: 13px;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--app-radius-control);
 }
 
 .preferences-menu-item:hover {
@@ -105,7 +105,7 @@
   padding: 8px 10px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
 }
 
 .profile-row-info {
@@ -127,7 +127,7 @@
   letter-spacing: 0.5px;
   color: var(--text-muted);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--app-radius-overlay);
   padding: 1px 6px;
 }
 
@@ -181,7 +181,7 @@
   color: var(--text-primary);
   border: 1px solid var(--border);
   padding: 5px 14px;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
@@ -259,8 +259,8 @@
   margin-top: 1px;
 }
 
-.setup-check-icon.ok { color: #4caf50; }
-.setup-check-icon.error { color: #f44336; }
+.setup-check-icon.ok { color: var(--vscode-charts-green); }
+.setup-check-icon.error { color: var(--app-danger); }
 
 .setup-check-info {
   flex: 1;
@@ -285,8 +285,8 @@
   margin-top: 2px;
 }
 
-.setup-check-status.ok { color: #4caf50; }
-.setup-check-status.error { color: #f44336; }
+.setup-check-status.ok { color: var(--vscode-charts-green); }
+.setup-check-status.error { color: var(--app-danger); }
 
 .setup-check-help {
   font-size: 11px;
@@ -295,7 +295,7 @@
   font-family: monospace;
   background: var(--bg-primary);
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 .setup-fix-btn {
@@ -304,7 +304,7 @@
   border: 1px solid var(--border);
   background: var(--bg-primary);
   color: var(--text-primary);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 1px;
@@ -361,7 +361,7 @@
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: #f44336;
+  background: var(--app-danger);
   border-radius: 50%;
   margin-left: 6px;
   vertical-align: middle;
@@ -406,7 +406,7 @@
   padding: 3px 8px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-secondary);
   cursor: pointer;
   min-width: 80px;
@@ -421,7 +421,7 @@
 
 .shortcut-key-btn.recording {
   border-color: var(--accent);
-  background: rgba(233, 69, 96, 0.1);
+  background: color-mix(in srgb, var(--app-danger) 10%, transparent);
   color: var(--accent);
   animation: pulse 1s ease-in-out infinite;
 }
@@ -435,7 +435,7 @@
   padding: 2px 6px;
   background: none;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   color: var(--text-muted);
   cursor: pointer;
 }

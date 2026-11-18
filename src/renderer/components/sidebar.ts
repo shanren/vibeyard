@@ -1,6 +1,5 @@
 import { appState, MAX_PROJECT_NAME_LENGTH, ProjectRecord } from '../state.js';
 import { showModal, setModalError, closeModal, showConfirmDialog, FieldDef } from './modal.js';
-import { showPreferencesModal } from './preferences-modal.js';
 import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
 import { onChange as onActivityChange } from '../session-activity.js';
 import { getProjectStatus, projectInitial } from '../project-status.js';
@@ -18,18 +17,16 @@ import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js'
 import { ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
-type ProjectPanel = 'history' | 'git' | null;
+export type ProjectPanel = 'history' | 'git' | null;
 const projectPanelOpen = new Map<string, ProjectPanel>();
 
 const projectListEl = document.getElementById('project-list')!;
 let activeProjectContextMenu: HTMLElement | null = null;
 let renamingProjectId: string | null = null;
 const btnAddProject = document.getElementById('btn-add-project')!;
-const btnPreferences = document.getElementById('btn-preferences')!;
 const sidebarEl = document.getElementById('sidebar')!;
 const resizeHandle = document.getElementById('sidebar-resize-handle')!;
 
-const btnToggleSidebar = document.getElementById('btn-toggle-sidebar')!;
 
 const SIDEBAR_MIN = 150;
 const SIDEBAR_MAX = 500;
@@ -46,8 +43,14 @@ function applySidebarCollapsed(): void {
 
 export function initSidebar(): void {
   btnAddProject.addEventListener('click', promptNewProject);
-  btnPreferences.addEventListener('click', () => showPreferencesModal());
-  btnToggleSidebar.addEventListener('click', toggleSidebar);
+
+  // VS Code shows the current view name in the sidebar header.
+  const sidebarTitle = document.getElementById('sidebar-title');
+  const applyTitle = () => {
+    if (sidebarTitle) sidebarTitle.textContent = t('activityBar.projects');
+  };
+  applyTitle();
+  appState.on('preferences-changed', applyTitle);
 
   initResizeHandle();
   appState.on('state-loaded', () => {
@@ -369,6 +372,13 @@ function setProjectPanel(projectId: string, next: ProjectPanel): void {
 }
 
 /** Toggle the Git changes panel on the active project (Cmd/Ctrl+Shift+G). */
+/** Open (or close) one of a project card's panels. Used by the Activity Bar. */
+export function openProjectPanel(panel: ProjectPanel): void {
+  const project = appState.activeProject;
+  if (!project) return;
+  setProjectPanel(project.id, panel);
+}
+
 export function toggleGitPanel(): void {
   const project = appState.activeProject;
   if (!project) return;

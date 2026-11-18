@@ -36,7 +36,7 @@
   padding: 6px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
@@ -55,7 +55,7 @@
   padding: 6px 16px;
   background: var(--accent);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: white;
   font-size: 13px;
   cursor: pointer;
@@ -79,11 +79,11 @@
 }
 
 .mcp-status.connected {
-  background: #34a853;
+  background: var(--vscode-charts-green);
 }
 
 .mcp-status.connecting {
-  background: #f4b400;
+  background: var(--vscode-charts-yellow);
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -116,7 +116,7 @@
   padding: 8px 12px;
   background: none;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
@@ -138,7 +138,7 @@
   color: var(--text-muted);
   background: var(--bg-primary);
   padding: 1px 6px;
-  border-radius: 8px;
+  border-radius: var(--app-radius-overlay);
 }
 
 .mcp-inspector-content {
@@ -154,7 +154,7 @@
 
 .mcp-inspector-content::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
 }
 
 .mcp-empty-content {
@@ -173,7 +173,7 @@
 
 .mcp-card {
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--app-radius-overlay);
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -245,7 +245,7 @@
   padding: 6px 10px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
@@ -271,7 +271,7 @@ select.mcp-form-input {
   padding: 6px 20px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   color: var(--text-primary);
   font-size: 13px;
   cursor: pointer;
@@ -290,9 +290,9 @@ select.mcp-form-input {
 }
 
 .mcp-result {
-  background: #000000;
+  background: var(--app-surface-canvas);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   padding: 10px 12px;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
   font-size: 12px;
@@ -309,15 +309,15 @@ select.mcp-form-input {
 }
 
 .tab-status.mcp {
-  background: #4a90d9;
+  background: var(--vscode-charts-blue);
 }
 
 .tab-mcp-badge {
   font-size: 9px;
   font-weight: 700;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   background: rgba(74, 144, 217, 0.2);
-  color: #4a90d9;
+  color: var(--vscode-charts-blue);
   vertical-align: middle;
 }

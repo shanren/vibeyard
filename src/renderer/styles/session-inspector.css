@@ -87,7 +87,7 @@
   padding: 5px 12px;
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--app-radius-overlay);
   color: var(--text-muted);
   font-size: 12px;
   cursor: pointer;
@@ -112,7 +112,7 @@
   margin: 4px 6px;
   background: none;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   color: var(--text-muted);
   font-size: 10px;
   cursor: pointer;
@@ -128,7 +128,7 @@
 .inspector-autoscroll-toggle.active {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(66, 133, 244, 0.1);
+  background: color-mix(in srgb, var(--vscode-charts-blue) 10%, transparent);
 }
 
 .inspector-content {
@@ -157,7 +157,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 6px;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   flex-wrap: wrap;
 }
 
@@ -179,45 +179,45 @@
 .inspector-badge {
   font-size: 9px;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
-.inspector-badge-prompt { background: rgba(66,133,244,0.2); color: #6ea8fe; }
-.inspector-badge-tool { background: rgba(52,168,83,0.2); color: #5cb85c; }
-.inspector-badge-failure { background: rgba(233,69,96,0.2); color: #e94560; }
+.inspector-badge-prompt { background: color-mix(in srgb, var(--vscode-charts-blue) 20%, transparent); color: var(--vscode-charts-blue); }
+.inspector-badge-tool { background: color-mix(in srgb, var(--vscode-charts-green) 20%, transparent); color: var(--vscode-charts-green); }
+.inspector-badge-failure { background: color-mix(in srgb, var(--app-danger) 20%, transparent); color: var(--app-danger); }
 .inspector-badge-stop { background: rgba(160,160,176,0.15); color: var(--text-secondary); }
-.inspector-badge-start { background: rgba(187,134,252,0.2); color: #bb86fc; }
-.inspector-badge-input { background: rgba(244,180,0,0.2); color: #f4b400; }
-.inspector-badge-agent { background: rgba(0,188,212,0.2); color: #4dd0e1; }
-.inspector-badge-lifecycle { background: rgba(171,130,255,0.2); color: #ab82ff; }
-.inspector-badge-task { background: rgba(38,198,166,0.2); color: #26c6a6; }
-.inspector-badge-system { background: rgba(120,144,176,0.18); color: #90a4ae; }
-.inspector-badge-notify { background: rgba(255,152,0,0.2); color: #ffb74d; }
-.inspector-badge-mcp { background: rgba(255,255,255,0.08); color: #7dd3fc; border: 1px solid rgba(125,211,252,0.35); }
+.inspector-badge-start { background: color-mix(in srgb, var(--vscode-charts-purple) 20%, transparent); color: var(--vscode-charts-purple); }
+.inspector-badge-input { background: color-mix(in srgb, var(--vscode-charts-yellow) 20%, transparent); color: var(--vscode-charts-yellow); }
+.inspector-badge-agent { background: color-mix(in srgb, var(--vscode-charts-blue) 20%, transparent); color: var(--vscode-charts-blue); }
+.inspector-badge-lifecycle { background: color-mix(in srgb, var(--vscode-charts-purple) 20%, transparent); color: var(--vscode-charts-purple); }
+.inspector-badge-task { background: color-mix(in srgb, var(--vscode-charts-green) 20%, transparent); color: var(--vscode-charts-green); }
+.inspector-badge-system { background: rgba(120,144,176,0.18); color: var(--vscode-disabledForeground); }
+.inspector-badge-notify { background: color-mix(in srgb, var(--vscode-charts-orange) 20%, transparent); color: var(--vscode-charts-orange); }
+.inspector-badge-mcp { background: color-mix(in srgb, var(--app-text) 8%, transparent); color: var(--vscode-charts-blue); border: 1px solid color-mix(in srgb, var(--vscode-charts-blue) 35%, transparent); }
 .inspector-badge-default { background: var(--bg-tertiary); color: var(--text-muted); }
 
 /* --- Agent group nesting --- */
 
 .inspector-agent-group {
-  border-left: 2px solid rgba(0,188,212,0.3);
-  border-radius: 3px;
+  border-left: 2px solid color-mix(in srgb, var(--vscode-charts-blue) 30%, transparent);
+  border-radius: var(--app-radius-control);
   margin: 1px 0;
 }
 
 .inspector-agent-header {
-  background: rgba(0,188,212,0.05);
+  background: color-mix(in srgb, var(--vscode-charts-blue) 5%, transparent);
   cursor: pointer;
 }
 
 .inspector-agent-header:hover {
-  background: rgba(0,188,212,0.1);
+  background: color-mix(in srgb, var(--vscode-charts-blue) 10%, transparent);
 }
 
 .inspector-agent-running {
-  border-left-color: rgba(0,188,212,0.6);
+  border-left-color: color-mix(in srgb, var(--vscode-charts-blue) 60%, transparent);
   border-left-style: dashed;
 }
 
@@ -250,7 +250,7 @@
 }
 
 .inspector-cost-delta {
-  color: #34a853;
+  color: var(--vscode-charts-green);
   font-size: 10px;
   font-family: monospace;
 }
@@ -260,8 +260,8 @@
   margin-top: 4px;
   padding: 6px 8px;
   background: var(--bg-primary);
-  border-radius: 3px;
-  border-left: 2px solid #7dd3fc;
+  border-radius: var(--app-radius-control);
+  border-left: 2px solid var(--vscode-charts-blue);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -293,7 +293,7 @@
   margin: 0;
   padding: 0;
   background: transparent;
-  border-radius: 3px;
+  border-radius: var(--app-radius-control);
   color: var(--text-secondary);
   font-size: 10px;
   font-family: monospace;
@@ -310,8 +310,8 @@
   margin-top: 4px;
   padding: 6px 8px;
   background: var(--bg-primary);
-  border-radius: 3px;
-  border-left: 2px solid #4dd0e1;
+  border-radius: var(--app-radius-control);
+  border-left: 2px solid var(--vscode-charts-blue);
   font-size: 10px;
   font-family: monospace;
   max-height: 300px;
@@ -367,7 +367,7 @@
   flex: 1;
   min-width: 80px;
   background: var(--bg-tertiary);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   padding: 8px;
   text-align: center;
 }
@@ -453,7 +453,7 @@
 
 .inspector-bar-fill {
   height: 100%;
-  background: #4285f4;
+  background: var(--vscode-charts-blue);
   border-radius: 2px;
   transition: width 0.3s;
 }
@@ -480,14 +480,14 @@
 .inspector-gauge-bar {
   height: 16px;
   background: var(--bg-tertiary);
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   overflow: hidden;
   margin-bottom: 4px;
 }
 
 .inspector-gauge-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--app-radius-control);
   transition: width 0.3s;
 }
 
