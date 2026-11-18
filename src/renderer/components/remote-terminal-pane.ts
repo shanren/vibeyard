@@ -46,12 +46,6 @@ export function createRemoteTerminalPane(
   const disconnectBtn = document.createElement('button');
   disconnectBtn.className = 'remote-disconnect-btn';
   disconnectBtn.textContent = 'Disconnect';
-  disconnectBtn.addEventListener('click', () => {
-    // Import dynamically to avoid circular dependency
-    import('../sharing/share-manager.js').then(({ disconnectRemoteSession }) => {
-      disconnectRemoteSession(sessionId);
-    });
-  });
   statusBar.appendChild(modeLabel);
   statusBar.appendChild(disconnectBtn);
   element.appendChild(statusBar);

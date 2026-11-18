@@ -4,9 +4,6 @@ import { getStatus, type SessionStatus } from '../../session-activity.js';
 import { isUnread } from '../../session-unread.js';
 import { hasUnreadInProject as hasGithubUnread } from '../../github-unread.js';
 import { ICON_KANBAN, ICON_TEAM, ICON_OVERVIEW } from '../../icons.js';
-import { showShareDialog } from '../share-dialog.js';
-import { isSharing } from '../../sharing/peer-host.js';
-import { endShare } from '../../sharing/share-manager.js';
 import { openInspector, isInspectorOpen, getInspectedSessionId, closeInspector } from '../session-inspector.js';
 import { hasMultipleAvailableProviders, getProviderCapabilities } from '../../provider-availability.js';
 import { buildResumeWithProviderItems } from '../resume-with-provider-menu.js';
@@ -168,37 +165,10 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
     });
   }
 
-  // Share menu items — only for CLI sessions (not special types)
   const isCli = isCliSession(session);
   const isRemote = session.type === 'remote-terminal';
   const providerCapabilities = getProviderCapabilities(session.providerId || 'claude');
   const canInspect = isCli && providerCapabilities?.hookStatus !== false;
-  const currentlySharing = isSharing(session.id);
-
-  const shareSeparator = document.createElement('div');
-  shareSeparator.className = 'tab-context-menu-separator';
-
-  const shareItem = document.createElement('div');
-  shareItem.className = 'tab-context-menu-item' + (!isCli || currentlySharing ? ' disabled' : '');
-  shareItem.textContent = t('contextMenu.tab.shareSession');
-  if (isCli && !currentlySharing) {
-    shareItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hideTabContextMenu();
-      showShareDialog(session.id);
-    });
-  }
-
-  const stopShareItem = document.createElement('div');
-  stopShareItem.className = 'tab-context-menu-item' + (!currentlySharing ? ' disabled' : '');
-  stopShareItem.textContent = t('contextMenu.tab.stopSharing');
-  if (currentlySharing) {
-    stopShareItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hideTabContextMenu();
-      endShare(session.id);
-    });
-  }
 
   menu.appendChild(renameItem);
   menu.appendChild(moveLeftItem);
@@ -256,11 +226,6 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   const moveSeparator = document.createElement('div');
   moveSeparator.className = 'tab-context-menu-separator';
   menu.appendChild(moveSeparator);
-  if (isCli || isRemote) {
-    menu.appendChild(shareSeparator);
-    if (!currentlySharing) menu.appendChild(shareItem);
-    if (currentlySharing) menu.appendChild(stopShareItem);
-  }
   if (canInspect) {
     const inspectSeparator = document.createElement('div');
     inspectSeparator.className = 'tab-context-menu-separator';
@@ -311,21 +276,18 @@ export function render(): void {
     const isKanban = session.type === 'kanban';
     const isTeam = session.type === 'team';
     const isSpecial = isMcp || isDiff || isFileReader || isRemoteTab || isBrowserTab || isProjectTab || isKanban || isTeam;
-    const sharing = isSharing(session.id);
     const displayName = isProjectTab ? t('tab.title.overview', { name: project.name }) : isKanban ? t('tab.title.kanban', { name: project.name }) : isTeam ? t('tab.title.team', { name: project.name }) : session.name;
-    tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '') + (sharing ? ' tab-sharing' : '') + (isRemoteTab ? ' tab-remote' : '');
+    tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '') + + (isRemoteTab ? ' tab-remote' : '');
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
     tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : isRemoteTab ? t('tab.tooltip.remote', { name: session.remoteHostName || session.name }) : isBrowserTab ? t('tab.tooltip.browser', { url: session.browserTabUrl || t('tab.tooltip.browserNew') }) : isProjectTab ? t('tab.tooltip.projectTools') : isKanban ? t('tab.tooltip.kanbanBoard') : isTeam ? t('tab.tooltip.team') : buildTooltip(getStatus(session.id), session.cliSessionId);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
     const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : isRemoteTab ? '<span class="tab-remote-badge">P2P</span> ' : isBrowserTab ? '<span class="tab-browser-badge">WEB</span> ' : isProjectTab ? `<span class="tab-project-badge">${ICON_OVERVIEW}</span> ` : isKanban ? `<span class="tab-kanban-badge">${ICON_KANBAN}</span> ` : isTeam ? `<span class="tab-team-badge">${ICON_TEAM}</span> ` : !isSpecial ? providerIcon : '';
-    const shareIndicator = sharing ? `<span class="tab-share-indicator" title="${esc(t('tab.shareIndicatorTooltip'))}"></span>` : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
       ${statusDot}
       <span class="tab-name">${namePrefix}${esc(displayName)}</span>
-      ${shareIndicator}
       <span class="tab-close" title="${esc(t('tab.closeTooltip'))}">&times;</span>
     `;
 

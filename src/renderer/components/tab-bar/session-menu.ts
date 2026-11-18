@@ -2,7 +2,6 @@ import { appState, type SessionRecord } from '../../state.js';
 import type { ProviderId } from '../../../shared/types.js';
 import { showModal, closeModal, setModalError, FieldDef } from '../modal.js';
 import { findInvalidEnvLines } from '../../../shared/env-vars.js';
-import { showJoinDialog } from '../join-dialog.js';
 import { loadProviderAvailability, getProviderAvailabilitySnapshot } from '../../provider-availability.js';
 import { hideTabContextMenu, setActiveContextMenu, positionMenu } from './menu.js';
 import { t } from '../../i18n.js';
@@ -48,8 +47,6 @@ export function showMoreMenu(x: number, y: number): void {
   addItem(swarmActive ? t('tab.moreMenu.swarmLayoutActive') : t('tab.moreMenu.swarmLayout'), () => appState.toggleSwarm());
   addItem(t('tab.moreMenu.mcpInspector'), () => addMcpInspector());
 
-  addSeparator();
-  addItem(t('tab.moreMenu.joinRemoteSession'), () => showJoinDialog());
 
   document.body.appendChild(menu);
   setActiveContextMenu(menu);

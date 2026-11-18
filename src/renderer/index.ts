@@ -28,8 +28,6 @@ import { initToolAlert } from './components/tool-alert.js';
 import { initLargeFileDetector } from './tools/large-file-detector.js';
 import { initLargeFileAlert } from './components/large-file-alert.js';
 import { initSettingsGuard } from './components/settings-guard-ui.js';
-import { initShareManager, forwardPtyData, endShare, cleanupAllShares } from './sharing/share-manager.js';
-import { isSharing } from './sharing/peer-host.js';
 import { addEvents as addInspectorEvents } from './session-inspector-state.js';
 import type { InspectorEvent } from '../shared/types.js';
 import { getContext } from './session-context.js';
@@ -68,7 +66,6 @@ import { confirmAppClose } from './session-close.js';
 let isQuitting = false;
 window.vibeyard.app.onQuitting(() => {
   isQuitting = true;
-  cleanupAllShares();
 });
 
 window.vibeyard.app.onConfirmClose(() => {
@@ -86,10 +83,6 @@ async function main(): Promise<void> {
       parseTitle(sessionId, data);
       if (data.includes('Interrupted')) {
         notifyInterrupt(sessionId);
-      }
-      // Forward to P2P share if active
-      if (isSharing(sessionId)) {
-        forwardPtyData(sessionId, data);
       }
     }
   });
@@ -156,10 +149,6 @@ async function main(): Promise<void> {
     if (isShellSessionId(sessionId)) {
       handleShellPtyExit(sessionId, exitCode);
     } else if (!isMcpSession(sessionId) && !isQuitting) {
-      // End any active P2P share for this session
-      if (isSharing(sessionId)) {
-        endShare(sessionId);
-      }
       // Auto-close the session when CLI exits (skip during app quit to preserve session state)
       const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
       if (project) {
@@ -195,7 +184,6 @@ async function main(): Promise<void> {
   initLargeFileDetector();
   initLargeFileAlert();
   initSettingsGuard();
-  initShareManager();
   initSessionInspector();
   initBoard();
   initBoardSessionSync();

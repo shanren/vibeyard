@@ -4,7 +4,6 @@ import { onChange as onGitStatusChange } from '../../git-status.js';
 import { onChange as onUnreadChange } from '../../session-unread.js';
 import { onChange as onGithubUnreadChange } from '../../github-unread.js';
 import { ICON_TERMINAL, ICON_MENU, ICON_FILES } from '../../icons.js';
-import { onShareChange } from '../../sharing/share-manager.js';
 import { loadProviderAvailability, hasMultipleAvailableProviders } from '../../provider-availability.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
 import { gitStatusEl } from './dom.js';
