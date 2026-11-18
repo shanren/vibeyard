@@ -58,7 +58,6 @@ export class ClaudeProvider implements CliProvider {
       shiftEnterNewline: true,
       pendingPromptTrigger: 'startup-arg',
       planModeArg: '--permission-mode plan',
-      systemPromptInjection: true,
     },
     defaultContextWindowSize: 200_000,
   };
@@ -82,7 +81,7 @@ export class ClaudeProvider implements CliProvider {
     return env;
   }
 
-  buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string; initialPrompt?: string; systemPrompt?: string }): string[] {
+  buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string; initialPrompt?: string}): string[] {
     const args: string[] = [];
     if (opts.cliSessionId) {
       if (opts.isResume) {
@@ -90,9 +89,6 @@ export class ClaudeProvider implements CliProvider {
       } else {
         args.push('--session-id', opts.cliSessionId);
       }
-    }
-    if (opts.systemPrompt) {
-      args.push('--append-system-prompt', opts.systemPrompt);
     }
     if (opts.initialPrompt) {
       args.push(opts.initialPrompt);

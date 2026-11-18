@@ -492,15 +492,6 @@ class AppState {
     this.emit('project-changed');
   }
 
-  consumePendingSystemPrompt(projectId: string, sessionId: string): string | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    const session = project?.sessions.find((s) => s.id === sessionId);
-    if (!session?.pendingSystemPrompt) return undefined;
-    const prompt = session.pendingSystemPrompt;
-    delete session.pendingSystemPrompt;
-    return prompt;
-  }
-
   addFileReaderSession(projectId: string, filePath: string, lineNumber?: number): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;

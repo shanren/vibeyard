@@ -31,7 +31,6 @@ export interface CliProviderCapabilities {
   shiftEnterNewline: boolean;
   pendingPromptTrigger: PendingPromptTrigger;
   planModeArg?: string;
-  systemPromptInjection: boolean;
 }
 
 export interface CliProviderMeta {
@@ -120,7 +119,6 @@ export interface SessionRecord {
   /** Transient: initial prompt to inject on first spawn. Not persisted. */
   pendingInitialPrompt?: string;
   /** Transient: system prompt to attach on first spawn. Not persisted (resume must not re-inject). */
-  pendingSystemPrompt?: string;
 }
 
 // --- Team ---

@@ -113,7 +113,7 @@ export function resetHookWatcher(): void {
 }
 
 export function registerIpcHandlers(): void {
-  ipcMain.handle('pty:create', async (_event, sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs: string, providerId: ProviderId = 'claude', initialPrompt?: string, systemPrompt?: string, envVars: string = '', configDir?: string) => {
+  ipcMain.handle('pty:create', async (_event, sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs: string, providerId: ProviderId = 'claude', initialPrompt?: string, envVars: string = '', configDir?: string) => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return;
 
@@ -139,7 +139,6 @@ export function registerIpcHandlers(): void {
       extraArgs,
       providerId,
       initialPrompt,
-      systemPrompt,
       envVars,
       (data) => {
         const w = BrowserWindow.getAllWindows()[0];

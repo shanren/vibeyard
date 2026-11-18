@@ -33,7 +33,6 @@ interface TerminalInstance {
   spawned: boolean;
   exited: boolean;
   pendingPrompt: string | null;
-  pendingSystemPrompt: string | null;
   pendingPromptTimer: ReturnType<typeof setTimeout> | null;
   /**
    * Peak output-token count seen this session, used to render a stable "out"
@@ -143,7 +142,6 @@ export function createTerminalPane(
     spawned: false,
     exited: false,
     pendingPrompt: null,
-    pendingSystemPrompt: null,
     pendingPromptTimer: null,
     peakOutputTokens: 0,
   };
@@ -235,13 +233,6 @@ export function setPendingPrompt(sessionId: string, prompt: string): void {
   }
 }
 
-export function setPendingSystemPrompt(sessionId: string, prompt: string): void {
-  const instance = instances.get(sessionId);
-  if (instance) {
-    instance.pendingSystemPrompt = prompt;
-  }
-}
-
 function collectDroppedPaths(dt: DataTransfer | null): string[] {
   if (!dt) return [];
   const internal = dt.getData(FILE_PATH_DRAG_TYPE);
@@ -295,12 +286,7 @@ export async function spawnTerminal(sessionId: string): Promise<void> {
     initialPrompt = instance.pendingPrompt;
     instance.pendingPrompt = null;
   }
-  let systemPrompt: string | undefined;
-  if (instance.pendingSystemPrompt) {
-    systemPrompt = instance.pendingSystemPrompt;
-    instance.pendingSystemPrompt = null;
-  }
-  await window.vibeyard.pty.create(sessionId, instance.projectPath, instance.cliSessionId, instance.isResume, instance.args, instance.providerId, initialPrompt, systemPrompt, instance.envVars, instance.configDir);
+  await window.vibeyard.pty.create(sessionId, instance.projectPath, instance.cliSessionId, instance.isResume, instance.args, instance.providerId, initialPrompt, instance.envVars, instance.configDir);
   instance.isResume = true; // subsequent spawns (e.g. Restart Session) should resume
 }
 

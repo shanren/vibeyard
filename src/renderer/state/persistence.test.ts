@@ -90,12 +90,11 @@ describe('serializeForSave', () => {
     expect(out.projects[0].sessions[0].profileId).toBe('work');
   });
 
-  it('strips the transient pending prompts', () => {
-    const out = serializeForSave(baseState({ profileId: 'work', pendingInitialPrompt: 'hi', pendingSystemPrompt: 'sys' }));
+  it('strips the transient pending prompt', () => {
+    const out = serializeForSave(baseState({ profileId: 'work', pendingInitialPrompt: 'hi' }));
     const s = out.projects[0].sessions[0];
     expect(s.profileId).toBe('work');
     expect(s.pendingInitialPrompt).toBeUndefined();
-    expect(s.pendingSystemPrompt).toBeUndefined();
   });
 
   it('passes the top-level profiles array through unchanged', () => {

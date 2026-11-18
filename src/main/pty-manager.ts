@@ -167,7 +167,6 @@ export async function spawnPty(
   extraArgs: string,
   providerId: ProviderId,
   initialPrompt: string | undefined,
-  systemPrompt: string | undefined,
   envVars: string,
   onData: (data: string) => void,
   onExit: (exitCode: number, signal?: number) => void,
@@ -233,7 +232,7 @@ export async function spawnPty(
   // User-provided env vars are merged last so they can override anything,
   // including provider-set vars like PATH (see plan: "user vars win").
   Object.assign(env, parseEnvVars(envVars));
-  const args = provider.buildArgs({ cliSessionId, isResume, extraArgs, initialPrompt, systemPrompt });
+  const args = provider.buildArgs({ cliSessionId, isResume, extraArgs, initialPrompt });
   const resolvedShell = provider.resolveBinaryPath();
   const { shell, args: spawnArgs } = resolveWindowsShell(resolvedShell, args);
 

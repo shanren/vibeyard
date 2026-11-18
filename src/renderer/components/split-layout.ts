@@ -16,7 +16,6 @@ import {
   setFocused,
   spawnTerminal,
   setPendingPrompt,
-  setPendingSystemPrompt,
   destroyTerminal,
   getTerminalInstance,
 } from './terminal-pane.js';
@@ -135,10 +134,6 @@ function onSessionAdded(data: unknown): void {
     const pending = appState.consumePendingInitialPrompt(project.id, session.id);
     if (pending) {
       setPendingPrompt(session.id, pending);
-    }
-    const pendingSys = appState.consumePendingSystemPrompt(project.id, session.id);
-    if (pendingSys) {
-      setPendingSystemPrompt(session.id, pendingSys);
     }
     renderLayout();
 
