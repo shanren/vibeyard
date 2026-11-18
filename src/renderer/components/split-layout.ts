@@ -62,14 +62,6 @@ import {
   attachKanbanToContainer,
   getKanbanInstance,
 } from './kanban/pane.js';
-import {
-  createTeamPane,
-  destroyTeamPane,
-  showTeamPane,
-  hideAllTeamPanes,
-  attachTeamToContainer,
-  getTeamInstance,
-} from './team/pane.js';
 import { quickNewSession } from './tab-bar.js';
 import { isCliSession } from '../session-utils.js';
 
@@ -135,9 +127,6 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'kanban') {
     createKanbanPane(session.id, projectId);
     renderLayout();
-  } else if (session.type === 'team') {
-    createTeamPane(session.id, projectId);
-    renderLayout();
   } else {
     // Create and spawn immediately
     const cliProviderId = (session.providerId as ProviderId) || 'claude';
@@ -174,8 +163,6 @@ function onSessionRemoved(data: unknown): void {
     destroyRemoteTerminal(sessionId);
   } else if (getKanbanInstance(sessionId)) {
     destroyKanbanPane(sessionId);
-  } else if (getTeamInstance(sessionId)) {
-    destroyTeamPane(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -192,7 +179,6 @@ export function renderLayout(): void {
     hideAllFileReaderPanes();
     hideAllRemotePanes();
     hideAllKanbanPanes();
-    hideAllTeamPanes();
     setContainerClass('');
     showEmptyState(project);
     return;
@@ -222,10 +208,6 @@ export function renderLayout(): void {
       if (!getKanbanInstance(session.id)) {
         createKanbanPane(session.id, project.id);
       }
-    } else if (session.type === 'team') {
-      if (!getTeamInstance(session.id)) {
-        createTeamPane(session.id, project.id);
-      }
     } else {
       if (!getTerminalInstance(session.id)) {
         const cliProviderId = session.providerId || 'claude';
@@ -241,7 +223,6 @@ export function renderLayout(): void {
   hideAllFileReaderPanes();
   hideAllRemotePanes();
   hideAllKanbanPanes();
-  hideAllTeamPanes();
 
   if (project.layout.mode === 'swarm' && project.layout.splitPanes.length >= 1) {
     renderSwarmMode(project);
@@ -274,9 +255,6 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'kanban') {
     attachKanbanToContainer(session.id, target);
     showKanbanPane(session.id, inSplit);
-  } else if (session.type === 'team') {
-    attachTeamToContainer(session.id, target);
-    showTeamPane(session.id, inSplit);
   }
 }
 

@@ -1,7 +1,5 @@
 // Shared type definitions used across main, preload, and renderer processes.
 
-import type { TeamDomain } from './team-config.js';
-
 export const ZOOM_MIN = 0.75;
 export const ZOOM_MAX = 2.0;
 
@@ -94,8 +92,7 @@ export type SessionType =
   | 'diff-viewer'
   | 'file-reader'
   | 'remote-terminal'
-  | 'kanban'
-  | 'team';
+  | 'kanban';
 
 export interface SessionRecord {
   id: string;
@@ -118,8 +115,6 @@ export interface SessionRecord {
   contextWindow?: ContextWindowInfo;
   remoteHostName?: string;
   shareMode?: 'readonly' | 'readwrite';
-  /** Persisted: identifies which TeamMember spawned this session, if any. */
-  teamMemberId?: string;
   /** Persisted, sticky: which Profile backs this session's CLI config dir. Resume must reuse it. */
   profileId?: string;
   /** Transient: initial prompt to inject on first spawn. Not persisted. */
@@ -129,28 +124,6 @@ export interface SessionRecord {
 }
 
 // --- Team ---
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  description?: string;
-  domain?: TeamDomain;
-  systemPrompt: string;
-  source: 'predefined' | 'custom';
-  sourceUrl?: string;
-  createdAt: number;
-  updatedAt: number;
-  /** When true, member is mirrored as a CLI-provider agent file at ~/.<cli>/agents/<slug>.md. */
-  installAsAgent?: boolean;
-  /** Sticky slug assigned on first install; preserved across renames so the right file is removed. */
-  agentSlug?: string;
-}
-
-export interface TeamData {
-  members: TeamMember[];
-  predefinedCache?: { fetchedAt: number; suggestions: TeamMember[] };
-}
 
 // --- CLI Provider Profiles ---
 
@@ -179,7 +152,6 @@ export interface ArchivedSession {
   createdAt: string;
   closedAt: string;
   bookmarked?: boolean;
-  teamMemberId?: string;
   /** Preserved so a resumed session reuses the same profile config dir (CLAUDE_CONFIG_DIR). */
   profileId?: string;
   cost: {
@@ -368,7 +340,6 @@ export interface PersistedState {
   lastSeenVersion?: string;
   appLaunchCount?: number;
   starPromptDismissed?: boolean;
-  team?: TeamData;
   /** Global, provider-scoped CLI profiles (e.g. Claude work/personal config dirs). */
   profiles?: Profile[];
 }

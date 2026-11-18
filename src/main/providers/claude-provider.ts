@@ -11,7 +11,6 @@ import { installHooksOnly, installStatusLine, getClaudeConfig } from '../claude-
 import { guardedInstall, validateSettings, reinstallSettings } from '../settings-guard';
 import { resolveBinary, validateBinaryExists } from './resolve-binary';
 import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR, UUID_RE } from './transcript-utils';
-import { writeAgentFile, deleteAgentFile } from './agent-files';
 import { loadState } from '../store';
 
 const binaryCache = { path: null as string | null };
@@ -205,18 +204,6 @@ export class ClaudeProvider implements CliProvider {
       }
     }
     return { text: texts.join(TRANSCRIPT_TEXT_SEPARATOR), cwd };
-  }
-
-  agentsDir(): string {
-    return path.join(os.homedir(), '.claude', 'agents');
-  }
-
-  async installAgent(slug: string, content: string): Promise<{ filePath: string }> {
-    return writeAgentFile(this.agentsDir(), slug, content);
-  }
-
-  async removeAgent(slug: string): Promise<void> {
-    return deleteAgentFile(this.agentsDir(), slug);
   }
 
   parseCostFromOutput(rawText: string): { totalCostUsd: number } | null {

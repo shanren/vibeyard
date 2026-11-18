@@ -1,5 +1,5 @@
 import type { VibeyardApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, TeamMember, TeamData, Profile } from '../shared/types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename, isAbsolutePath } from '../shared/platform.js';
 import { isCliSession } from './session-utils.js';
@@ -22,20 +22,9 @@ import {
   buildKanbanSession,
   buildMcpInspectorSession,
   buildRemoteSession,
-  buildTeamSession,
 } from './state/session-factory.js';
 import { NavHistory } from './state/nav-history.js';
 import { createDefaultBoard, ensureProjectDefaults, hydrateLoadedState, serializeForSave } from './state/persistence.js';
-import {
-  applyMemberPatch,
-  buildNewMember,
-  buildTeamChatSession,
-  fireAndForgetRemoveAgent,
-  pickTeamChatProvider,
-  reconcileAgent as reconcileAgentPure,
-  removeMember,
-  syncAgentInstall as syncAgentInstallPure,
-} from './state/team-state.js';
 import {
   buildPlanSessionArgs,
   findExistingDiffViewer,
@@ -85,7 +74,6 @@ type EventType =
   | 'explorer-toggled'
   | 'cli-session-cleared'
   | 'board-changed'
-  | 'team-changed'
   | 'profiles-changed'
   | 'state-loaded';
 
@@ -433,70 +421,6 @@ class AppState {
     return session;
   }
 
-  openTeamTab(projectId: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    if (this.state.activeProjectId !== projectId) this.setActiveProject(projectId);
-
-    const existing = findExistingTabByType(project, 'team');
-    if (existing) return this.activateExistingSession(project, existing);
-
-    const session = buildTeamSession({ projectName: project.name });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  get team(): TeamData {
-    if (!this.state.team) this.state.team = { members: [] };
-    return this.state.team;
-  }
-
-  getTeamMembers(): TeamMember[] {
-    return this.team.members;
-  }
-
-  addTeamMember(input: Omit<TeamMember, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): TeamMember {
-    const member = buildNewMember(input);
-    this.team.members.push(member);
-    this.persist();
-    this.emit('team-changed');
-    if (member.installAsAgent) {
-      void syncAgentInstallPure(window.vibeyard.provider, this.team, member, () => this.persist());
-    }
-    return member;
-  }
-
-  updateTeamMember(id: string, patch: Partial<Omit<TeamMember, 'id' | 'createdAt'>>): TeamMember | undefined {
-    const result = applyMemberPatch(this.team, id, patch);
-    if (!result) return undefined;
-    this.persist();
-    this.emit('team-changed');
-    void reconcileAgentPure(window.vibeyard.provider, this.team, result.before, result.after, () => this.persist());
-    return result.after;
-  }
-
-  removeTeamMember(id: string): void {
-    const removed = removeMember(this.team, id);
-    if (!removed) return;
-    this.persist();
-    this.emit('team-changed');
-    if (removed.installAsAgent && removed.agentSlug) {
-      fireAndForgetRemoveAgent(window.vibeyard.provider, removed.agentSlug);
-    }
-  }
-
-  setTeamPredefinedCache(suggestions: TeamMember[]): void {
-    this.team.predefinedCache = { fetchedAt: Date.now(), suggestions };
-    this.persist();
-  }
-
-  notifyTeamChanged(): void {
-    this.persist();
-    this.emit('team-changed');
-  }
-
   // --- CLI provider profiles ---
 
   get profiles(): Profile[] {
@@ -566,24 +490,6 @@ class AppState {
     project.defaultProfileId = profileId || undefined;
     this.persist();
     this.emit('project-changed');
-  }
-
-  startTeamChat(
-    projectId: string,
-    member: TeamMember,
-    overrideProviderId?: ProviderId,
-  ): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    const activeSession = project.sessions.find((s) => s.id === project.activeSessionId);
-    const providerId = pickTeamChatProvider(activeSession, this.state.preferences.defaultProvider, overrideProviderId);
-    if (!providerId) return undefined;
-
-    const session = buildTeamChatSession(project, member, providerId, MAX_SESSION_NAME_LENGTH);
-    attachSessionToProject(project, session, { addToSwarm: true });
-    this.commitNewSession(projectId, session);
-    return session;
   }
 
   consumePendingSystemPrompt(projectId: string, sessionId: string): string | undefined {

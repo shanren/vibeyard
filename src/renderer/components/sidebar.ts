@@ -15,7 +15,7 @@ import {
 import { attachHoverCard } from './hover-card.js';
 import { mountGitPanel, closeGitPanel } from './git-panel.js';
 import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
-import { ICON_KANBAN, ICON_TEAM, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
+import { ICON_KANBAN, ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
 type ProjectPanel = 'history' | 'git' | null;
@@ -326,13 +326,6 @@ function buildProjectActions(
     });
     actions.appendChild(historyBtn);
   }
-
-  const teamBtn = makeActionButton(t('sidebar.team'), ICON_TEAM, false);
-  teamBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    appState.openTeamTab(project.id);
-  });
-  actions.appendChild(teamBtn);
 
   // Opens the project folder in the OS file explorer (like VSCode's
   // "Reveal in File Explorer" for a folder).

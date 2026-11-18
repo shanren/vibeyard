@@ -398,23 +398,6 @@ export function registerIpcHandlers(): void {
     return provider.validatePrerequisites();
   });
 
-  ipcMain.handle('provider:installAgent', async (_event, slug: string, content: string) => {
-    const targets = getAllProviders().filter((p) => p.installAgent && p.validatePrerequisites());
-    return Promise.all(targets.map(async (p) => {
-      try {
-        const r = await p.installAgent!(slug, content);
-        return { providerId: p.meta.id, ok: true, filePath: r.filePath };
-      } catch (err) {
-        return { providerId: p.meta.id, ok: false, error: String((err as Error)?.message ?? err) };
-      }
-    }));
-  });
-
-  ipcMain.handle('provider:removeAgent', async (_event, slug: string) => {
-    const targets = getAllProviders().filter((p) => p.removeAgent);
-    await Promise.all(targets.map((p) => p.removeAgent!(slug).catch(() => undefined)));
-  });
-
   ipcMain.handle('fs:browseDirectory', async () => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return null;
