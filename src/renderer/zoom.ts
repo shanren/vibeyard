@@ -2,7 +2,7 @@ import { appState } from './state.js';
 import { fitAllVisible } from './components/terminal-pane.js';
 import { ZOOM_MIN, ZOOM_MAX } from '../shared/types.js';
 
-export const ZOOM_STEPS = [0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0] as const;
+export const ZOOM_STEPS: readonly number[] = [0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
 
 export function getZoomFactor(): number {
   return appState.preferences.zoomFactor ?? 1.0;

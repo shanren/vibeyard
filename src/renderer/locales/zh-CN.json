@@ -240,11 +240,6 @@
   "about": {
     "appName": "Vibeyard",
     "versionLoading": "版本：加载中…",
-    "updateButton": "检查更新",
-    "updateChecking": "检查中…",
-    "upToDate": "已是最新版本。",
-    "updateAvailable": "发现更新 v{version}，正在下载…",
-    "updateFailed": "更新检查失败。",
     "githubLink": "GitHub",
     "bugLink": "报告 Bug",
     "contributeLink": "在 GitHub 上贡献代码",

@@ -22,45 +22,6 @@ export function createAboutSection(): SectionController {
       versionLine.className = 'about-version';
       versionLine.textContent = t('about.versionLoading');
 
-      const updateRow = document.createElement('div');
-      updateRow.className = 'about-update-row';
-
-      const updateBtn = document.createElement('button');
-      updateBtn.className = 'about-update-btn';
-      updateBtn.textContent = t('about.updateButton');
-
-      const updateStatus = document.createElement('span');
-      updateStatus.className = 'about-update-status';
-
-      updateBtn.addEventListener('click', () => {
-        updateBtn.disabled = true;
-        updateStatus.textContent = t('about.updateChecking');
-        window.vibeyard.update.checkNow().then(() => {
-          // If no update event fires within a few seconds, show "up to date"
-          const timeout = setTimeout(() => {
-            updateStatus.textContent = t('about.upToDate');
-            updateBtn.disabled = false;
-          }, 5000);
-          const unsub = window.vibeyard.update.onAvailable((info) => {
-            clearTimeout(timeout);
-            updateStatus.textContent = t('about.updateAvailable', { version: info.version });
-            unsub();
-          });
-          const unsubErr = window.vibeyard.update.onError(() => {
-            clearTimeout(timeout);
-            updateStatus.textContent = t('about.updateFailed');
-            updateBtn.disabled = false;
-            unsubErr();
-          });
-        }).catch(() => {
-          updateStatus.textContent = t('about.updateFailed');
-          updateBtn.disabled = false;
-        });
-      });
-
-      updateRow.appendChild(updateBtn);
-      updateRow.appendChild(updateStatus);
-
       const linksDiv = document.createElement('div');
       linksDiv.className = 'about-links';
 
@@ -98,7 +59,6 @@ export function createAboutSection(): SectionController {
 
       aboutDiv.appendChild(appName);
       aboutDiv.appendChild(versionLine);
-      aboutDiv.appendChild(updateRow);
       aboutDiv.appendChild(linksDiv);
       aboutDiv.appendChild(communityDiv);
       aboutDiv.appendChild(debugRow);

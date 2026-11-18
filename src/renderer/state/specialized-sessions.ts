@@ -59,11 +59,3 @@ export function findExistingDiffViewer(
 export function findExistingFileReader(project: ProjectRecord, filePath: string): SessionRecord | undefined {
   return project.sessions.find((s) => s.type === 'file-reader' && s.fileReaderPath === filePath);
 }
-
-export function findExistingTabByType(
-  project: ProjectRecord,
-  type: 'kanban',
-): SessionRecord | undefined {
-  return project.sessions.find((s) => s.type === type);
-}
-

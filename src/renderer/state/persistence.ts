@@ -34,7 +34,7 @@ const STALE_PREFERENCE_FIELDS = ['chromeImport', 'readinessExcludedProviders'] a
  */
 export function hydrateLoadedState(state: PersistedState, defaultPreferences: Preferences): void {
   state.preferences = { ...defaultPreferences, ...state.preferences };
-  for (const field of STALE_TOP_LEVEL_FIELDS) delete (state as Record<string, unknown>)[field];
+  for (const field of STALE_TOP_LEVEL_FIELDS) delete (state as unknown as Record<string, unknown>)[field];
   for (const field of STALE_PREFERENCE_FIELDS) {
     delete (state.preferences as unknown as Record<string, unknown>)[field];
   }

@@ -1,5 +1,6 @@
 import { hasProviderIssue, type ProviderStatus } from '../setup-checks.js';
 import { t } from '../../i18n.js';
+import type { ProviderId } from '../../../shared/types.js';
 import type { PreferencesContext, SectionController } from './section.js';
 
 function renderCheckItem(parent: HTMLElement, opts: {
@@ -94,7 +95,7 @@ export async function updateSetupBadge(ctx: PreferencesContext): Promise<void> {
 
 export function createSetupSection(ctx: PreferencesContext): SectionController {
   async function fixAndRerender(providerId?: string) {
-    await window.vibeyard.settings.reinstall(providerId);
+    await window.vibeyard.settings.reinstall(providerId as ProviderId | undefined);
     ctx.rerenderSection('setup');
   }
 

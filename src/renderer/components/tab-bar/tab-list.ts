@@ -271,7 +271,7 @@ export function render(): void {
     tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '');
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId);
+    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId ?? undefined);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
     const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : !isSpecial ? providerIcon : '';
@@ -377,6 +377,6 @@ export function updateTabStatus(sessionId: string, status: SessionStatus): void 
   const tab = tabListEl.querySelector(`.tab-item[data-session-id="${sessionId}"]`) as HTMLElement | null;
   if (tab) {
     const session = appState.activeProject?.sessions.find(s => s.id === sessionId);
-    tab.title = buildTooltip(status, session?.cliSessionId);
+    tab.title = buildTooltip(status, session?.cliSessionId ?? undefined);
   }
 }

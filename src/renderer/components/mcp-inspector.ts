@@ -203,7 +203,7 @@ function renderToolsList(sessionId: string, tools: unknown[], container: HTMLEle
       if (!isOpen && body.children.length === 0) {
         // Build form
         if (tool.inputSchema && (tool.inputSchema as Record<string, unknown>).properties) {
-          const { element, getValues } = renderSchemaForm(tool.inputSchema as { properties: Record<string, unknown>; required?: string[] });
+          const { element, getValues } = renderSchemaForm(tool.inputSchema as unknown as Parameters<typeof renderSchemaForm>[0]);
           formRef = { getValues };
           body.appendChild(element);
         }

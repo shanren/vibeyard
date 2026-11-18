@@ -27,7 +27,6 @@ import {
   buildPlanSessionArgs,
   findExistingDiffViewer,
   findExistingFileReader,
-  findExistingTabByType,
   resolveCliProvider,
   resolvePlanProvider,
   resolveProfile,
@@ -756,7 +755,6 @@ class AppState {
     if (!project) return;
     const session = project.sessions.find((s) => s.id === sessionId);
     if (!session) return;
-    if (session.type === 'kanban') return;
     session.name = name.slice(0, MAX_SESSION_NAME_LENGTH);
     if (userRenamed) session.userRenamed = true;
     // Keep history entry in sync if this session was resumed from history

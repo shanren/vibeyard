@@ -17,7 +17,6 @@ export function archiveSession(project: ProjectRecord, session: SessionRecord): 
     cliSessionId: session.cliSessionId,
     createdAt: session.createdAt,
     closedAt: new Date().toISOString(),
-    teamMemberId: session.teamMemberId,
     profileId: session.profileId,
     cost: costInfo ? {
       totalCostUsd: costInfo.totalCostUsd,
@@ -37,9 +36,6 @@ export function archiveSession(project: ProjectRecord, session: SessionRecord): 
     if (archived.cost) project.sessionHistory[existingIndex].cost = archived.cost;
     if (archived.name !== project.sessionHistory[existingIndex].name) {
       project.sessionHistory[existingIndex].name = archived.name;
-    }
-    if (archived.teamMemberId) {
-      project.sessionHistory[existingIndex].teamMemberId = archived.teamMemberId;
     }
     // Always sync (not just when truthy) so clearing a session's profile is reflected.
     project.sessionHistory[existingIndex].profileId = archived.profileId;
@@ -65,7 +61,6 @@ export function buildResumedSession(archived: ArchivedSession): SessionRecord {
     providerId: archived.providerId,
     cliSessionId: archived.cliSessionId,
     createdAt: new Date().toISOString(),
-    teamMemberId: archived.teamMemberId,
     profileId: archived.profileId,
   };
 }

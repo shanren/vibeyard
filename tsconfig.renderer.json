@@ -8,9 +8,10 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "declaration": true,
     "composite": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
   },
   "include": ["src/renderer/**/*.ts", "src/shared/**/*.ts"],
   "exclude": ["src/renderer/**/*.test.ts"]

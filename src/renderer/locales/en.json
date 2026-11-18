@@ -240,11 +240,6 @@
   "about": {
     "appName": "Vibeyard",
     "versionLoading": "Version: loading...",
-    "updateButton": "Check for Updates",
-    "updateChecking": "Checking...",
-    "upToDate": "You're up to date.",
-    "updateAvailable": "Update v{version} available — downloading...",
-    "updateFailed": "Update check failed.",
     "githubLink": "GitHub",
     "bugLink": "Report a Bug",
     "contributeLink": "Contribute on GitHub",
