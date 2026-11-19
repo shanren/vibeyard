@@ -22,68 +22,6 @@
   background: var(--accent);
 }
 
-/* Collapsed rail — a 58px vertical strip: expand button, divider, active
-   project avatar, nav icons, then Discussions pinned to the bottom. */
-#sidebar.collapsed {
-  width: 58px !important;
-  min-width: 58px;
-  max-width: 58px;
-}
-
-#sidebar.collapsed #project-list {
-  padding: var(--app-space-2) 0;
-}
-
-/* Rail mode: one folder glyph per project, view buttons stacked underneath. */
-#sidebar.collapsed .project-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--app-space-2);
-  padding: var(--app-space-3) 0;
-}
-
-#sidebar.collapsed .project-head {
-  justify-content: center;
-  min-height: 0;
-}
-
-#sidebar.collapsed .project-name,
-#sidebar.collapsed .project-session-count,
-#sidebar.collapsed .project-profile-badge,
-#sidebar.collapsed .project-sub {
-  display: none;
-}
-
-#sidebar.collapsed .project-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--app-space-1);
-  margin: var(--app-space-1) 0 0;
-}
-
-#sidebar.collapsed .project-action-btn {
-  width: 36px;
-  height: 26px;
-  padding: 0;
-}
-
-#sidebar.collapsed .project-action-btn .action-label {
-  display: none;
-}
-
-/* Short centered divider between the expand button and the avatar (the mock's
-   `.rdiv`) — drawn as a pseudo-element to avoid touching the markup. */
-#sidebar.collapsed #project-list::before {
-  content: '';
-  display: block;
-  width: 26px;
-  height: 1px;
-  background: var(--border);
-  margin: 2px auto 12px;
-}
-
 /* Discussions — pinned to the bottom by #sidebar-content's flex:1 (footer hidden). */
 /* Unread dot (the mock's `.rdot`) — base .discussions-icon-dot already supplies
    position/color/radius; the rail just drops the ring and bumps the size. */
@@ -102,10 +40,6 @@
 }
 
 #sidebar-active-sessions.hidden {
-  display: none;
-}
-
-#sidebar.collapsed #sidebar-active-sessions {
   display: none;
 }
 
@@ -458,3 +392,9 @@
 }
 
 .project-panel.hidden { display: none; }
+
+/* 收起 = 隐藏整列（Ctrl+B 或标题栏按钮恢复）。不留 58px 图标轨：
+   一行项目名 + 分支 + 三个入口塞不进 58px，硬塞只会变成一列看不懂的图标。 */
+#sidebar.collapsed {
+  display: none;
+}

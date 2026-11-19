@@ -57,10 +57,6 @@ export function renderTitleBar(root: HTMLElement): void {
 
   root.appendChild(buildAppMenuButton());
 
-  const spacer = document.createElement('div');
-  spacer.className = 'titlebar-spacer';
-  root.appendChild(spacer);
-
   root.appendChild(
     buildIconButton('btn-toggle-sidebar', t('titleBar.toggleSidebar'), '', toggleSidebar, [
       '<rect x="4" y="4" width="16" height="16" rx="2.4"/>',
@@ -69,10 +65,14 @@ export function renderTitleBar(root: HTMLElement): void {
   );
   root.appendChild(
     buildIconButton('btn-add-project', t('titleBar.newProject'), 'primary', promptNewProject, [
-      '<line x1="8" y1="3.5" x2="8" y2="12.5"/>',
-      '<line x1="3.5" y1="8" x2="12.5" y2="8"/>',
+      '<line x1="12" y1="5" x2="12" y2="19"/>',
+      '<line x1="5" y1="12" x2="19" y2="12"/>',
     ]),
   );
+
+  const spacer = document.createElement('div');
+  spacer.className = 'titlebar-spacer';
+  root.appendChild(spacer);
 }
 
 /** A 26px square icon button living in the title bar. */
