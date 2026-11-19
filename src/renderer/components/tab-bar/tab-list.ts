@@ -7,7 +7,7 @@ import { hasMultipleAvailableProviders, getProviderCapabilities } from '../../pr
 import { buildResumeWithProviderItems } from '../resume-with-provider-menu.js';
 import { isCliSession } from '../../session-utils.js';
 import { esc } from '../../dom-utils.js';
-import { providerGlyph } from '../../icons.js';
+import { providerMark } from '../../icons.js';
 import {
   closeSessionWithConfirm,
   closeSessionWithAlwaysConfirm,
@@ -388,7 +388,5 @@ export function updateTabStatus(sessionId: string, status: SessionStatus): void 
  * back to the stroke glyph in icons.ts. Both occupy the same 14px box.
  */
 function providerTabIcon(providerId: string): string {
-  const glyph = providerGlyph(providerId);
-  if (glyph) return `<span class="tab-provider-glyph" title="${esc(providerId)}">${glyph}</span> `;
-  return `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> `;
+  return `${providerMark(providerId, 'tab')} `;
 }

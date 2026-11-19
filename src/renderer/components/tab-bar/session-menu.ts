@@ -2,16 +2,92 @@ import { appState, type SessionRecord } from '../../state.js';
 import type { ProviderId } from '../../../shared/types.js';
 import { showModal, closeModal, setModalError, FieldDef } from '../modal.js';
 import { findInvalidEnvLines } from '../../../shared/env-vars.js';
-import { loadProviderAvailability, getProviderAvailabilitySnapshot } from '../../provider-availability.js';
+import { loadProviderAvailability, getProviderAvailabilitySnapshot, resolveDefaultProviderId, getAvailableProviderMetas } from '../../provider-availability.js';
+import { providerMark } from '../../icons.js';
 import { hideTabContextMenu, setActiveContextMenu, positionMenu } from './menu.js';
 import { t } from '../../i18n.js';
 
-export function quickNewSession(): void {
+/**
+ * Create a session immediately, no dialog. `providerId` decides which CLI runs;
+ * omitted ⇒ the configured default (with a fallback to the first installed one,
+ * so a default that is no longer installed cannot spawn a missing binary).
+ *
+ * Custom CLI is the one provider that cannot be created blind — it needs a
+ * command — so it uses the command this project used last and otherwise opens the
+ * dialog, which is the only place that can ask for one.
+ */
+export function quickNewSession(providerId?: ProviderId): void {
   const project = appState.activeProject;
   if (!project) return;
   (document.activeElement as HTMLElement)?.blur?.();
+
+  const resolved = resolveProviderForNewSession(providerId);
+  if (resolved === 'custom' && !project.customCliCommand) {
+    void promptNewSession();
+    return;
+  }
+
   const sessionNum = project.sessions.length + 1;
-  appState.addSession(project.id, t('tab.newSession.defaultName', { num: sessionNum }));
+  appState.addSession(project.id, t('tab.newSession.defaultName', { num: sessionNum }), undefined, resolved);
+}
+
+/** Which provider a bare "New session" click should use right now. */
+export function resolveProviderForNewSession(providerId?: ProviderId): ProviderId {
+  const snapshot = getProviderAvailabilitySnapshot();
+  const isAvailable = (id: ProviderId) => snapshot?.availability.get(id) ?? false;
+  if (providerId) return providerId;
+  return resolveDefaultProviderId(isAvailable, appState.preferences.defaultProvider);
+}
+
+/**
+ * The caret's menu: one row per installed CLI, choice creates a session straight
+ * away. "More options…" stays because the dialog is the only way to set a name,
+ * extra args, env vars or a Claude profile.
+ */
+export function showNewSessionMenu(x: number, y: number): void {
+  hideTabContextMenu();
+
+  const menu = document.createElement('div');
+  menu.className = 'tab-context-menu new-session-menu';
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+
+  const providers = getAvailableProviderMetas();
+  const current = resolveProviderForNewSession();
+
+  for (const provider of providers) {
+    const item = document.createElement('div');
+    item.className = 'tab-context-menu-item' + (provider.id === current ? ' active' : '');
+    const needsCommand = provider.id === 'custom' && !appState.activeProject?.customCliCommand;
+    const label = document.createElement('span');
+    label.className = 'new-session-menu-label';
+    label.innerHTML = `${providerMark(provider.id, 'button')}<span>${provider.displayName}${needsCommand ? '…' : ''}</span>`;
+    item.appendChild(label);
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideTabContextMenu();
+      quickNewSession(provider.id);
+    });
+    menu.appendChild(item);
+  }
+
+  const separator = document.createElement('div');
+  separator.className = 'tab-context-menu-separator';
+  menu.appendChild(separator);
+
+  const more = document.createElement('div');
+  more.className = 'tab-context-menu-item';
+  more.textContent = t('tab.newSessionMenu.moreOptions');
+  more.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideTabContextMenu();
+    void promptNewSession();
+  });
+  menu.appendChild(more);
+
+  document.body.appendChild(menu);
+  setActiveContextMenu(menu);
+  positionMenu(menu);
 }
 
 // "More" overflow menu. Deliberately excludes actions that have their own

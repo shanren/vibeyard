@@ -27,6 +27,26 @@ export async function loadProviderAvailability(): Promise<void> {
   }
 }
 
+/**
+ * The provider a bare "New session" click should launch.
+ *
+ * Order: the user's configured default when it is actually installed, otherwise
+ * the first installed provider, otherwise the configured value (or 'claude') so
+ * the caller still has something to name in an error.
+ *
+ * Without the middle step, setting the default to a CLI and later uninstalling it
+ * left the button spawning a binary that no longer exists.
+ */
+export function resolveDefaultProviderId(
+  isAvailable: (id: ProviderId) => boolean,
+  configured?: ProviderId,
+): ProviderId {
+  if (configured && isAvailable(configured)) return configured;
+  const firstInstalled = cachedProviders?.find((p) => cachedAvailability?.get(p.id));
+  if (firstInstalled) return firstInstalled.id;
+  return configured ?? 'claude';
+}
+
 export function hasMultipleAvailableProviders(): boolean {
   if (!cachedAvailability) return false;
   let count = 0;

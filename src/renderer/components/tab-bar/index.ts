@@ -2,13 +2,14 @@ import { appState } from '../../state.js';
 import { onChange as onStatusChange } from '../../session-activity.js';
 import { onChange as onGitStatusChange } from '../../git-status.js';
 import { onChange as onUnreadChange } from '../../session-unread.js';
-import { ICON_TERMINAL, ICON_MENU, ICON_FILES } from '../../icons.js';
-import { loadProviderAvailability, hasMultipleAvailableProviders } from '../../provider-availability.js';
+import { ICON_TERMINAL, ICON_MENU, ICON_FILES, providerMark } from '../../icons.js';
+import { loadProviderAvailability, hasMultipleAvailableProviders, getProviderDisplayName } from '../../provider-availability.js';
+import { t } from '../../i18n.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
 import { gitStatusEl } from './dom.js';
 import { render, updateTabStatus } from './tab-list.js';
 import { renderGitStatus, showBranchContextMenu } from './git-status-bar.js';
-import { showMoreMenu, promptNewSession, quickNewSession } from './session-menu.js';
+import { showMoreMenu, showNewSessionMenu, promptNewSession, quickNewSession, resolveProviderForNewSession } from './session-menu.js';
 
 const btnAddSession = document.getElementById('btn-add-session')!;
 const btnAddSessionMenu = document.getElementById('btn-add-session-menu')!;
@@ -38,11 +39,28 @@ export function initTabBar(): void {
     e.preventDefault();
     showMoreMenu(e.clientX, e.clientY);
   });
-  // The pill's caret opens a custom-session dialog; the More button owns the menu.
+  // The pill creates a session with the default CLI immediately; its caret lets you
+  // pick a different installed CLI (still immediate) or fall back to the dialog.
   btnAddSessionMenu.addEventListener('click', (e) => {
     e.stopPropagation();
-    promptNewSession();
+    const rect = btnAddSessionMenu.getBoundingClientRect();
+    showNewSessionMenu(rect.left, rect.bottom + 4);
   });
+
+  const newSessionLabel = btnAddSession.querySelector('.new-session-label');
+  const newSessionIcon = btnAddSession.querySelector('.new-session-icon');
+  const syncNewSessionButton = (): void => {
+    const providerId = resolveProviderForNewSession();
+    const name = getProviderDisplayName(providerId);
+    if (newSessionIcon) newSessionIcon.innerHTML = providerMark(providerId, 'button');
+    if (newSessionLabel) newSessionLabel.textContent = t('tab.newSession.label');
+    btnAddSession.title = t('tab.newSession.tooltip', { name });
+    btnAddSessionMenu.title = t('tab.newSession.moreTooltip');
+  };
+  syncNewSessionButton();
+  appState.on('state-loaded', syncNewSessionButton);
+  appState.on('preferences-changed', syncNewSessionButton);
+  loadProviderAvailability().then(syncNewSessionButton).catch(() => {});
   btnMore.addEventListener('click', (e) => {
     e.stopPropagation();
     if (getActiveContextMenu()) {

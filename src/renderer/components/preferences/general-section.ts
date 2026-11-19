@@ -50,8 +50,14 @@ export function createGeneralSection(ctx: PreferencesContext): SectionController
       providerLabel.textContent = t('general.defaultCodingTool');
 
       const currentDefault = appState.preferences.defaultProvider ?? 'claude';
+      // A default tool that is not installed cannot run, so it is offered but
+      // disabled rather than silently selectable.
+      const availability = () => getProviderAvailabilitySnapshot()?.availability;
       const buildProviderOptions = (providers: CliProviderMeta[]) =>
-        providers.map(p => ({ value: p.id, label: p.displayName }));
+        providers.map(p => {
+          const ok = availability()?.get(p.id);
+          return { value: p.id, label: p.displayName, disabled: ok === false };
+        });
 
       if (providerSelect) providerSelect.destroy();
       let snapshot = getProviderAvailabilitySnapshot();

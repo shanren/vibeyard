@@ -81,7 +81,10 @@
     "title": {},
     "closeTooltip": "关闭会话",
     "newSession": {
-      "defaultName": "会话 {num}"
+      "defaultName": "会话 {num}",
+      "label": "新建会话",
+      "tooltip": "新建 {name} 会话",
+      "moreTooltip": "选择要运行的工具"
     },
     "moreMenu": {
       "splitLayoutActive": "分屏布局 ✓",
@@ -108,6 +111,9 @@
     },
     "newMcpInspector": {
       "defaultName": "检查器 {num}"
+    },
+    "newSessionMenu": {
+      "moreOptions": "更多选项…"
     }
   },
   "contextMenu": {

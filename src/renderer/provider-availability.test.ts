@@ -112,6 +112,30 @@ describe('provider-availability', () => {
     });
   });
 
+  describe('resolveDefaultProviderId', () => {
+    it('uses the configured provider when it is installed', async () => {
+      const mod = await loadModule();
+      expect(mod.resolveDefaultProviderId((id) => id === 'claude', 'claude')).toBe('claude');
+    });
+
+    it('falls back to the configured value when nothing is installed', async () => {
+      const mod = await loadModule();
+      expect(mod.resolveDefaultProviderId(() => false, 'pi')).toBe('pi');
+    });
+
+    it('falls back to claude when there is no configuration', async () => {
+      const mod = await loadModule();
+      expect(mod.resolveDefaultProviderId(() => false, undefined)).toBe('claude');
+    });
+
+    it('falls back to the first installed provider when the configured one is gone', async () => {
+      listProviders.mockResolvedValue([metaClaude, metaCodex]);
+      checkBinary.mockResolvedValue(true);
+      const mod = await loadModule();
+      await mod.loadProviderAvailability();
+      expect(mod.resolveDefaultProviderId((id) => id === 'claude', 'pi' as never)).toBe('claude');
+    });
+  });
   describe('getProviderCapabilities / getProviderDisplayName', () => {
     it('returns capabilities for a known provider', async () => {
       listProviders.mockResolvedValue([metaClaude]);

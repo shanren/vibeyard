@@ -81,7 +81,10 @@
     "title": {},
     "closeTooltip": "Close session",
     "newSession": {
-      "defaultName": "Session {num}"
+      "defaultName": "Session {num}",
+      "label": "New session",
+      "tooltip": "New {name} session",
+      "moreTooltip": "Choose a CLI to run"
     },
     "moreMenu": {
       "splitLayoutActive": "Split Layout ✓",
@@ -108,6 +111,9 @@
     },
     "newMcpInspector": {
       "defaultName": "Inspector {num}"
+    },
+    "newSessionMenu": {
+      "moreOptions": "More options…"
     }
   },
   "contextMenu": {

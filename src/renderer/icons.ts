@@ -44,3 +44,16 @@ export const PROVIDER_ICONS: Record<string, string> = {
 export function providerGlyph(providerId: string): string | null {
   return PROVIDER_ICONS[providerId] ?? null;
 }
+
+/**
+ * One provider's mark, as HTML. The four bundled CLIs ship a brand PNG; the ones
+ * added later use the stroke glyph above. `variant` only picks the wrapper class
+ * so the tab bar (14px inline) and the New Session button can size it.
+ */
+export function providerMark(providerId: string, variant: 'tab' | 'button'): string {
+  const glyph = providerGlyph(providerId);
+  if (glyph) {
+    return `<span class="${variant}-provider-glyph" aria-hidden="true">${glyph}</span>`;
+  }
+  return `<img class="${variant}-provider-icon" src="assets/providers/${providerId}.png" alt="" onerror="this.style.display='none'">`;
+}
