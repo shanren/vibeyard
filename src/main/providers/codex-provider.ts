@@ -22,6 +22,7 @@ export class CodexProvider implements CliProvider {
     binaryName: 'codex',
     capabilities: {
       sessionResume: true,
+      preassignedSessionId: false,
       contextWindow: false,
       hookStatus: true,
       configReading: true,

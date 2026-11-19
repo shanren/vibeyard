@@ -4,6 +4,8 @@ import { ClaudeProvider } from './claude-provider';
 import { CodexProvider } from './codex-provider';
 import { CopilotProvider } from './copilot-provider';
 import { GeminiProvider } from './gemini-provider';
+import { PiProvider } from './pi-provider';
+import { OpencodeProvider } from './opencode-provider';
 import { CustomProvider } from './custom-provider';
 
 const providers = new Map<ProviderId, CliProvider>();
@@ -13,6 +15,9 @@ export function initProviders(): void {
   registerProvider(new CodexProvider());
   registerProvider(new CopilotProvider());
   registerProvider(new GeminiProvider());
+
+  registerProvider(new PiProvider());
+  registerProvider(new OpencodeProvider());
 
   // Always last: the escape hatch for CLIs without an adapter.
   registerProvider(new CustomProvider());

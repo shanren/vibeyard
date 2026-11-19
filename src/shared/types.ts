@@ -5,7 +5,7 @@ export const ZOOM_MAX = 2.0;
 
 // --- Provider ---
 
-export type ProviderId = 'claude' | 'codex' | 'copilot' | 'gemini' | 'custom';
+export type ProviderId = 'claude' | 'codex' | 'copilot' | 'gemini' | 'pi' | 'opencode' | 'custom';
 export type PendingPromptTrigger = 'session-start' | 'first-output' | 'startup-arg';
 
 /**
@@ -24,6 +24,12 @@ export type EditAction = 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete' |
 
 export interface CliProviderCapabilities {
   sessionResume: boolean;
+  /**
+   * The provider accepts a session id *we* choose and creates-or-resumes it
+   * (`pi --session-id`, `opencode --session`). When set, the renderer assigns the
+   * id at session creation, so resume works without hooks or transcript scraping.
+   */
+  preassignedSessionId?: boolean;
   contextWindow: boolean;
   hookStatus: boolean;
   configReading: boolean;

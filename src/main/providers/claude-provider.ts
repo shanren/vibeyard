@@ -51,6 +51,7 @@ export class ClaudeProvider implements CliProvider {
     binaryName: 'claude',
     capabilities: {
       sessionResume: true,
+      preassignedSessionId: false,
       contextWindow: true,
       hookStatus: true,
       configReading: true,

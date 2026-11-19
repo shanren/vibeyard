@@ -183,6 +183,8 @@ const PROVIDERS = [
   { id: 'codex', displayName: 'Codex CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false, pendingPromptTrigger: 'first-output' } },
   { id: 'copilot', displayName: 'Copilot CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false } },
   { id: 'gemini', displayName: 'Gemini CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false } },
+  { id: 'pi', displayName: 'Pi', capabilities: { resume: true, hooks: false, hookStatus: false } },
+  { id: 'opencode', displayName: 'OpenCode', capabilities: { resume: true, hooks: false, hookStatus: false } },
   { id: 'custom', displayName: 'Custom CLI', capabilities: { resume: false, hooks: false, hookStatus: false, cost: false } },
 ];
 

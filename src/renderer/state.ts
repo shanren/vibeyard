@@ -325,6 +325,9 @@ class AppState {
       profileId: pinnedProfileId,
       envVars: envVars ?? project.defaultEnv,
       customCommand: cliProviderId === 'custom' ? customCommand?.trim() || undefined : undefined,
+      // Providers whose flag is create-or-resume (pi --session-id, opencode --session)
+      // get their id now: the first spawn creates it, later spawns resume it.
+      cliSessionId: getProviderCapabilities(cliProviderId)?.preassignedSessionId ? crypto.randomUUID() : undefined,
     });
     // Remember the command so the next New Session in this project prefills it.
     if (cliProviderId === 'custom' && customCommand?.trim()) {
