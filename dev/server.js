@@ -58,9 +58,11 @@ function serveIndex(res) {
   // Every asset URL carries its mtime so a reload always picks up the new build.
   const injected = html
     .replace('href="styles.css"', `href="styles.css?v=${mtime(path.join(DIST, 'styles.css'))}"`)
+    // Match the bundle tag whatever attributes it carries (`defer`, a version query…).
     .replace(
-      '<script src="index.js"></script>',
-      `<script src="mock-bridge.js?v=${mtime(MOCK)}"></script>\n  <script src="index.js?v=${mtime(path.join(DIST, 'index.js'))}"></script>`,
+      /<script src="index\.js"[^>]*><\/script>/,
+      `<script src="mock-bridge.js?v=${mtime(MOCK)}"></script>
+  <script src="index.js?v=${mtime(path.join(DIST, 'index.js'))}" defer></script>`,
     )
     .replace('</body>', `  <script>
     // Auto reload when the build changes (dev:web:watch).

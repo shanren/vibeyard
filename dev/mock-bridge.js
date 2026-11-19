@@ -96,10 +96,12 @@ const PROJECTS = [
   },
 ];
 
+// `?empty=1` renders the first-run state (no projects, no auto modal).
+const params = new URLSearchParams(location.search);
 const state = {
   version: 1,
-  projects: PROJECTS,
-  activeProjectId: 'p-qis',
+  projects: params.has('empty') ? [] : PROJECTS,
+  activeProjectId: params.has('empty') ? null : 'p-qis',
   preferences: {
     theme: 'dark',
     locale: 'en',
@@ -328,6 +330,8 @@ const api = {
     getVersion: () => resolved('0.0.1'),
     setTitleBarOverlay: () => resolved(),
     openExternal: () => resolved(),
+    takePendingOpenPath: () => resolved(null),
+    onOpenPath: (cb) => on('app:openPath', cb),
     onQuitting: unsubscribe,
     onConfirmClose: unsubscribe,
     closeConfirmed: noop,

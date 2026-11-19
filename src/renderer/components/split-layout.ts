@@ -29,6 +29,7 @@ import {
   disconnectInspector,
 } from './mcp-inspector.js';
 import { isInspectorOpen } from './session-inspector.js';
+import { promptNewProject } from './sidebar.js';
 import {
   createFileViewerPane,
   destroyFileViewerPane,
@@ -266,10 +267,20 @@ function showEmptyState(project: ProjectRecord | undefined): void {
   const el = document.createElement('div');
   el.className = 'empty-state';
   if (!project) {
-    el.innerHTML = `
-      <div>No project selected</div>
-      <div class="hint">Create a project with the + button in the sidebar</div>
-    `;
+    const title = document.createElement('div');
+    title.className = 'empty-state-title';
+    title.textContent = 'No project yet';
+
+    const hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = 'Add a folder to start working in it.';
+
+    const cta = document.createElement('button');
+    cta.className = 'btn-primary empty-state-cta';
+    cta.innerHTML = `${plusIcon}<span>New project</span>`;
+    cta.addEventListener('click', () => promptNewProject());
+
+    el.append(title, hint, cta);
   } else {
     const title = document.createElement('div');
     title.className = 'empty-state-title';

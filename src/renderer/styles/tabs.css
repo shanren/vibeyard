@@ -269,6 +269,11 @@
 /* "+ New session" pill — a split .btn-primary (main label + caret that opens
    the custom-session dialog). Geometry-only classes; the accent fill comes
    from .btn-primary in base.css, which this file overrides (loaded later). */
+/* First run has no project to attach a session to — hide the CTA rather than
+   leave a button that does nothing. */
+#tab-actions .new-session-group.hidden {
+  display: none;
+}
 .new-session-group {
   margin-left: 4px;
 }

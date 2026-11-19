@@ -1,6 +1,6 @@
 import { appState } from './state.js';
 import { planShellOpen, findProjectForDirectory } from './state/shell-open.js';
-import { initSidebar, promptNewProject } from './components/sidebar.js';
+import { initSidebar } from './components/sidebar.js';
 import { initTitleBar } from './components/title-bar.js';
 import { initTabBar } from './components/tab-bar.js';
 import { initExplorerPanel } from './components/explorer-panel.js';
@@ -117,13 +117,13 @@ async function main(): Promise<void> {
   const wireShellOpen = (): void => {
     if (shellOpenWired) return;
     shellOpenWired = true;
-    window.rcode.app.onOpenPath((target) => {
+    window.rcode.app.onOpenPath?.((target) => {
       void openPathFromShell(target);
     });
     // A cold start from the Explorer context menu stashed its path in the main
     // process; pull it now that state is loaded and the listener is live.
-    void window.rcode.app
-      .takePendingOpenPath()
+    void Promise.resolve()
+      .then(() => window.rcode.app.takePendingOpenPath?.())
       .then((target) => (target ? openPathFromShell(target) : undefined))
       .catch(() => undefined);
   };
@@ -280,11 +280,6 @@ async function main(): Promise<void> {
 
   const savedZoom = getZoomFactor();
   if (savedZoom !== 1.0) window.rcode.zoom.set(savedZoom);
-
-  // Auto-open new project modal when no projects exist
-  if (appState.projects.length === 0) {
-    promptNewProject();
-  }
 
   mark('renderer:ready');
 }

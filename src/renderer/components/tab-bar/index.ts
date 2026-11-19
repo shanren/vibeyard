@@ -22,6 +22,17 @@ export function initTabBar(): void {
   btnMore.innerHTML = ICON_MENU;
   btnToggleExplorer.innerHTML = ICON_FILES;
 
+  // With no projects there is nothing to attach a session to, so the CTA would be
+  // a dead button on first run. The empty state offers "New project" instead.
+  const newSessionGroup = document.querySelector('.new-session-group') as HTMLElement | null;
+  const syncNewSessionAvailability = (): void => {
+    newSessionGroup?.classList.toggle('hidden', appState.projects.length === 0);
+  };
+  syncNewSessionAvailability();
+  appState.on('state-loaded', syncNewSessionAvailability);
+  appState.on('project-added', syncNewSessionAvailability);
+  appState.on('project-removed', syncNewSessionAvailability);
+
   btnAddSession.addEventListener('click', () => quickNewSession());
   btnAddSession.addEventListener('contextmenu', (e) => {
     e.preventDefault();
