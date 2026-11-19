@@ -74,7 +74,7 @@ export function initSplitLayout(): void {
 }
 
 function onSessionAdded(data: unknown): void {
-  const { projectId, session } = data as { projectId: string; session: { id: string; type?: string; cliSessionId: string | null; providerId?: string; args?: string; envVars?: string; profileId?: string; cwd?: string; diffFilePath?: string; diffArea?: string; worktreePath?: string; fileReaderPath?: string; fileReaderLine?: number } };
+  const { projectId, session } = data as { projectId: string; session: { id: string; type?: string; cliSessionId: string | null; providerId?: string; args?: string; envVars?: string; profileId?: string; cwd?: string; diffFilePath?: string; diffArea?: string; worktreePath?: string; fileReaderPath?: string; fileReaderLine?: number; customCommand?: string } };
   const project = appState.activeProject;
   if (!project) return;
 
@@ -91,7 +91,7 @@ function onSessionAdded(data: unknown): void {
     // Create and spawn immediately
     const cliProviderId = (session.providerId as ProviderId) || 'claude';
     const configDir = sessionConfigDir(session, cliProviderId);
-    createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', cliProviderId, project.id, session.envVars || '', configDir);
+    createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', cliProviderId, project.id, session.envVars || '', configDir, session.customCommand);
     const pending = appState.consumePendingInitialPrompt(project.id, session.id);
     if (pending) {
       setPendingPrompt(session.id, pending);
@@ -153,7 +153,7 @@ export function renderLayout(): void {
       if (!getTerminalInstance(session.id)) {
         const cliProviderId = session.providerId || 'claude';
         const configDir = sessionConfigDir(session, cliProviderId);
-        createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', cliProviderId, project.id, session.envVars || '', configDir);
+        createTerminalPane(session.id, project.path, session.cliSessionId, !!session.cliSessionId, session.args || '', cliProviderId, project.id, session.envVars || '', configDir, session.customCommand);
       }
     }
   }

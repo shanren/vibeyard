@@ -183,6 +183,7 @@ const PROVIDERS = [
   { id: 'codex', displayName: 'Codex CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false, pendingPromptTrigger: 'first-output' } },
   { id: 'copilot', displayName: 'Copilot CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false } },
   { id: 'gemini', displayName: 'Gemini CLI', capabilities: { resume: true, hooks: true, hookStatus: true, cost: false } },
+  { id: 'custom', displayName: 'Custom CLI', capabilities: { resume: false, hooks: false, hookStatus: false, cost: false } },
 ];
 
 const listeners = new Map();

@@ -20,6 +20,12 @@ export interface CliProvider {
   validatePrerequisites(): boolean;
   buildEnv(sessionId: string, baseEnv: Record<string, string>, opts?: { configDir?: string }): Record<string, string>;
   buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string; initialPrompt?: string }): string[];
+  /**
+   * Providers that run a *user-supplied* command (Custom CLI) turn it into a
+   * spawnable binary + argv here. When present and the session carries a custom
+   * command, `spawnPty` prefers this over resolveBinaryPath/buildArgs.
+   */
+  buildSpawn?(opts: { command: string; extraArgs: string; initialPrompt?: string }): { binary: string; args: string[] };
   installHooks(win?: BrowserWindow | null, projectPath?: string): Promise<void>;
   installStatusScripts(): void;
   cleanup(): void;

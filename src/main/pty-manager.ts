@@ -170,7 +170,9 @@ export async function spawnPty(
   envVars: string,
   onData: (data: string) => void,
   onExit: (exitCode: number, signal?: number) => void,
-  configDir?: string
+  configDir?: string,
+  /** Only for `providerId === 'custom'`: the command this session runs. */
+  customCommand?: string,
 ): Promise<void> {
   if (ptys.has(sessionId)) {
     // Silence the old PTY's exit event so it doesn't remove the new session
@@ -232,9 +234,15 @@ export async function spawnPty(
   // User-provided env vars are merged last so they can override anything,
   // including provider-set vars like PATH (see plan: "user vars win").
   Object.assign(env, parseEnvVars(envVars));
-  const args = provider.buildArgs({ cliSessionId, isResume, extraArgs, initialPrompt });
-  const resolvedShell = provider.resolveBinaryPath();
-  const { shell, args: spawnArgs } = resolveWindowsShell(resolvedShell, args);
+  // A Custom CLI session carries its own command; everything else derives the
+  // binary and argv from the provider's fixed contract.
+  const spawn = provider.buildSpawn && customCommand
+    ? provider.buildSpawn({ command: customCommand, extraArgs, initialPrompt })
+    : {
+        binary: provider.resolveBinaryPath(),
+        args: provider.buildArgs({ cliSessionId, isResume, extraArgs, initialPrompt }),
+      };
+  const { shell, args: spawnArgs } = resolveWindowsShell(spawn.binary, spawn.args);
 
   const ptyProcess = pty.spawn(shell, spawnArgs, {
     name: 'xterm-256color',

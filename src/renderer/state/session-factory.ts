@@ -5,8 +5,8 @@ interface BaseOpts {
   createdAt?: string;
 }
 
-export function buildCliSession(opts: BaseOpts & { name: string; providerId: ProviderId; args?: string; profileId?: string; envVars?: string }): SessionRecord {
-  const { name, providerId, args, profileId, envVars, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
+export function buildCliSession(opts: BaseOpts & { name: string; providerId: ProviderId; args?: string; profileId?: string; envVars?: string; customCommand?: string }): SessionRecord {
+  const { name, providerId, args, profileId, envVars, customCommand, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
   return {
     id,
     name,
@@ -14,6 +14,7 @@ export function buildCliSession(opts: BaseOpts & { name: string; providerId: Pro
     ...(args ? { args } : {}),
     ...(profileId ? { profileId } : {}),
     ...(envVars ? { envVars } : {}),
+    ...(customCommand ? { customCommand } : {}),
     cliSessionId: null,
     createdAt,
   };

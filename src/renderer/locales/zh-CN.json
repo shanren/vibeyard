@@ -100,7 +100,10 @@
       "providerNotInstalled": "{name}（未安装）",
       "profileLabel": "配置文件",
       "title": "新建会话",
-      "envError": "请使用 KEY=VALUE 格式——非法行：{line}"
+      "envError": "请使用 KEY=VALUE 格式——非法行：{line}",
+      "customCommandLabel": "命令",
+      "customCommandPlaceholder": "pi（或任意在 PATH 里的 CLI，如 opencode、aider）",
+      "customCommandRequired": "请填写要运行的命令"
     },
     "newMcpInspector": {
       "defaultName": "检查器 {num}"

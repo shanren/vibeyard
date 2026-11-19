@@ -5,7 +5,7 @@ export const ZOOM_MAX = 2.0;
 
 // --- Provider ---
 
-export type ProviderId = 'claude' | 'codex' | 'copilot' | 'gemini';
+export type ProviderId = 'claude' | 'codex' | 'copilot' | 'gemini' | 'custom';
 export type PendingPromptTrigger = 'session-start' | 'first-output' | 'startup-arg';
 
 /**
@@ -100,6 +100,11 @@ export interface SessionRecord {
   args?: string;
   /** Custom environment variables (raw `KEY=VALUE` lines) injected into the PTY on spawn. */
   envVars?: string;
+  /**
+   * The command a `'custom'` provider session runs (e.g. `pi`, `opencode -x`).
+   * Only meaningful when `providerId === 'custom'`.
+   */
+  customCommand?: string;
   cliSessionId: string | null;
   mcpServerUrl?: string;
   diffFilePath?: string;
@@ -213,6 +218,8 @@ export interface ProjectRecord {
   sessionHistory?: ArchivedSession[];
   insights?: ProjectInsightsData;
   defaultArgs?: string;
+  /** Last custom CLI command used in this project, prefilled in New Session. */
+  customCliCommand?: string;
   /** Default profile applied to new sessions in this project (overridden per-session). */
   defaultProfileId?: string;
   defaultEnv?: string;

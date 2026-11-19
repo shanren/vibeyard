@@ -309,7 +309,7 @@ class AppState {
     return this.addSession(projectId, name, args, providerId, profileId);
   }
 
-  addSession(projectId: string, name: string, args?: string, providerId?: ProviderId, profileId?: string, envVars?: string): SessionRecord | undefined {
+  addSession(projectId: string, name: string, args?: string, providerId?: ProviderId, profileId?: string, envVars?: string, customCommand?: string): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
 
@@ -324,7 +324,12 @@ class AppState {
       args: args ?? project.defaultArgs,
       profileId: pinnedProfileId,
       envVars: envVars ?? project.defaultEnv,
+      customCommand: cliProviderId === 'custom' ? customCommand?.trim() || undefined : undefined,
     });
+    // Remember the command so the next New Session in this project prefills it.
+    if (cliProviderId === 'custom' && customCommand?.trim()) {
+      project.customCliCommand = customCommand.trim();
+    }
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;

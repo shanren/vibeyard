@@ -111,7 +111,7 @@ export function resetHookWatcher(): void {
 }
 
 export function registerIpcHandlers(): void {
-  ipcMain.handle('pty:create', async (_event, sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs: string, providerId: ProviderId = 'claude', initialPrompt?: string, envVars: string = '', configDir?: string) => {
+  ipcMain.handle('pty:create', async (_event, sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs: string, providerId: ProviderId = 'claude', initialPrompt?: string, envVars: string = '', configDir?: string, customCommand?: string) => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return;
 
@@ -153,7 +153,8 @@ export function registerIpcHandlers(): void {
           w.webContents.send('pty:exit', sessionId, exitCode, signal);
         }
       },
-      configDir
+      configDir,
+      customCommand,
     );
 
     // Validate after spawnPty — Copilot installs per-project hooks there, so

@@ -6,7 +6,7 @@ export type { CostData } from '../shared/types';
 
 export interface VibeyardApi {
   pty: {
-    create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, envVars?: string, configDir?: string): Promise<void>;
+    create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, envVars?: string, configDir?: string, customCommand?: string): Promise<void>;
     createShell(sessionId: string, cwd: string): Promise<void>;
     write(sessionId: string, data: string): void;
     resize(sessionId: string, cols: number, rows: number): void;
@@ -139,8 +139,8 @@ function onChannel(channel: string, callback: (...args: unknown[]) => void): () 
 
 const api: VibeyardApi = {
   pty: {
-    create: (sessionId, cwd, cliSessionId, isResume, extraArgs, providerId, initialPrompt, envVars, configDir) =>
-      ipcRenderer.invoke('pty:create', sessionId, cwd, cliSessionId, isResume, extraArgs || '', providerId || 'claude', initialPrompt, envVars || '', configDir),
+    create: (sessionId, cwd, cliSessionId, isResume, extraArgs, providerId, initialPrompt, envVars, configDir, customCommand) =>
+      ipcRenderer.invoke('pty:create', sessionId, cwd, cliSessionId, isResume, extraArgs || '', providerId || 'claude', initialPrompt, envVars || '', configDir, customCommand),
     createShell: (sessionId, cwd) =>
       ipcRenderer.invoke('pty:createShell', sessionId, cwd),
     write: (sessionId, data) =>

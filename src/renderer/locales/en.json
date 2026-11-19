@@ -100,7 +100,10 @@
       "providerNotInstalled": "{name} (not installed)",
       "profileLabel": "Profile",
       "title": "New Session",
-      "envError": "Use KEY=VALUE — invalid line: {line}"
+      "envError": "Use KEY=VALUE — invalid line: {line}",
+      "customCommandLabel": "Command",
+      "customCommandPlaceholder": "pi  (or any CLI on your PATH, e.g. opencode, aider)",
+      "customCommandRequired": "Enter the command to run"
     },
     "newMcpInspector": {
       "defaultName": "Inspector {num}"

@@ -94,13 +94,27 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
       id: 'provider',
       type: 'select',
       defaultValue: effectiveProvider,
-      onSelectChange: (value) => setProfileFieldVisible(value === 'claude'),
+      onSelectChange: (value) => {
+        setProfileFieldVisible(value === 'claude');
+        setCustomCommandFieldVisible(value === 'custom');
+      },
       options: providers.map(p => {
         const available = availabilityMap.get(p.id);
         return { value: p.id, label: available ? p.displayName : t('tab.newSessionModal.providerNotInstalled', { name: p.displayName }), disabled: !available };
       }),
     });
   }
+
+  // Custom CLI: the user supplies the command. It sits directly under Provider —
+  // it is the one field that matters for that provider — and is prefilled with
+  // the last command used in this project.
+  fields.splice(providers.length > 1 ? 1 : 0, 0, {
+    label: t('tab.newSessionModal.customCommandLabel'),
+    id: 'custom-command',
+    type: 'text',
+    placeholder: t('tab.newSessionModal.customCommandPlaceholder'),
+    defaultValue: project.customCliCommand ?? '',
+  });
 
   // Profile picker (Claude only). Defaults to the project/global default.
   const claudeProfiles = appState.profiles.filter(p => p.providerId === 'claude');
@@ -137,9 +151,17 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
     const keepEnv = values['keep-env'] === 'true';
     project.defaultEnv = keepEnv ? (envVars || undefined) : undefined;
     const providerId = (values['provider'] || 'claude') as ProviderId;
+    const customCommand = values['custom-command']?.trim();
+    if (providerId === 'custom' && !customCommand) {
+      setModalError('custom-command', t('tab.newSessionModal.customCommandRequired'));
+      return;
+    }
     // Profiles only apply to Claude; ignore the field for other providers.
     const profileId = providerId === 'claude' ? (values['profile'] || undefined) : undefined;
-    const session = appState.addSession(project.id, name, args, providerId, profileId, envVars);
+    const session = appState.addSession(
+      project.id, name, args, providerId, profileId, envVars,
+      providerId === 'custom' ? customCommand : undefined,
+    );
     if (session && onCreated) onCreated(session);
   });
 
@@ -147,6 +169,13 @@ export async function promptNewSession(onCreated?: (session: SessionRecord) => v
   // defaulted to a non-Claude provider. The provider select's onSelectChange
   // keeps it in sync as the user switches.
   if (claudeProfiles.length > 0) setProfileFieldVisible(effectiveProvider === 'claude');
+  setCustomCommandFieldVisible(effectiveProvider === 'custom');
+}
+
+/** Toggle the Custom CLI command field's wrapper in the open New Session modal. */
+function setCustomCommandFieldVisible(visible: boolean): void {
+  const wrapper = document.getElementById('modal-custom-command')?.closest('.modal-field') as HTMLElement | null;
+  if (wrapper) wrapper.style.display = visible ? '' : 'none';
 }
 
 /** Toggle the Profile field's wrapper in the open New Session modal. */
