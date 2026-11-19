@@ -88,6 +88,8 @@ export interface RCodeApi {
     setTitleBarOverlay(options: { color: string; symbolColor: string; height?: number }): Promise<void>;
     openExternal(url: string): Promise<void>;
     /** A folder/file handed over by the OS (context menu, `rcode <path>`, second instance). */
+    /** Pull a path that arrived before the renderer was listening (cold start). */
+    takePendingOpenPath(): Promise<string | null>;
     onOpenPath(callback: (target: string) => void): () => void;
     onQuitting(callback: () => void): () => void;
     onConfirmClose(callback: () => void): () => void;
@@ -247,6 +249,7 @@ const api: RCodeApi = {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     setTitleBarOverlay: (options) => ipcRenderer.invoke('app:setTitleBarOverlay', options),
     openExternal: (url: string) => ipcRenderer.invoke('app:openExternal', url),
+    takePendingOpenPath: () => ipcRenderer.invoke('app:takePendingOpenPath'),
     onOpenPath: (cb) => onChannel('app:openPath', (target) => cb(target as string)),
     onQuitting: (cb: () => void) => onChannel('app:quitting', cb),
     onConfirmClose: (cb: () => void) => onChannel('app:confirmClose', cb),

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, powerMonitor, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ipcMain } from 'electron';
 import { registerIpcHandlers, resetHookWatcher } from './ipc-handlers';
 import { killAllPtys } from './pty-manager';
 import { flushState, loadState } from './store';
@@ -127,12 +128,11 @@ function createWindow(): void {
 
   mainWindow.webContents.on('did-finish-load', () => {
     if (TIMING) mark('main:did-finish-load');
-    // A path may have arrived before the window could take it (cold start from a
-    // context-menu entry, or `rcode <path>`). Deliver it once the renderer is up.
-    if (pendingOpenPath && mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('app:openPath', pendingOpenPath);
-      pendingOpenPath = null;
-    }
+    // NOTE: a pending OS hand-off is NOT pushed from here. `did-finish-load` fires
+    // before the renderer has registered its listener (it wires up after loading
+    // state), so a push would be dropped *and* clear the pending path before the
+    // renderer can pull it. The renderer calls app:takePendingOpenPath instead;
+    // only the already-running case (second-instance) pushes.
   });
 
   if (TIMING) {
@@ -225,33 +225,60 @@ app.whenReady().then(async () => {
   registerIpcHandlers();
   mark('main:ipc-registered');
 
-  // Cold start from a context-menu entry / `rcode <path>`: stash the path; it is
-  // delivered on did-finish-load (see createWindow).
+  // Cold start from a context-menu entry / `rcode <path>`. The renderer pulls this
+  // once it has loaded its state (app:takePendingOpenPath) — pushing it from here
+  // raced with the listener registration whenever startup was slow.
   const initialPath = extractOpenPath(process.argv, app.getAppPath());
   if (initialPath) pendingOpenPath = initialPath;
+
+  // The renderer asks for this right after loading state: the hand-off cannot be
+  // pushed from here because the listener does not exist yet.
+  ipcMain.handle('app:takePendingOpenPath', () => {
+    const target = pendingOpenPath;
+    pendingOpenPath = null;
+    return target;
+  });
   const state = loadState();
   mark('main:state-loaded');
   createAppMenu(state.preferences?.debugMode ?? false);
   createWindow();
   mark('main:window-created');
 
-  // Warn if Python is missing on Windows (hooks depend on it)
-  const pythonWarning = checkPythonAvailable();
-  if (pythonWarning) {
-    console.warn(pythonWarning);
-    dialog.showMessageBox(mainWindow!, {
-      type: 'warning',
-      title: 'RCode — Python Not Found',
-      message: pythonWarning,
-    });
-  }
-
-  // Install hooks and status scripts for available providers (after window creation so dialogs can attach)
-  for (const provider of getAllProviders()) {
-    if (provider.validatePrerequisites()) {
-      await provider.installHooks(mainWindow);
-      provider.installStatusScripts();
+  // Post-first-paint work. This used to run right after createWindow(), where the
+  // synchronous `python --version` probe and the provider hook installs blocked the
+  // main thread and stalled the renderer's `store:load` for seconds — on Windows
+  // that delayed the first usable window and could drop an OS hand-off entirely.
+  const runDeferredStartupWork = async (): Promise<void> => {
+    const pythonWarning = checkPythonAvailable();
+    if (pythonWarning) {
+      console.warn(pythonWarning);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        void dialog.showMessageBox(mainWindow, {
+          type: 'warning',
+          title: 'RCode — Python Not Found',
+          message: pythonWarning,
+        });
+      }
     }
+
+    // Install hooks and status scripts for available providers
+    for (const provider of getAllProviders()) {
+      if (!provider.validatePrerequisites()) continue;
+      try {
+        await provider.installHooks(mainWindow);
+        provider.installStatusScripts();
+      } catch (err) {
+        console.warn('Provider startup work failed:', err);
+      }
+    }
+    mark('main:deferred-work-done');
+  };
+
+  const win = mainWindow;
+  if (win) {
+    win.webContents.once('did-finish-load', () => {
+      setTimeout(() => void runDeferredStartupWork(), 0);
+    });
   }
 
   mark('main:ready');

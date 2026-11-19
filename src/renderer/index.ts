@@ -120,6 +120,12 @@ async function main(): Promise<void> {
     window.rcode.app.onOpenPath((target) => {
       void openPathFromShell(target);
     });
+    // A cold start from the Explorer context menu stashed its path in the main
+    // process; pull it now that state is loaded and the listener is live.
+    void window.rcode.app
+      .takePendingOpenPath()
+      .then((target) => (target ? openPathFromShell(target) : undefined))
+      .catch(() => undefined);
   };
   async function openPathFromShell(raw: string): Promise<void> {
     let isDirectory = false;
