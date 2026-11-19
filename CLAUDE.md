@@ -15,6 +15,22 @@ npm start        # Build then launch Electron app (alias: npm run dev)
 
 No hot reload — changes require rebuild + app restart.
 
+### Packaging (Windows)
+
+```bash
+npm run dist                 # build + electron-builder (nsis installer + portable)
+out/RCode Setup 0.0.1.exe    # installer (writes the Explorer context menu)
+out/RCode 0.0.1.exe          # portable
+```
+
+- Output goes to `out/`, not `dist/` — `dist/` is the compiled app and is listed in
+  `build.files`, so writing installers there would package them into themselves.
+- `build/installer.nsh` adds "Open with RCode" to `Directory`, `Directory\Background`
+  and `*` under HKCU (no elevation) and removes the keys on uninstall.
+- If the Electron download fails (GitHub release assets time out), package against the
+  already-installed runtime instead:
+  `npx electron-builder --win nsis portable --publish never -c.electronDist=node_modules/electron/dist`.
+- Builds are unsigned, so Windows SmartScreen will warn on first run.
 For UI work there is a browser harness: `npm run dev:web:watch` serves the renderer at
 `http://localhost:5173` with a fixture-backed `window.rcode` (`dev/`), so CSS/TS
 tweaks reload without Electron. `node dev/shot.js out.png` screenshots it headlessly

@@ -7,7 +7,7 @@
 ; The app itself decides what "open" means (switch to the project, add it first
 ; if it is unknown); this file only hands it a path.
 
-!macro rcodeWriteMenuEntry ROOT_KEY
+!macro rcodeWriteMenuEntry
   ; --- Folder right-click -------------------------------------------------
   WriteRegStr HKCU "Software\Classes\Directory\shell\RCode" "" "Open with RCode"
   WriteRegStr HKCU "Software\Classes\Directory\shell\RCode" "Icon" "$INSTDIR\${APP_EXECUTABLE_FILENAME}"

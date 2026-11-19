@@ -1,6 +1,6 @@
 {
   "name": "rcode",
-  "version": "0.3.4",
+  "version": "0.0.1",
   "description": "A terminal-centric IDE for AI-powered CLI tools, built on Electron",
   "author": {
     "name": "Eliran Tutia",
@@ -54,6 +54,10 @@
   "build": {
     "appId": "com.rcode.app",
     "productName": "RCode",
+    "directories": {
+      "output": "out",
+      "buildResources": "build"
+    },
     "icon": "build/icon.png",
     "files": [
       "dist/main/**/*",
