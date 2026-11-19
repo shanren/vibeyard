@@ -25,3 +25,22 @@ export const ICON_MENU = STROKE_ICON('<line x1="4" x2="20" y1="12" y2="12"/><lin
 export const ICON_PROJECTS = STROKE_ICON('<path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l1.8 2H19a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 10.5h17"/>');
 
 export const ICON_SETTINGS = STROKE_ICON('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
+
+// ── Provider marks ──────────────────────────────────────────────────────────
+// The four bundled CLIs ship a brand PNG in assets/providers/<id>.png, which
+// the tab bar renders as an <img>. Providers added later have no logo file, so
+// they get a stroke glyph here instead — same 14px box, theme-aware colour.
+
+export const PROVIDER_ICONS: Record<string, string> = {
+  // π — pi's own mark.
+  pi: STROKE_ICON('<path d="M5 7.5h14"/><path d="M9.5 7.5V18"/><path d="M15.5 7.5V16c0 1 .7 2 2 2"/>'),
+  // >_ inside a rounded terminal — opencode is a terminal agent.
+  opencode: STROKE_ICON('<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="m7.5 10 2.5 2-2.5 2"/><path d="M13 14h4"/>'),
+  // Sliders — a CLI the user configured themselves.
+  custom: STROKE_ICON('<path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="17" r="2"/>'),
+};
+
+/** Inline mark for providers without a bundled PNG, or null when a PNG exists. */
+export function providerGlyph(providerId: string): string | null {
+  return PROVIDER_ICONS[providerId] ?? null;
+}

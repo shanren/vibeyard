@@ -39,6 +39,28 @@ const PROJECTS = [
         createdAt: iso(12),
       },
       {
+        id: 'p-qis-pi',
+        name: 'pi: refactor the parser',
+        cliSessionId: 'c0ffee00-0000-4000-8000-000000000010',
+        providerId: 'pi',
+        createdAt: iso(20),
+      },
+      {
+        id: 'p-qis-oc',
+        name: 'opencode: audit deps',
+        cliSessionId: 'c0ffee00-0000-4000-8000-000000000011',
+        providerId: 'opencode',
+        createdAt: iso(15),
+      },
+      {
+        id: 'p-qis-custom',
+        name: 'aider: tweak prompts',
+        cliSessionId: 'c0ffee00-0000-4000-8000-000000000012',
+        providerId: 'custom',
+        customCommand: 'aider',
+        createdAt: iso(10),
+      },
+      {
         id: 'p-qis-3',
         name: 'state.ts',
         type: 'file-reader',

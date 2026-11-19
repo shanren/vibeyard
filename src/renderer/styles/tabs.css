@@ -415,6 +415,23 @@
 }
 
 /* Provider icon in tab */
+/* Providers without a bundled PNG use this stroke glyph, sized to match. */
+.tab-provider-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+  color: var(--app-text-secondary);
+  vertical-align: middle;
+}
+
+.tab-provider-glyph svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
 .tab-provider-icon {
   width: 14px;
   height: 14px;

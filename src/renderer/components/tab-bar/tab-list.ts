@@ -7,6 +7,7 @@ import { hasMultipleAvailableProviders, getProviderCapabilities } from '../../pr
 import { buildResumeWithProviderItems } from '../resume-with-provider-menu.js';
 import { isCliSession } from '../../session-utils.js';
 import { esc } from '../../dom-utils.js';
+import { providerGlyph } from '../../icons.js';
 import {
   closeSessionWithConfirm,
   closeSessionWithAlwaysConfirm,
@@ -273,7 +274,7 @@ export function render(): void {
     tab.draggable = true;
     tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId ?? undefined);
     const providerId = session.providerId || 'claude';
-    const providerIcon = hasMultipleAvailableProviders() ? `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> ` : '';
+    const providerIcon = hasMultipleAvailableProviders() ? providerTabIcon(providerId) : '';
     const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : !isSpecial ? providerIcon : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
@@ -379,4 +380,15 @@ export function updateTabStatus(sessionId: string, status: SessionStatus): void 
     const session = appState.activeProject?.sessions.find(s => s.id === sessionId);
     tab.title = buildTooltip(status, session?.cliSessionId ?? undefined);
   }
+}
+
+/**
+ * Provider mark shown before a CLI tab title. Bundled CLIs ship a brand PNG;
+ * providers added later (pi, opencode, custom) have no logo file, so they fall
+ * back to the stroke glyph in icons.ts. Both occupy the same 14px box.
+ */
+function providerTabIcon(providerId: string): string {
+  const glyph = providerGlyph(providerId);
+  if (glyph) return `<span class="tab-provider-glyph" title="${esc(providerId)}">${glyph}</span> `;
+  return `<img class="tab-provider-icon" src="assets/providers/${providerId}.png" alt="${providerId}" onerror="this.style.display='none'"> `;
 }
