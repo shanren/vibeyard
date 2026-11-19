@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, powerMonitor, shell } from 'electron';
+import * as fs from 'fs';
 import * as path from 'path';
 import { registerIpcHandlers, resetHookWatcher } from './ipc-handlers';
 import { killAllPtys } from './pty-manager';
@@ -11,8 +12,63 @@ import { stopAllFileWatchers } from './file-watcher';
 import { checkPythonAvailable } from './prerequisites';
 import { isMac, isWin } from './platform';
 import { isCloseConfirmed, setCloseConfirmed } from './close-state';
+import { isAbsolutePath, normalizeShellPath } from '../shared/platform';
 
 let mainWindow: BrowserWindow | null = null;
+
+/**
+ * A folder (or file) handed to us by the OS — a file-manager context menu entry,
+ * a `rcode <path>` invocation, or a second-instance launch. It is forwarded to the
+ * renderer, which owns the project list, once that window is ready.
+ */
+let pendingOpenPath: string | null = null;
+
+/**
+ * Pull the path out of a command line. Packaged launches arrive as
+ * `RCode.exe "<path>"`; dev launches as `electron . "<path>"` — in both cases the
+ * path is whatever argv entry exists after the first one that is neither a flag
+ * nor the app directory.
+ */
+export function extractOpenPath(argv: string[], appPath: string): string | null {
+  const rest = argv.slice(1).filter((arg) => {
+    if (!arg || arg.startsWith('-')) return false;
+    // Only absolute paths count. A dev launch is `electron .`, and `.` would
+    // otherwise resolve against the cwd and register the app dir as a project.
+    if (!isAbsolutePath(arg)) return false;
+    if (appPath && normalizeShellPath(arg) === normalizeShellPath(appPath)) return false;
+    return true;
+  });
+  const candidate = rest[rest.length - 1];
+  if (!candidate) return null;
+  const normalized = normalizeShellPath(candidate);
+  try {
+    // Only hand over paths that exist; a stray argv entry must not add a project.
+    // Resolve to the OS-native form so the project path we store matches what the
+    // rest of the app (fs, watchers, git) sees on this platform.
+    if (fs.existsSync(normalized)) return path.resolve(normalized);
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function openPathInWindow(win: BrowserWindow, target: string): void {
+  if (win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+  win.webContents.send('app:openPath', target);
+}
+
+/** Focus the existing window and forward the path, or remember it until ready. */
+function requestOpenPath(target: string): void {
+  const win = mainWindow ?? BrowserWindow.getAllWindows()[0];
+  if (win && !win.isDestroyed() && !win.webContents.isLoading()) {
+    openPathInWindow(win, target);
+    return;
+  }
+  pendingOpenPath = target;
+}
 
 // Startup timing instrumentation. Enable with RCODE_TIMING=1; every mark
 // prints "[startup] <label> <ms since process start>" so cold-start work can be
@@ -69,8 +125,17 @@ function createWindow(): void {
     TIMING ? { query: { timing: '1' } } : undefined,
   );
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (TIMING) mark('main:did-finish-load');
+    // A path may have arrived before the window could take it (cold start from a
+    // context-menu entry, or `rcode <path>`). Deliver it once the renderer is up.
+    if (pendingOpenPath && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('app:openPath', pendingOpenPath);
+      pendingOpenPath = null;
+    }
+  });
+
   if (TIMING) {
-    mainWindow.webContents.on('did-finish-load', () => mark('main:did-finish-load'));
     mainWindow.webContents.on('console-message', (_e, _level, message) => {
       console.log(`[renderer] ${message}`);
     });
@@ -108,6 +173,34 @@ function createWindow(): void {
   });
 }
 
+// One instance only: this process owns the state file, and a second instance would
+// overwrite it. A second launch — icon double-click, or a context-menu entry while
+// we are already running — forwards its path here instead of starting over.
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, argv) => {
+    const target = extractOpenPath(argv, app.getAppPath());
+    if (target) {
+      requestOpenPath(target);
+      return;
+    }
+    const win = mainWindow ?? BrowserWindow.getAllWindows()[0];
+    if (win && !win.isDestroyed()) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
+  });
+
+  // macOS hands paths to an already-running app through `open-file`, not argv.
+  app.on('open-file', (event, filePath) => {
+    event.preventDefault();
+    requestOpenPath(normalizeShellPath(filePath));
+  });
+}
+
 app.whenReady().then(async () => {
   initProviders();
 
@@ -131,6 +224,11 @@ app.whenReady().then(async () => {
 
   registerIpcHandlers();
   mark('main:ipc-registered');
+
+  // Cold start from a context-menu entry / `rcode <path>`: stash the path; it is
+  // delivered on did-finish-load (see createWindow).
+  const initialPath = extractOpenPath(process.argv, app.getAppPath());
+  if (initialPath) pendingOpenPath = initialPath;
   const state = loadState();
   mark('main:state-loaded');
   createAppMenu(state.preferences?.debugMode ?? false);

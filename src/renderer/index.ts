@@ -1,4 +1,5 @@
 import { appState } from './state.js';
+import { planShellOpen, findProjectForDirectory } from './state/shell-open.js';
 import { initSidebar, promptNewProject } from './components/sidebar.js';
 import { initTitleBar } from './components/title-bar.js';
 import { initTabBar } from './components/tab-bar.js';
@@ -109,6 +110,36 @@ async function main(): Promise<void> {
     appState.updateSessionContext(sessionId, info);
   });
 
+  // "Open with RCode" from the OS shell: switch to the project if we have it,
+  // add it if we don't, and open the file when a file was what got clicked.
+  // Runs after the first state load so `appState.projects` is populated.
+  let shellOpenWired = false;
+  const wireShellOpen = (): void => {
+    if (shellOpenWired) return;
+    shellOpenWired = true;
+    window.rcode.app.onOpenPath((target) => {
+      void openPathFromShell(target);
+    });
+  };
+  async function openPathFromShell(raw: string): Promise<void> {
+    let isDirectory = false;
+    try {
+      isDirectory = await window.rcode.fs.isDirectory(raw);
+    } catch {
+      isDirectory = false;
+    }
+    const plan = planShellOpen(raw, isDirectory);
+    if (!plan) return;
+
+    let project = findProjectForDirectory(appState.projects, plan.directory);
+    if (!project) {
+      project = appState.addProject(plan.name, plan.directory);
+    }
+    if (!project) return;
+    if (appState.activeProjectId !== project.id) appState.setActiveProject(project.id);
+    if (plan.file) appState.addFileReaderSession(project.id, plan.file);
+  }
+
   window.rcode.session.onHookStatus((sessionId, status, hookName) => {
     if (!appState.hasSession(sessionId)) return;
     setHookStatus(sessionId, status, hookName);
@@ -192,6 +223,7 @@ async function main(): Promise<void> {
 
   // Load persisted state
   await appState.load();
+  wireShellOpen();
   mark('renderer:state-loaded');
 
   // Initialize the UI locale before anything else renders strings.
