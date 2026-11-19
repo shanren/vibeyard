@@ -1,8 +1,6 @@
 import { appState } from './state.js';
 import { initSidebar, promptNewProject } from './components/sidebar.js';
 import { initTitleBar } from './components/title-bar.js';
-import { initActivityBar } from './components/activity-bar.js';
-import { initStatusBar } from './components/status-bar.js';
 import { initTabBar } from './components/tab-bar.js';
 import { initExplorerPanel } from './components/explorer-panel.js';
 import { initSplitLayout } from './components/split-layout.js';
@@ -162,9 +160,7 @@ async function main(): Promise<void> {
 
   // Initialize components
   initSessionUnread();
-  initActivityBar();
   initSidebar();
-  initStatusBar();
   initTitleBar();
   initTabBar();
   initExplorerPanel();

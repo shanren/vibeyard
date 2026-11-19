@@ -200,7 +200,11 @@ function makeRow(depth: number, entry: DirEntry, projectId: string): HTMLElement
 
   const icon = document.createElement('span');
   icon.className = 'file-tree-icon';
-  icon.textContent = entry.isDirectory ? '\u{1F4C1}' : '\u{1F4C4}';
+  // Monochrome glyphs: the emoji folder/page icons brought the OS colour palette
+  // into the sidebar and read as noise against the flat chrome.
+  icon.innerHTML = entry.isDirectory
+    ? '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1.8 3.6h4l1.4 1.6h6.9v7.2a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z"/></svg>'
+    : '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3.6 1.8h4.9l3 3v9.4a1 1 0 0 1-1 1H3.6a1 1 0 0 1-1-1V2.8a1 1 0 0 1 1-1z"/><path d="M8.5 1.9v3h3"/></svg>';
 
   const label = document.createElement('span');
   label.className = 'file-tree-label';

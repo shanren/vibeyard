@@ -47,7 +47,9 @@
     "dist": "npm run build && electron-builder",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "dev:web": "npm run build && node dev/server.js",
+    "dev:web:watch": "node dev/server.js --watch"
   },
   "build": {
     "appId": "com.vibeyard.app",

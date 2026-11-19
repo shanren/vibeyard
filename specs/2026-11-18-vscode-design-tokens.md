@@ -326,17 +326,28 @@ VS Code 的垂直节奏是 4px 栅格 + 固定结构高度。
 
 ## 11. 落地记录（第 3 步实施后的实际结果）
 
-已按本规格实施完毕。以下是实施中做出的、与上文描述有出入的决定，全部由实现者裁定：
+**重要修正**：初版曾把左侧改成 VS Code 的 Activity Bar 骨架（48px 图标栏 + 底部状态栏、Explorer 移到左侧）。
+实施后确认这条路是错的——本软件是"一个工具里管理多个项目"，左侧本就该只负责项目管理；引入图标栏后同一功能出现两条入口，操作逻辑混乱。
+**已回退**：不存在 Activity Bar，不存在底部 Status Bar，Explorer 回到右侧，分支指示器回到 tab 栏，项目卡片的三个人口按钮（Sessions / Files / Git）保留。
+**本次只做视觉层替换**：配色、字体、圆角、字号、阴影、语义色。布局与操作路径保持原样。
 
-1. **左侧只有一列**：Explorer 从右侧移到 Activity Bar 之后，成为左侧面板；`#sidebar.collapsed` 由「58px 图标栏」改为 `display:none`（活动栏已经承担了图标栏的角色，删掉了 21 条 rail 规则）。启动时若 Explorer 处于打开状态，会自动收起 sidebar，避免两列并排。
-2. **项目列表不再是卡片**：VS Code 不在侧栏里嵌套表面。`.project-row.active` 去掉了圆角/边框/外边距，选中态改成 `#04395E`（`list.activeSelectionBackground`）的整行填充，行高 22px。
-3. **Tab 激活标记移到顶部 1px**（`tab.activeBorderTop`），tab 高 35px、字号 13px、无圆角。
-4. **分支指示器从 tab 栏移到状态栏**：VS Code 的 tab 栏没有分支。`#git-status` 元素删除，`renderGitStatus` 删除，分支菜单改由状态栏的分支项触发（`showBranchContextMenu(e, anchorEl)` 现在接受锚点元素，菜单向上弹出）。
-5. **窗口标题栏 35px**，并新增 `app:setTitleBarOverlay` IPC：主题切换时重新着色 Windows 的系统按钮覆盖层（原先写死 `#101116` 且高 36px）。
-6. **侧栏头部精简**：移除折叠按钮与设置齿轮（分别由「点活动栏图标收起」和活动栏底部齿轮承担），改为 VS Code 的视图名（11px 大写、字距 0.06em）。
-7. **阴影全部删除**：27 处 elevation `box-shadow` 移除，改用 1px 描边；保留 4 处 `inset` 投影——它们是拖拽放置指示线，不是层次。
-8. **`@media (prefers-reduced-motion)` 未引入**：VS Code 本身几乎无动效，本次已把结构性过渡删到只剩背景色一处。
+已落地的视觉规则：
 
-### 验证方式（无截图环境）
+1. **三档表面**：`#181818` 面板 / `#1F1F1F` 画布 / `#313131` 输入；部件之间用 1px `#2B2B2B` 分隔。
+2. **单一蓝色强调** `#0078D4`（浅色 `#005FB8`）：只用于主 CTA、焦点框、当前项指示。项目头像与侧栏 "+" 改为中性灰，不再整块刷蓝。
+3. **"当前项目"用左侧 2px 蓝线 + 中性选中底** `#37373D` 标记，不用整行蓝底（原 `#04395E` 被判定为"太突兀"）。
+4. **系统字体**：删掉自托管的 Hanken Grotesk / JetBrains Mono（woff2 一并删除，`copy-assets` 同步移除）。
+5. **圆角 0 / 2 / 6**：面板 0、控件 2、浮层 6；全部 elevation 阴影删除，改用 1px 描边（保留 4 处 `inset` 拖拽指示线）。
+6. **项目卡片**：头像 22px，行内边距 4px/10px，三个入口按钮 22×22、图标 16px、左对齐到卡片内容列，Git 计数徽标贴图标右上角。
+7. **文件树图标**改为单色 SVG（原 emoji 图标带系统彩色，与扁平 chrome 冲突）。
+8. **`.vibeyardignore`** 不再出现在文件树与 git 变更列表（它是应用自己的配置，写进用户项目根目录）。
 
-用 DevTools Protocol 驱动真实 Electron 渲染进程读取计算样式，实测值：Activity Bar 48×full `#181818`、Status Bar 22px/12px/顶边 1px、Tab 栏 35px、标题栏 35px、侧栏 300px、侧栏头 22px、侧栏标题 11px 大写 `#9D9D9D`、主按钮 26px/2px 圆角/字重 400、正文系统字体 13px；亮色主题下 chrome 全为 `#F8F8F8`、按钮 `#005FB8`。加载期控制台零报错。
+### 调试方式
+
+改样式不再重启 Electron：`npm run dev:web:watch` 在 `http://localhost:5173` 提供带 mock 桥的渲染层，改完自动刷新；
+`node dev/shot.js out.png` 用 headless Chrome 截图并回显页面报错。详见 `dev/README.md`。
+
+### 验收方式（无截图环境）
+
+用 DevTools Protocol 读真实计算样式：侧栏 300px、侧栏头 22px、标题栏/tab 栏 35px、主按钮 26px/2px 圆角/字重 400、正文系统字体 13px；
+亮色主题下 chrome 全为 `#F8F8F8`、按钮 `#005FB8`；加载期控制台零报错；`npm test` 98 文件 / 1423 通过；渲染层 `tsc` 0 错误。

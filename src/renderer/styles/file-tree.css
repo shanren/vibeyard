@@ -46,9 +46,10 @@
 }
 
 .file-tree-icon {
-  font-size: 13px;
-  opacity: 0.75;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  color: var(--app-text-secondary);
 }
 
 .file-tree-label {
