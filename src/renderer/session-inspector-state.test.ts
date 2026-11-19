@@ -5,7 +5,6 @@ import {
   getEvents,
   getToolStats,
   getContextHistory,
-  getCostDeltas,
   onChange,
   clearSession,
   _resetForTesting,
@@ -58,20 +57,7 @@ describe('session-inspector-state', () => {
       expect(cb).toHaveBeenCalledWith('s1');
     });
 
-    it('invalidates cost delta cache when events change', () => {
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.1, total_duration_ms: 100 } }),
-      ]);
-      const first = getCostDeltas('s1');
-      expect(first).toHaveLength(1);
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.3, total_duration_ms: 100 } }),
-      ]);
-      const second = getCostDeltas('s1');
-      expect(second).toHaveLength(2);
-      // second delta should be 0.3 - 0.1 = 0.2
-      expect(second[1].delta).toBeCloseTo(0.2, 5);
-    });
+
   });
 
   describe('getToolStats', () => {
@@ -79,41 +65,9 @@ describe('session-inspector-state', () => {
       expect(getToolStats('nope')).toEqual([]);
     });
 
-    it('aggregates call counts, failures, and attributes cost deltas to the preceding tool event', () => {
-      // Real event layout: snapshots live on status_update events that follow
-      // the tool event they should be attributed to.
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', tool_name: 'Bash' }),
-        makeEvent({ type: 'status_update', cost_snapshot: { total_cost_usd: 0.10, total_duration_ms: 10 } }),
-        makeEvent({ type: 'tool_use', tool_name: 'Bash' }),
-        makeEvent({ type: 'status_update', cost_snapshot: { total_cost_usd: 0.25, total_duration_ms: 10 } }),
-        makeEvent({ type: 'tool_failure', tool_name: 'Bash' }),
-        makeEvent({ type: 'status_update', cost_snapshot: { total_cost_usd: 0.30, total_duration_ms: 10 } }),
-        makeEvent({ type: 'tool_use', tool_name: 'Read' }),
-        makeEvent({ type: 'status_update', cost_snapshot: { total_cost_usd: 0.35, total_duration_ms: 10 } }),
-      ]);
 
-      const stats = getToolStats('s1');
-      // sorted desc by calls
-      expect(stats[0].tool_name).toBe('Bash');
-      expect(stats[0].calls).toBe(3);
-      expect(stats[0].failures).toBe(1);
-      // 0.10 (first snapshot → first Bash) + 0.15 (→ second Bash) + 0.05 (→ Bash failure)
-      expect(stats[0].totalCost).toBeCloseTo(0.30, 5);
-      expect(stats[1].tool_name).toBe('Read');
-      expect(stats[1].calls).toBe(1);
-      expect(stats[1].failures).toBe(0);
-      expect(stats[1].totalCost).toBeCloseTo(0.05, 5);
-    });
 
-    it('leaves totalCost at 0 when no cost snapshots are present', () => {
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', tool_name: 'Bash' }),
-        makeEvent({ type: 'tool_use', tool_name: 'Bash' }),
-      ]);
-      const stats = getToolStats('s1');
-      expect(stats[0].totalCost).toBe(0);
-    });
+
 
     it('uses "unknown" when tool_name is missing', () => {
       addEvents('s1', [makeEvent({ type: 'tool_use' })]);
@@ -157,45 +111,10 @@ describe('session-inspector-state', () => {
     });
   });
 
-  describe('getCostDeltas', () => {
-    it('returns empty array for unknown session', () => {
-      expect(getCostDeltas('nope')).toEqual([]);
-    });
 
-    it('computes first snapshot as absolute, subsequent as differences', () => {
-      addEvents('s1', [
-        makeEvent({ type: 'user_prompt' }), // no cost
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.1, total_duration_ms: 10 } }),
-        makeEvent({ type: 'tool_use' }), // no cost
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.35, total_duration_ms: 10 } }),
-      ]);
-      const deltas = getCostDeltas('s1');
-      expect(deltas).toHaveLength(2);
-      expect(deltas[0]).toEqual({ index: 1, delta: 0.1 });
-      expect(deltas[1].index).toBe(3);
-      expect(deltas[1].delta).toBeCloseTo(0.25, 5);
-    });
-
-    it('reuses cached deltas when event count has not changed', () => {
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.1, total_duration_ms: 10 } }),
-      ]);
-      const first = getCostDeltas('s1');
-      const second = getCostDeltas('s1');
-      expect(second).toBe(first); // identity — cache hit
-    });
-  });
 
   describe('clearSession', () => {
-    it('removes events and cost cache for a session', () => {
-      addEvents('s1', [
-        makeEvent({ type: 'tool_use', cost_snapshot: { total_cost_usd: 0.1, total_duration_ms: 10 } }),
-      ]);
-      getCostDeltas('s1'); // prime cache
-      clearSession('s1');
-      expect(getEvents('s1')).toEqual([]);
-      expect(getCostDeltas('s1')).toEqual([]);
-    });
+
 
     it('is a no-op for unknown sessions', () => {
       expect(() => clearSession('nope')).not.toThrow();

@@ -20,7 +20,6 @@ export class GeminiProvider implements CliProvider {
     binaryName: 'gemini',
     capabilities: {
       sessionResume: true,
-      costTracking: false,
       contextWindow: false,
       hookStatus: true,
       configReading: true,

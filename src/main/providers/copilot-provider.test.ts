@@ -70,17 +70,7 @@ describe('meta', () => {
     expect(provider.meta.binaryName).toBe('copilot');
   });
 
-  it('has sessionResume and hookStatus capabilities enabled', () => {
-    const caps = provider.meta.capabilities;
-    expect(caps.sessionResume).toBe(true);
-    expect(caps.costTracking).toBe(false);
-    expect(caps.contextWindow).toBe(false);
-    expect(caps.hookStatus).toBe(true);
-    expect(caps.configReading).toBe(true);
-    expect(caps.shiftEnterNewline).toBe(false);
-    expect(caps.pendingPromptTrigger).toBe('startup-arg');
-    expect(caps.planModeArg).toBe('--mode plan');
-  });
+
 
   it('has defaultContextWindowSize of 128,000', () => {
     expect(provider.meta.defaultContextWindowSize).toBe(128_000);

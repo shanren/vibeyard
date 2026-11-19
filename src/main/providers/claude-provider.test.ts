@@ -58,7 +58,6 @@ describe('meta', () => {
   it('has all capabilities set to true', () => {
     const caps = provider.meta.capabilities;
     expect(caps.sessionResume).toBe(true);
-    expect(caps.costTracking).toBe(true);
     expect(caps.contextWindow).toBe(true);
     expect(caps.hookStatus).toBe(true);
     expect(caps.configReading).toBe(true);
@@ -251,18 +250,4 @@ describe('getTranscriptPath', () => {
   });
 });
 
-describe('parseCostFromOutput', () => {
-  it('extracts last $X.XX match from text', () => {
-    const result = provider.parseCostFromOutput('Total cost: $1.23');
-    expect(result).toEqual({ totalCostUsd: 1.23 });
-  });
 
-  it('returns null when no cost pattern found', () => {
-    expect(provider.parseCostFromOutput('no costs here')).toBeNull();
-  });
-
-  it('handles multiple cost values and picks last one', () => {
-    const result = provider.parseCostFromOutput('Cost: $0.50 then $1.75 then $3.20');
-    expect(result).toEqual({ totalCostUsd: 3.20 });
-  });
-});

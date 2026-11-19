@@ -33,7 +33,6 @@ describe('CustomProvider', () => {
     expect(provider.meta.id).toBe('custom');
     expect(provider.meta.capabilities).toMatchObject({
       sessionResume: false,
-      costTracking: false,
       contextWindow: false,
       hookStatus: false,
       configReading: false,

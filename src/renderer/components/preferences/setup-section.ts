@@ -133,7 +133,7 @@ export function createSetupSection(ctx: PreferencesContext): SectionController {
 
         const { capabilities } = meta;
 
-        if (capabilities.costTracking || capabilities.contextWindow) {
+        if (capabilities.contextWindow) {
           const slOk = validation.statusLine === 'vibeyard';
           let slStatus = t('setup.statusLineConfigured');
           if (validation.statusLine === 'missing') slStatus = t('setup.statusLineMissing');
@@ -179,7 +179,7 @@ export function createSetupSection(ctx: PreferencesContext): SectionController {
           }
           section.appendChild(hookList);
 
-          if (capabilities.costTracking && validation.statusLine !== 'vibeyard' && !hooksOk) {
+          if (capabilities.contextWindow && validation.statusLine !== 'vibeyard' && !hooksOk) {
             const fixAllRow = document.createElement('div');
             fixAllRow.className = 'setup-fix-all-row';
 

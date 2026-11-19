@@ -181,7 +181,7 @@
     "statusLineMissing": "未配置",
     "statusLineForeign": "已被其他工具覆盖",
     "statusLineLabel": "状态行",
-    "statusLineDescription": "用于成本跟踪和上下文窗口监控。",
+    "statusLineDescription": "用于上下文窗口监控。",
     "hooksComplete": "所有钩子已安装",
     "hooksMissing": "未安装钩子",
     "hooksPartial": "部分钩子缺失",
@@ -208,9 +208,7 @@
     "tabBadgeUnreadLabel": "未读",
     "tabBadgeUnreadDesc": "后台会话需要关注",
     "statusBar": "状态栏",
-    "statusBarSample1": "$1.23 · 输入 5k / 输出 2k",
-    "statusBarCostLabel": "费用明细",
-    "statusBarCostDesc": "包含 Token 数的详细费用",
+    "statusBarSample1": "上下文 12% · 5k 入 / 2k 出",
     "statusBarSample2": "[====------] 50%",
     "statusBarCtxLabel": "上下文使用",
     "statusBarCtxDesc": "上下文窗口的占用程度",
@@ -316,7 +314,6 @@
   },
   "statusBar": {
     "branchTooltip": "当前分支：{branch}",
-    "costTooltip": "本次会话花费",
     "status": {
       "working": "进行中",
       "waiting": "等待中",

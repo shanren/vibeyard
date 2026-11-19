@@ -15,11 +15,6 @@ vi.stubGlobal('crypto', {
   randomUUID: () => `uuid-${++uuidCounter}`,
 });
 
-vi.mock('../session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-  restoreCost: vi.fn(),
-}));
-
 vi.mock('../session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
@@ -31,13 +26,10 @@ vi.mock('../provider-availability.js', () => ({
 }));
 
 import { appState, _resetForTesting, MAX_SESSION_NAME_LENGTH } from '../state';
-import { getCost } from '../session-cost.js';
-const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {
   vi.clearAllMocks();
   uuidCounter = 0;
-  mockGetCost.mockReturnValue(null);
   _resetForTesting();
 });
 
@@ -55,15 +47,6 @@ function addProjectWithSessions(count: number) {
 }
 
 function mockCostData() {
-  mockGetCost.mockReturnValue({
-    totalCostUsd: 0.42,
-    totalInputTokens: 1000,
-    totalOutputTokens: 500,
-    cacheReadTokens: 0,
-    cacheCreationTokens: 0,
-    totalDurationMs: 5000,
-    totalApiDurationMs: 3000,
-  });
 }
 
 describe('setActiveSession()', () => {
@@ -98,44 +81,7 @@ describe('updateSessionCliId()', () => {
   });
 });
 
-describe('updateSessionCost()', () => {
-  const sampleCost = {
-    totalCostUsd: 2.5,
-    totalInputTokens: 1000,
-    totalOutputTokens: 400,
-    cacheReadTokens: 50,
-    cacheCreationTokens: 25,
-    totalDurationMs: 3000,
-    totalApiDurationMs: 2000,
-  };
 
-  it('persists cost data on the session record', () => {
-    const project = addProject();
-    const session = appState.addSession(project.id, 'S1')!;
-    mockSave.mockClear();
-    appState.updateSessionCost(session.id, sampleCost);
-    const updated = appState.activeProject!.sessions.find(s => s.id === session.id)!;
-    expect(updated.cost).toEqual(sampleCost);
-    expect(mockSave).toHaveBeenCalled();
-  });
-
-  it('no-op for nonexistent session', () => {
-    addProject();
-    mockSave.mockClear();
-    appState.updateSessionCost('nonexistent', sampleCost);
-    expect(mockSave).not.toHaveBeenCalled();
-  });
-
-  it('updates cost across projects', () => {
-    const p1 = addProject('P1', '/p1');
-    const p2 = addProject('P2', '/p2');
-    const s1 = appState.addSession(p1.id, 'S1')!;
-    appState.addSession(p2.id, 'S2');
-    appState.updateSessionCost(s1.id, sampleCost);
-    const found = appState.projects.find(p => p.id === p1.id)!.sessions.find(s => s.id === s1.id)!;
-    expect(found.cost).toEqual(sampleCost);
-  });
-});
 
 describe('updateSessionContext()', () => {
   const sampleContext = { totalTokens: 5000, contextWindowSize: 200000, usedPercentage: 2.5 };

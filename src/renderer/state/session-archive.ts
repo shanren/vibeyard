@@ -1,5 +1,4 @@
 import type { ArchivedSession, ProjectRecord, ProviderId, SessionRecord } from '../../shared/types.js';
-import { getCost } from '../session-cost.js';
 
 const HISTORY_CAP = 500;
 
@@ -9,7 +8,6 @@ const HISTORY_CAP = 500;
  * Caps history at 500 entries while preserving bookmarked entries.
  */
 export function archiveSession(project: ProjectRecord, session: SessionRecord): void {
-  const costInfo = getCost(session.id);
   const archived: ArchivedSession = {
     id: crypto.randomUUID(),
     name: session.name,
@@ -18,12 +16,6 @@ export function archiveSession(project: ProjectRecord, session: SessionRecord): 
     createdAt: session.createdAt,
     closedAt: new Date().toISOString(),
     profileId: session.profileId,
-    cost: costInfo ? {
-      totalCostUsd: costInfo.totalCostUsd,
-      totalInputTokens: costInfo.totalInputTokens,
-      totalOutputTokens: costInfo.totalOutputTokens,
-      totalDurationMs: costInfo.totalDurationMs,
-    } : null,
   };
 
   if (!project.sessionHistory) project.sessionHistory = [];
@@ -33,7 +25,6 @@ export function archiveSession(project: ProjectRecord, session: SessionRecord): 
     : -1;
   if (existingIndex !== -1) {
     project.sessionHistory[existingIndex].closedAt = archived.closedAt;
-    if (archived.cost) project.sessionHistory[existingIndex].cost = archived.cost;
     if (archived.name !== project.sessionHistory[existingIndex].name) {
       project.sessionHistory[existingIndex].name = archived.name;
     }

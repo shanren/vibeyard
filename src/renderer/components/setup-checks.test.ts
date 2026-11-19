@@ -10,7 +10,7 @@ function makeMeta(overrides: Partial<CliProviderMeta['capabilities']> = {}): Cli
     defaultContextWindowSize: 200_000,
     capabilities: {
       sessionResume: false,
-      costTracking: false,
+      contextWindow: false,
       contextWindow: false,
       hookStatus: false,
       configReading: false,
@@ -42,16 +42,16 @@ function makeStatus(overrides: Partial<ProviderStatus> = {}): ProviderStatus {
 describe('hasProviderIssue', () => {
   it('returns false when binary is not installed', () => {
     const status = makeStatus({
-      meta: makeMeta({ costTracking: true, hookStatus: true }),
+      meta: makeMeta({ contextWindow: true, hookStatus: true }),
       validation: makeValidation({ statusLine: 'missing', hooks: 'missing' }),
       binaryOk: false,
     });
     expect(hasProviderIssue(status)).toBe(false);
   });
 
-  it('returns true when binary installed and statusLine misconfigured with costTracking', () => {
+  it('returns true when binary installed and statusLine misconfigured with contextWindow', () => {
     const status = makeStatus({
-      meta: makeMeta({ costTracking: true }),
+      meta: makeMeta({ contextWindow: true }),
       validation: makeValidation({ statusLine: 'missing' }),
     });
     expect(hasProviderIssue(status)).toBe(true);
@@ -83,7 +83,7 @@ describe('hasProviderIssue', () => {
 
   it('returns false when binary installed and everything configured', () => {
     const status = makeStatus({
-      meta: makeMeta({ costTracking: true, hookStatus: true }),
+      meta: makeMeta({ contextWindow: true, hookStatus: true }),
       validation: makeValidation({ statusLine: 'vibeyard', hooks: 'complete' }),
     });
     expect(hasProviderIssue(status)).toBe(false);
@@ -91,7 +91,7 @@ describe('hasProviderIssue', () => {
 
   it('returns false when statusLine misconfigured but no costTracking/contextWindow capability', () => {
     const status = makeStatus({
-      meta: makeMeta({ costTracking: false, contextWindow: false }),
+      meta: makeMeta({ contextWindow: false, contextWindow: false }),
       validation: makeValidation({ statusLine: 'missing' }),
     });
     expect(hasProviderIssue(status)).toBe(false);

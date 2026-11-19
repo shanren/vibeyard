@@ -17,7 +17,6 @@ const mockAppState = vi.hoisted(() => {
           cliSessionId: 'cli-1',
           createdAt: '2026-03-31T08:00:00.000Z',
           closedAt: '2026-03-31T09:00:00.000Z',
-          cost: { totalCostUsd: 0.42, totalInputTokens: 1000, totalOutputTokens: 500, totalDurationMs: 5000 },
         },
       ],
     },
@@ -52,7 +51,6 @@ const mockAppState = vi.hoisted(() => {
             cliSessionId: 'cli-1',
             createdAt: '2026-03-31T08:00:00.000Z',
             closedAt: '2026-03-31T09:00:00.000Z',
-            cost: { totalCostUsd: 0.42, totalInputTokens: 1000, totalOutputTokens: 500, totalDurationMs: 5000 },
           },
         ],
       };
@@ -246,23 +244,15 @@ beforeEach(() => {
 });
 
 describe('renderSessionHistory', () => {
-  it('renders the provider name in the subtitle after the cost', async () => {
+  it('renders the provider name in the subtitle', async () => {
     const container = await renderHistory();
     const details = container.querySelector('.history-item-details');
 
     expect(details).not.toBeNull();
-    expect(details?.textContent).toContain('$0.42');
-    expect(details?.textContent).toContain('Codex CLI');
-    expect(details?.textContent?.indexOf('$0.42')).toBeLessThan(details?.textContent?.indexOf('Codex CLI') ?? -1);
-  });
-
-  it('renders the provider name even when cost is missing', async () => {
-    mockAppState.activeProject.sessionHistory[0].cost = null;
-    const container = await renderHistory();
-    const details = container.querySelector('.history-item-details');
-
     expect(details?.textContent).toContain('Codex CLI');
   });
+
+
 
   it('shows empty state when there is no history', async () => {
     mockAppState.activeProject.sessionHistory = [];

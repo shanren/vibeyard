@@ -394,9 +394,6 @@ function renderList(
     details.className = 'history-item-details';
     const parts: string[] = [];
     parts.push(formatDate(archived.closedAt));
-    if (archived.cost) {
-      parts.push(`$${archived.cost.totalCostUsd.toFixed(2)}`);
-    }
     parts.push(getProviderLabel(archived.providerId));
     details.textContent = parts.join(' · ');
     info.appendChild(details);

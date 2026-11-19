@@ -33,7 +33,6 @@ export interface CliProvider {
   getShiftEnterSequence(): string | null;
   validateSettings(projectPath?: string, configDir?: string): SettingsValidationResult;
   reinstallSettings(): void;
-  parseCostFromOutput?(rawText: string): { totalCostUsd: number } | null;
   /** Return the absolute path to the source transcript file for a prior session, if any. */
   getTranscriptPath?(cliSessionId: string, projectPath: string, configDir?: string): string | null;
   /** Cheap enumeration of every on-disk transcript for global session search. */

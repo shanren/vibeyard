@@ -20,7 +20,6 @@ export class CopilotProvider implements CliProvider {
     binaryName: 'copilot',
     capabilities: {
       sessionResume: true,
-      costTracking: false,
       contextWindow: false,
       hookStatus: true,
       configReading: true,

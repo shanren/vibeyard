@@ -14,11 +14,6 @@ vi.stubGlobal('crypto', {
   randomUUID: () => `uuid-${++uuidCounter}`,
 });
 
-vi.mock('./session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-  restoreCost: vi.fn(),
-}));
-
 vi.mock('./session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
@@ -30,17 +25,13 @@ vi.mock('./provider-availability.js', () => ({
 }));
 
 import { appState, _resetForTesting, MAX_PROJECT_NAME_LENGTH } from './state';
-import { getCost, restoreCost } from './session-cost.js';
 import { restoreContext } from './session-context.js';
 
-const mockGetCost = vi.mocked(getCost);
-const mockRestoreCost = vi.mocked(restoreCost);
 const mockRestoreContext = vi.mocked(restoreContext);
 
 beforeEach(() => {
   vi.clearAllMocks();
   uuidCounter = 0;
-  mockGetCost.mockReturnValue(null);
   _resetForTesting();
 });
 
@@ -109,40 +100,7 @@ describe('load()', () => {
     await appState.load();
     expect(cb).toHaveBeenCalledTimes(1);
   });
-
-  it('restores persisted cost data into session-cost module', async () => {
-    const costData = {
-      totalCostUsd: 1.5,
-      totalInputTokens: 500,
-      totalOutputTokens: 200,
-      cacheReadTokens: 100,
-      cacheCreationTokens: 50,
-      totalDurationMs: 1000,
-      totalApiDurationMs: 800,
-    };
-    const persisted = {
-      version: 1,
-      projects: [{
-        id: 'p1',
-        name: 'Proj',
-        path: '/proj',
-        sessions: [
-          { id: 's1', name: 'S1', cliSessionId: 'cli-1', createdAt: '2026-01-01', cost: costData },
-          { id: 's2', name: 'S2', cliSessionId: null, createdAt: '2026-01-02' },
-        ],
-        activeSessionId: 's1',
-        layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
-      }],
-      activeProjectId: 'p1',
-      preferences: { soundOnSessionWaiting: false, debugMode: false },
-    };
-    mockLoad.mockResolvedValue(persisted);
-    await appState.load();
-    expect(mockRestoreCost).toHaveBeenCalledOnce();
-    expect(mockRestoreCost).toHaveBeenCalledWith('s1', costData);
-  });
-
-  it('restores persisted context window data into session-context module', async () => {
+it('restores persisted context window data into session-context module', async () => {
     const contextData = { totalTokens: 5000, contextWindowSize: 200000, usedPercentage: 2.5 };
     const persisted = {
       version: 1,
@@ -197,24 +155,7 @@ describe('load()', () => {
     expect(ids.size).toBe(3);
   });
 
-  it('does not call restoreCost for sessions without cost', async () => {
-    const persisted = {
-      version: 1,
-      projects: [{
-        id: 'p1',
-        name: 'Proj',
-        path: '/proj',
-        sessions: [{ id: 's1', name: 'S1', cliSessionId: null, createdAt: '2026-01-01' }],
-        activeSessionId: 's1',
-        layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
-      }],
-      activeProjectId: 'p1',
-      preferences: { soundOnSessionWaiting: false, debugMode: false },
-    };
-    mockLoad.mockResolvedValue(persisted);
-    await appState.load();
-    expect(mockRestoreCost).not.toHaveBeenCalled();
-  });
+
 });
 
 describe('persist()', () => {
@@ -689,14 +630,5 @@ describe('setActiveProject()', () => {
 // --- Session History Tests ---
 
 function mockCostData() {
-  mockGetCost.mockReturnValue({
-    totalCostUsd: 0.42,
-    totalInputTokens: 1000,
-    totalOutputTokens: 500,
-    cacheReadTokens: 0,
-    cacheCreationTokens: 0,
-    totalDurationMs: 5000,
-    totalApiDurationMs: 3000,
-  });
 }
 

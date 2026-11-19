@@ -24,7 +24,6 @@ export type EditAction = 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'delete' |
 
 export interface CliProviderCapabilities {
   sessionResume: boolean;
-  costTracking: boolean;
   contextWindow: boolean;
   hookStatus: boolean;
   configReading: boolean;
@@ -65,18 +64,7 @@ export interface Command { name: string; description: string; scope: 'user' | 'p
 export interface ProviderConfig { mcpServers: McpServer[]; agents: Agent[]; skills: Skill[]; commands: Command[] }
 export type ClaudeConfig = ProviderConfig;
 
-// --- Cost / Context (shared with renderer modules) ---
-
-export interface CostInfo {
-  totalCostUsd: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  cacheReadTokens: number;
-  cacheCreationTokens: number;
-  totalDurationMs: number;
-  totalApiDurationMs: number;
-  model?: string;
-}
+// --- Context window (shared with renderer modules) ---
 
 export interface ContextWindowInfo {
   totalTokens: number;
@@ -114,7 +102,6 @@ export interface SessionRecord {
   fileReaderLine?: number;
   createdAt: string;
   userRenamed?: boolean;
-  cost?: CostInfo;
   contextWindow?: ContextWindowInfo;
   /** Persisted, sticky: which Profile backs this session's CLI config dir. Resume must reuse it. */
   profileId?: string;
@@ -154,12 +141,6 @@ export interface ArchivedSession {
   bookmarked?: boolean;
   /** Preserved so a resumed session reuses the same profile config dir (CLAUDE_CONFIG_DIR). */
   profileId?: string;
-  cost: {
-    totalCostUsd: number;
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalDurationMs: number;
-  } | null;
 }
 
 export interface InitialContextSnapshot {
@@ -304,9 +285,12 @@ export interface PersistedState {
 
 // --- Cost / Context ---
 
+/**
+ * Payload written by the CLI status-line script and forwarded as
+ * `session:costData` (channel name kept for compatibility — it now carries the
+ * context window only; cost tracking was removed).
+ */
 export interface CostData {
-  cost: { total_cost_usd: number; total_duration_ms: number; total_api_duration_ms: number };
-  model?: string;
   context_window: {
     total_input_tokens: number;
     total_output_tokens: number;
@@ -358,7 +342,6 @@ export interface InspectorEvent {
   tool_name?: string;
   tool_input?: Record<string, unknown>;
   error?: string;
-  cost_snapshot?: { total_cost_usd: number; total_duration_ms: number };
   context_snapshot?: { total_tokens: number; context_window_size: number; used_percentage: number };
   agent_id?: string;
   agent_type?: string;
@@ -378,7 +361,6 @@ export interface ToolUsageStats {
   tool_name: string;
   calls: number;
   failures: number;
-  totalCost: number;
 }
 
 export interface ContextDataPoint {

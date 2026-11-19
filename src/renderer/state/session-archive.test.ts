@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-}));
 
 let uuidCounter = 0;
 vi.stubGlobal('crypto', {

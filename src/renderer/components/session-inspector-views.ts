@@ -1,4 +1,4 @@
-import { getEvents, getToolStats, getContextHistory, getCostDeltas } from '../session-inspector-state.js';
+import { getEvents, getToolStats, getContextHistory } from '../session-inspector-state.js';
 import type { InspectorEventType } from '../../shared/types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
 import { inspectorState } from './session-inspector-state-ui.js';
@@ -11,85 +11,6 @@ import {
   getInspectedProviderId,
 } from './session-inspector-utils.js';
 
-// --- Costs View ---
-
-export function renderCosts(container: HTMLElement): void {
-  if (renderUnsupportedGuard(container, 'costTracking', 'Cost tracking')) return;
-
-  const events = getEvents(inspectorState.inspectedSessionId!);
-
-  if (events.length === 0) {
-    container.innerHTML = `<div class="inspector-empty">${emptyMessage('No events yet')}</div>`;
-    return;
-  }
-
-  // Summary bar — scan backwards without copying the array
-  let totalCost = 0;
-  let totalTokens = 0;
-  for (let i = events.length - 1; i >= 0; i--) {
-    if (totalCost === 0 && events[i].cost_snapshot) {
-      totalCost = events[i].cost_snapshot!.total_cost_usd;
-    }
-    if (totalTokens === 0 && events[i].context_snapshot) {
-      totalTokens = events[i].context_snapshot!.total_tokens;
-    }
-    if (totalCost !== 0 && totalTokens !== 0) break;
-  }
-
-  const summary = document.createElement('div');
-  summary.className = 'inspector-summary';
-  summary.innerHTML = `
-    <div class="inspector-summary-item"><span class="inspector-summary-label">Total Cost</span><span class="inspector-summary-value">$${totalCost.toFixed(4)}</span></div>
-    <div class="inspector-summary-item"><span class="inspector-summary-label">Total Tokens</span><span class="inspector-summary-value">${formatTokenCount(totalTokens)}</span></div>
-  `;
-  container.appendChild(summary);
-
-  // Cost table
-  const table = document.createElement('table');
-  table.className = 'inspector-table';
-  table.innerHTML = '<thead><tr><th>#</th><th>Event</th><th>Tool</th><th>Cost Delta</th><th>Cumulative</th></tr></thead>';
-  const tbody = document.createElement('tbody');
-
-  // Attribute each cost delta to the nearest preceding tool event,
-  // since cost snapshots live on synthetic status_update events.
-  const costDeltas = getCostDeltas(inspectorState.inspectedSessionId!);
-  const toolRows: { index: number; type: InspectorEventType; tool: string | undefined; delta: number; cumulative: number }[] = [];
-  const toolRowByIndex = new Map<number, typeof toolRows[number]>();
-
-  for (const { index, delta } of costDeltas) {
-    for (let j = index - 1; j >= 0; j--) {
-      const t = events[j].type;
-      if (t === 'tool_use' || t === 'tool_failure') {
-        let row = toolRowByIndex.get(j);
-        if (!row) {
-          row = { index: j, type: t, tool: events[j].tool_name, delta: 0, cumulative: 0 };
-          toolRows.push(row);
-          toolRowByIndex.set(j, row);
-        }
-        row.delta += delta;
-        row.cumulative = events[index].cost_snapshot!.total_cost_usd;
-        break;
-      }
-    }
-  }
-
-  for (const row of toolRows) {
-    if (row.delta === 0 && row.cumulative === 0) continue;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row.index + 1}</td>
-      <td>${badgeLabel(row.type)}</td>
-      <td>${row.tool ? escapeHtml(row.tool) : '-'}</td>
-      <td>+$${row.delta.toFixed(4)}</td>
-      <td>$${row.cumulative.toFixed(4)}</td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  table.appendChild(tbody);
-  container.appendChild(table);
-}
-
 // --- Tools View ---
 
 export function renderTools(container: HTMLElement): void {
@@ -100,12 +21,10 @@ export function renderTools(container: HTMLElement): void {
     return;
   }
 
-  const caps = getProviderCapabilities(getInspectedProviderId());
-  const showCost = caps?.costTracking !== false;
 
   const table = document.createElement('table');
   table.className = 'inspector-table';
-  table.innerHTML = `<thead><tr><th>Tool</th><th>Calls</th><th>Failures</th><th>Rate</th>${showCost ? '<th>Cost</th>' : ''}</tr></thead>`;
+  table.innerHTML = `<thead><tr><th>Tool</th><th>Calls</th><th>Failures</th><th>Rate</th></tr></thead>`;
   const tbody = document.createElement('tbody');
 
   for (const s of stats) {
@@ -116,7 +35,6 @@ export function renderTools(container: HTMLElement): void {
       <td>${s.calls}</td>
       <td>${s.failures}</td>
       <td>${rate}%</td>
-      ${showCost ? `<td>$${s.totalCost.toFixed(4)}</td>` : ''}
     `;
     tbody.appendChild(tr);
   }

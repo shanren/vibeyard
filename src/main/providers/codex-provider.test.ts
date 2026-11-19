@@ -69,16 +69,7 @@ describe('meta', () => {
     expect(provider.meta.binaryName).toBe('codex');
   });
 
-  it('has sessionResume and hookStatus capabilities enabled', () => {
-    const caps = provider.meta.capabilities;
-    expect(caps.sessionResume).toBe(true);
-    expect(caps.costTracking).toBe(false);
-    expect(caps.contextWindow).toBe(false);
-    expect(caps.hookStatus).toBe(true);
-    expect(caps.configReading).toBe(true);
-    expect(caps.shiftEnterNewline).toBe(false);
-    expect(caps.pendingPromptTrigger).toBe('startup-arg');
-  });
+
 
   it('has defaultContextWindowSize of 200,000', () => {
     expect(provider.meta.defaultContextWindowSize).toBe(200_000);

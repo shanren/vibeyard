@@ -68,7 +68,6 @@ export class CustomProvider implements CliProvider {
     binaryName: '',
     capabilities: {
       sessionResume: false,
-      costTracking: false,
       contextWindow: false,
       hookStatus: false,
       configReading: false,

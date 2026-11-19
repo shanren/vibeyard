@@ -51,7 +51,6 @@ export class ClaudeProvider implements CliProvider {
     binaryName: 'claude',
     capabilities: {
       sessionResume: true,
-      costTracking: true,
       contextWindow: true,
       hookStatus: true,
       configReading: true,
@@ -200,19 +199,6 @@ export class ClaudeProvider implements CliProvider {
       }
     }
     return { text: texts.join(TRANSCRIPT_TEXT_SEPARATOR), cwd };
-  }
-
-  parseCostFromOutput(rawText: string): { totalCostUsd: number } | null {
-    const COST_RE = /\$(\d+\.\d{2,})/g;
-    let match: RegExpExecArray | null;
-    let lastCost: string | null = null;
-    while ((match = COST_RE.exec(rawText)) !== null) {
-      lastCost = match[0];
-    }
-    if (lastCost) {
-      return { totalCostUsd: parseFloat(lastCost.replace('$', '')) };
-    }
-    return null;
   }
 }
 

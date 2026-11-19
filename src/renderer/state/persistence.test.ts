@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('../session-cost.js', () => ({ restoreCost: vi.fn() }));
 vi.mock('../session-context.js', () => ({ restoreContext: vi.fn() }));
 
 import { hydrateLoadedState, serializeForSave } from './persistence.js';

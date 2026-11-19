@@ -242,7 +242,7 @@ export function installHooksOnly(configDir: string = defaultClaudeDir()): void {
   // Uses a random suffix to avoid filename collisions when multiple tools fail rapidly.
   const captureToolFailureCmd = mkCaptureToolFailureCmd('CLAUDE_IDE_SESSION_ID', HOOK_MARKER);
 
-  // Hook to capture inspector events (tool names, cost snapshots, timestamps) into a JSONL log.
+  // Hook to capture inspector events (tool names, context snapshots, timestamps) into a JSONL log.
   // Each hook event appends one JSON line to STATUS_DIR/{sessionId}.events
   const captureEventCmd = (hookEvent: string, eventType: string) => {
     // In-flight subagent counter mutation, injected ONLY into the scripts for
@@ -303,7 +303,6 @@ except:
 sid=os.environ.get("CLAUDE_IDE_SESSION_ID","")
 if not sid:
  sys.exit(0)
-cs=d.get("cost",{})
 cw=d.get("context_window",{})
 e={"type":"${eventType}","timestamp":int(time.time()*1000),"hookEvent":"${hookEvent}"}
 tn=d.get("tool_name","")
@@ -319,8 +318,6 @@ for fld in ("agent_id","agent_type","last_assistant_message","agent_transcript_p
  v=d.get(fld,"")
  if v:
   e[fld]=v
-if cs:
- e["cost_snapshot"]={k:cs[k] for k in ("total_cost_usd","total_duration_ms") if k in cs}
 if cw:
  tt=cw.get("total_input_tokens",0)+cw.get("total_output_tokens",0)
  e["context_snapshot"]={

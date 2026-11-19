@@ -7,7 +7,7 @@ import { fitAllVisible } from './terminal-pane.js';
 import { inspectorState } from './session-inspector-state-ui.js';
 import { resetUIState, canInspectSession } from './session-inspector-utils.js';
 import { renderTimeline } from './session-inspector-timeline.js';
-import { renderCosts, renderTools, renderContext } from './session-inspector-views.js';
+import { renderTools, renderContext } from './session-inspector-views.js';
 
 export function isInspectorOpen(): boolean {
   return inspectorState.inspectorPanel !== null && inspectorState.inspectedSessionId !== null;
@@ -186,7 +186,6 @@ function createPanel(): HTMLElement {
   tabBar.className = 'inspector-tabs';
   const tabs: { id: typeof inspectorState.activeTab; label: string }[] = [
     { id: 'timeline', label: 'Timeline' },
-    { id: 'costs', label: 'Costs' },
     { id: 'tools', label: 'Tools' },
     { id: 'context', label: 'Context' },
   ];
@@ -251,7 +250,6 @@ function renderActiveTab(): void {
 
   switch (inspectorState.activeTab) {
     case 'timeline': renderTimeline(content); break;
-    case 'costs': renderCosts(content); break;
     case 'tools': renderTools(content); break;
     case 'context': renderContext(content); break;
   }

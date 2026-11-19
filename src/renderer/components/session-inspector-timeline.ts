@@ -1,4 +1,4 @@
-import { getEvents, getCostDeltas } from '../session-inspector-state.js';
+import { getEvents } from '../session-inspector-state.js';
 import type { InspectorEvent } from '../../shared/types.js';
 import { inspectorState } from './session-inspector-state-ui.js';
 import {
@@ -101,8 +101,6 @@ export function renderTimeline(container: HTMLElement): void {
 
   const sessionStart = events[0].timestamp;
   const sessionId = inspectorState.inspectedSessionId!;
-  const costDeltas = getCostDeltas(inspectorState.inspectedSessionId!);
-  const deltaMap = new Map(costDeltas.map(d => [d.index, d.delta]));
 
   // Show last 500 events
   const startIdx = Math.max(0, events.length - 500);
@@ -325,20 +323,11 @@ export function renderTimeline(container: HTMLElement): void {
       durationEl.textContent = formatDuration(durationMs);
     }
 
-    // Cost delta
-    const costEl = document.createElement('span');
-    costEl.className = 'inspector-cost-delta';
-    const delta = deltaMap.get(i);
-    if (delta !== undefined && delta > 0) {
-      costEl.textContent = `+$${delta.toFixed(4)}`;
-    }
-
     row.appendChild(timeEl);
     row.appendChild(badge);
     if (mcpBadge) row.appendChild(mcpBadge);
     row.appendChild(desc);
     row.appendChild(durationEl);
-    row.appendChild(costEl);
 
     // Expandable tool input
     if (ev.tool_input) {

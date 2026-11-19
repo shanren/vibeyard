@@ -36,7 +36,9 @@ export function installStatusLineScript(): void {
   fs.mkdirSync(STATUS_DIR, { recursive: true, mode: 0o700 });
   fs.mkdirSync(SCRIPT_DIR, { recursive: true, mode: 0o700 });
 
-  // Script that extracts cost, context_window, and session_id from hook JSON stdin.
+  // Script that extracts context_window and session_id from hook JSON stdin.
+  // (`cost` is still forwarded verbatim inside the payload for wire compatibility;
+  //  the renderer no longer reads it — cost tracking was removed.)
   // Used by hook commands to write .cost and .sessionid files to STATUS_DIR.
   // Use forward slashes — backslashes inside double-quoted .cmd strings can
   // interfere with cmd.exe's >> redirection parsing on some Windows versions.

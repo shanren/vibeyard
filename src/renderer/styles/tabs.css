@@ -118,16 +118,6 @@
   min-width: 40px;
 }
 
-.tab-cost {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-left: 4px;
-}
-
-.tab-cost:empty {
-  display: none;
-}
-
 .tab-close {
   font-size: 14px;
   line-height: 1;

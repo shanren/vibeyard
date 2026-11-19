@@ -14,11 +14,6 @@ vi.stubGlobal('crypto', {
   randomUUID: () => `uuid-${++uuidCounter}`,
 });
 
-vi.mock('../session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-  restoreCost: vi.fn(),
-}));
-
 vi.mock('../session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
@@ -29,13 +24,10 @@ vi.mock('../provider-availability.js', () => ({
 }));
 
 import { appState, _resetForTesting } from '../state';
-import { getCost } from '../session-cost.js';
-const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {
   vi.clearAllMocks();
   uuidCounter = 0;
-  mockGetCost.mockReturnValue(null);
   _resetForTesting();
 });
 

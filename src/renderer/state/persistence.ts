@@ -1,5 +1,4 @@
 import type { PersistedState, Preferences, ProjectRecord, SessionRecord } from '../../shared/types.js';
-import { restoreCost } from '../session-cost.js';
 import { restoreContext } from '../session-context.js';
 
 /**
@@ -54,7 +53,6 @@ export function hydrateLoadedState(state: PersistedState, defaultPreferences: Pr
     if ((project.layout as { mode: string }).mode === 'swarm') project.layout.mode = 'tabs';
 
     for (const session of project.sessions) {
-      if (session.cost) restoreCost(session.id, session.cost);
       if (session.contextWindow) restoreContext(session.id, session.contextWindow);
     }
     if (project.sessionHistory) {

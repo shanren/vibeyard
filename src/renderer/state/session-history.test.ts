@@ -17,11 +17,6 @@ vi.stubGlobal('crypto', {
   randomUUID: () => `uuid-${++uuidCounter}`,
 });
 
-vi.mock('../session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-  restoreCost: vi.fn(),
-}));
-
 vi.mock('../session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
@@ -33,13 +28,10 @@ vi.mock('../provider-availability.js', () => ({
 }));
 
 import { appState, _resetForTesting } from '../state';
-import { getCost } from '../session-cost.js';
-const mockGetCost = vi.mocked(getCost);
 
 beforeEach(() => {
   vi.clearAllMocks();
   uuidCounter = 0;
-  mockGetCost.mockReturnValue(null);
   mockTranscriptExists.mockResolvedValue(true);
   mockTranscriptExistsSync.mockReturnValue(true);
   _resetForTesting();
@@ -65,15 +57,6 @@ function addProjectWithSessions(count: number) {
 }
 
 function mockCostData() {
-  mockGetCost.mockReturnValue({
-    totalCostUsd: 0.42,
-    totalInputTokens: 1000,
-    totalOutputTokens: 500,
-    cacheReadTokens: 0,
-    cacheCreationTokens: 0,
-    totalDurationMs: 5000,
-    totalApiDurationMs: 3000,
-  });
 }
 
 describe('archiveSession via removeSession()', () => {
@@ -103,28 +86,6 @@ describe('archiveSession via removeSession()', () => {
     expect(history[0].cliSessionId).toBe('copilot-cli-123');
   });
 
-  it('captures cost data when available', () => {
-    mockCostData();
-    const project = addProject();
-    const session = appState.addSession(project.id, 'S1')!;
-    activateSession(project.id, session.id, 'cli-cost');
-    appState.removeSession(project.id, session.id);
-    const history = appState.getSessionHistory(project.id);
-    expect(history[0].cost).not.toBeNull();
-    expect(history[0].cost!.totalCostUsd).toBe(0.42);
-    expect(history[0].cost!.totalInputTokens).toBe(1000);
-    expect(history[0].cost!.totalOutputTokens).toBe(500);
-    expect(history[0].cost!.totalDurationMs).toBe(5000);
-  });
-
-  it('archives with null cost when no cost data', () => {
-    const project = addProject();
-    const session = appState.addSession(project.id, 'S1')!;
-    activateSession(project.id, session.id, 'cli-no-cost');
-    appState.removeSession(project.id, session.id);
-    const history = appState.getSessionHistory(project.id);
-    expect(history[0].cost).toBeNull();
-  });
 
   it('does NOT archive empty sessions (no cliSessionId, no cost)', () => {
     const project = addProject();
@@ -223,20 +184,7 @@ describe('archiveSession via removeSession()', () => {
     expect(appState.getSessionHistory(project.id)).toHaveLength(1);
   });
 
-  it('updates cost on deduplicated re-close', () => {
-    const project = addProject();
-    const session = appState.addSession(project.id, 'S1')!;
-    activateSession(project.id, session.id, 'cli-abc');
-    appState.removeSession(project.id, session.id);
-    expect(appState.getSessionHistory(project.id)[0].cost).toBeNull();
 
-    // Resume with cost data
-    const resumed = appState.resumeFromHistory(project.id, appState.getSessionHistory(project.id)[0].id)!;
-    mockCostData();
-    appState.removeSession(project.id, resumed.id);
-    expect(appState.getSessionHistory(project.id)[0].cost).not.toBeNull();
-    expect(appState.getSessionHistory(project.id)[0].cost!.totalCostUsd).toBe(0.42);
-  });
 
   it('updates name on deduplicated re-close', () => {
     const project = addProject();

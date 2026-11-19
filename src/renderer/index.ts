@@ -5,9 +5,8 @@ import { initTabBar } from './components/tab-bar.js';
 import { initExplorerPanel } from './components/explorer-panel.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { initKeybindings } from './keybindings.js';
-import { handlePtyData, destroyTerminal, updateCostDisplay, updateContextDisplay, applyThemeToAllTerminals, refreshProfileLabels } from './components/terminal-pane.js';
+import { handlePtyData, destroyTerminal, updateContextDisplay, applyThemeToAllTerminals, refreshProfileLabels } from './components/terminal-pane.js';
 import { setIdle, setHookStatus, notifyInterrupt } from './session-activity.js';
-import { parseCost, setCostData, onChange as onCostChange } from './session-cost.js';
 import { parseTitle, clearSession as clearTitleSession } from './session-title.js';
 import { setContextData, onChange as onContextChange } from './session-context.js';
 import { initNotificationSound } from './notification-sound.js';
@@ -74,7 +73,6 @@ async function main(): Promise<void> {
       handleShellPtyData(sessionId, data);
     } else if (!isMcpSession(sessionId)) {
       handlePtyData(sessionId, data);
-      parseCost(sessionId, data);
       parseTitle(sessionId, data);
       if (data.includes('Interrupted')) {
         notifyInterrupt(sessionId);
@@ -84,23 +82,18 @@ async function main(): Promise<void> {
 
   window.vibeyard.session.onCostData((sessionId, costData) => {
     if (!appState.hasSession(sessionId)) return;
-    setCostData(sessionId, costData);
     const contextBefore = getContext(sessionId);
     setContextData(sessionId, costData.context_window);
     captureInitialContext(sessionId, costData.context_window);
 
-    // Bridge cost/context into inspector events so Costs & Context tabs work.
-    // Only emit when context actually changed (avoids filling the event buffer with duplicates).
+    // Bridge the context snapshot into inspector events so the Context tab works.
+    // Only emit when it actually changed (avoids filling the event buffer with duplicates).
     const contextAfter = getContext(sessionId);
     if (contextAfter && contextAfter !== contextBefore) {
       const syntheticEvent: InspectorEvent = {
         type: 'status_update',
         timestamp: Date.now(),
         hookEvent: 'StatusLine',
-        cost_snapshot: {
-          total_cost_usd: costData.cost.total_cost_usd ?? 0,
-          total_duration_ms: costData.cost.total_duration_ms ?? 0,
-        },
         context_snapshot: {
           total_tokens: contextAfter.totalTokens,
           context_window_size: contextAfter.contextWindowSize,
@@ -109,11 +102,6 @@ async function main(): Promise<void> {
       };
       addInspectorEvents(sessionId, [syntheticEvent]);
     }
-  });
-
-  onCostChange((sessionId, cost) => {
-    updateCostDisplay(sessionId, cost);
-    appState.updateSessionCost(sessionId, cost);
   });
 
   onContextChange((sessionId, info) => {

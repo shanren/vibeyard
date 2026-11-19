@@ -100,14 +100,6 @@
   color: var(--accent);
 }
 
-.cost-display {
-  white-space: nowrap;
-}
-
-.cost-display.hidden {
-  display: none;
-}
-
 .context-indicator.hidden {
   display: none;
 }
@@ -308,13 +300,6 @@
   min-width: 0;
 }
 
-.session-status-bar .cost-display {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  white-space: nowrap;
-}
-
 /* Left cluster — graphical context meter */
 .ssl-label {
   color: var(--text-muted);
@@ -353,15 +338,6 @@
   color: var(--text-muted);
   opacity: 0.55;
 }
-.ssl-model { color: var(--text-secondary); }
-.ssl-cost {
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-.ssl-io {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
 .ssl-pill {
   display: inline-flex;
   align-items: center;
@@ -379,7 +355,7 @@
   background: var(--border-subtle);
 }
 
-/* Interactive segments lighten on hover (model / cost / io) */
+/* Interactive segments lighten on hover (context meter / token counts) */
 .session-status-bar .seg {
   padding: 2px 4px;
   border-radius: var(--app-radius-overlay);

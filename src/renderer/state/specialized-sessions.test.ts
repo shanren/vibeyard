@@ -17,11 +17,6 @@ vi.stubGlobal('crypto', {
   randomUUID: () => `uuid-${++uuidCounter}`,
 });
 
-vi.mock('../session-cost.js', () => ({
-  getCost: vi.fn().mockReturnValue(null),
-  restoreCost: vi.fn(),
-}));
-
 vi.mock('../session-context.js', () => ({
   restoreContext: vi.fn(),
 }));
@@ -35,8 +30,6 @@ vi.mock('../provider-availability.js', () => ({
 import { appState, _resetForTesting } from '../state';
 import { resolveProfile } from './specialized-sessions.js';
 import type { Profile } from '../../shared/types.js';
-import { getCost } from '../session-cost.js';
-const mockGetCost = vi.mocked(getCost);
 
 const PROFILES: Profile[] = [
   { id: 'work', name: 'Work', providerId: 'claude', configDir: '/cfg/work', managed: true, createdAt: 0 },
@@ -46,7 +39,6 @@ const PROFILES: Profile[] = [
 beforeEach(() => {
   vi.clearAllMocks();
   uuidCounter = 0;
-  mockGetCost.mockReturnValue(null);
   _resetForTesting();
 });
 
@@ -64,15 +56,6 @@ function addProjectWithSessions(count: number) {
 }
 
 function mockCostData() {
-  mockGetCost.mockReturnValue({
-    totalCostUsd: 0.42,
-    totalInputTokens: 1000,
-    totalOutputTokens: 500,
-    cacheReadTokens: 0,
-    cacheCreationTokens: 0,
-    totalDurationMs: 5000,
-    totalApiDurationMs: 3000,
-  });
 }
 
 describe('addDiffViewerSession()', () => {

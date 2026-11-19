@@ -5,7 +5,6 @@ import { SearchAddon } from '@xterm/addon-search';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { initSession, removeSession } from '../session-activity.js';
 import { markFreshSession } from '../session-insights.js';
-import { removeSession as removeCostSession, formatTokens, getCost, type CostInfo } from '../session-cost.js';
 import { removeSession as removeContextSession, getContextSeverity, type ContextWindowInfo } from '../session-context.js';
 import type { ProviderId } from '../types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
@@ -77,17 +76,9 @@ export function createTerminalPane(
   statusBar.className = 'session-status-bar';
   const contextIndicator = document.createElement('div');
   contextIndicator.className = 'context-indicator';
-  const costDisplay = document.createElement('div');
-  costDisplay.className = 'cost-display';
   const caps = getProviderCapabilities(providerId);
-  if (caps?.costTracking !== false) {
-    costDisplay.textContent = `${profilePrefix(providerId, configDir)}$0.0000`;
-  } else {
-    costDisplay.classList.add('hidden');
-  }
   contextIndicator.classList.toggle('hidden', caps?.contextWindow === false);
   statusBar.appendChild(contextIndicator);
-  statusBar.appendChild(costDisplay);
   element.appendChild(statusBar);
 
   const terminal = new Terminal({
@@ -403,27 +394,12 @@ export function destroyTerminal(sessionId: string): void {
   instance.element.remove();
   instances.delete(sessionId);
   removeSession(sessionId);
-  removeCostSession(sessionId);
   removeContextSession(sessionId);
 }
 
 function showStatusBar(instance: TerminalInstance): void {
   const bar = instance.element.querySelector('.session-status-bar');
   if (bar) bar.classList.remove('hidden');
-}
-
-/**
- * Leading "<profile>  ·  " segment for the status-line cost string, shown only when
- * more than one profile exists for the provider. The profile is keyed off the
- * session's `configDir` — the exact dir threaded into the PTY spawn — so the label
- * can never disagree with the config the running session actually uses. No matching
- * dir (undefined → base ~/.claude) is labeled "Default". Empty string when not shown.
- */
-function profilePrefix(providerId: ProviderId, configDir?: string): string {
-  const providerProfiles = appState.profiles.filter((p) => p.providerId === providerId);
-  if (providerProfiles.length <= 1) return '';
-  const profile = configDir ? providerProfiles.find((p) => p.configDir === configDir) : undefined;
-  return `${profile?.name ?? 'Default'}  ·  `;
 }
 
 /** Resolve the display name of the profile backing this session, or null when
@@ -433,77 +409,6 @@ function resolveProfileName(providerId: ProviderId, configDir?: string): string 
   if (providerProfiles.length <= 1) return null;
   const profile = configDir ? providerProfiles.find((p) => p.configDir === configDir) : undefined;
   return profile?.name ?? 'Default';
-}
-
-/** Re-render every open pane's cost line from its last known cost (e.g. after a profile is added/removed). */
-export function refreshProfileLabels(): void {
-  for (const instance of instances.values()) {
-    if (getProviderCapabilities(instance.providerId)?.costTracking === false) continue;
-    updateCostDisplay(instance.sessionId, getCost(instance.sessionId));
-  }
-}
-
-export function updateCostDisplay(sessionId: string, cost: CostInfo | null): void {
-  const instance = instances.get(sessionId);
-  if (!instance) return;
-  if (getProviderCapabilities(instance.providerId)?.costTracking === false) return;
-  const el = instance.element.querySelector('.cost-display') as HTMLElement | null;
-  if (!el) return;
-
-  // Rebuild the rail's right cluster: [profile pill] · [model] · [cost] | [in/out].
-  // Separators are only inserted between segments that are actually present.
-  el.replaceChildren();
-  const segs: HTMLElement[] = [];
-
-  const profileName = resolveProfileName(instance.providerId, instance.configDir);
-  if (profileName) {
-    const pill = document.createElement('span');
-    pill.className = 'ssl-pill';
-    pill.textContent = profileName;
-    segs.push(pill);
-  }
-  if (cost?.model) {
-    const model = document.createElement('span');
-    model.className = 'ssl-model seg';
-    model.textContent = cost.model;
-    segs.push(model);
-  }
-  const costEl = document.createElement('span');
-  costEl.className = 'ssl-cost seg';
-  costEl.textContent = `$${(cost?.totalCostUsd ?? 0).toFixed(4)}`;
-  segs.push(costEl);
-
-  segs.forEach((seg, i) => {
-    if (i > 0) {
-      const dot = document.createElement('span');
-      dot.className = 'ssl-dot';
-      dot.textContent = '·';
-      el.appendChild(dot);
-    }
-    el.appendChild(seg);
-  });
-
-  // `total_output_tokens` is per-turn and regresses at each turn boundary;
-  // hold the session peak so the displayed "out" only ever ratchets up.
-  if (cost) instance.peakOutputTokens = Math.max(instance.peakOutputTokens, cost.totalOutputTokens);
-  const outTokens = instance.peakOutputTokens;
-
-  if (cost && (cost.totalInputTokens > 0 || outTokens > 0)) {
-    const vrule = document.createElement('span');
-    vrule.className = 'ssl-vrule';
-    el.appendChild(vrule);
-    const io = document.createElement('span');
-    io.className = 'ssl-io seg';
-    io.textContent = `${formatTokens(cost.totalInputTokens)} in / ${formatTokens(outTokens)} out`;
-    el.appendChild(io);
-
-    const durationSec = (cost.totalDurationMs / 1000).toFixed(1);
-    const apiDurationSec = (cost.totalApiDurationMs / 1000).toFixed(1);
-    el.title = `Cache read: ${formatTokens(cost.cacheReadTokens)} · Cache create: ${formatTokens(cost.cacheCreationTokens)} · Duration: ${durationSec}s · API: ${apiDurationSec}s`;
-  } else {
-    el.title = '';
-  }
-  showStatusBar(instance);
 }
 
 export function updateContextDisplay(sessionId: string, info: ContextWindowInfo): void {
@@ -536,7 +441,7 @@ export function updateContextDisplay(sessionId: string, info: ContextWindowInfo)
   const pct = Math.min(Math.round(info.usedPercentage), 100);
   fill.style.width = `${pct}%`;
   (el.querySelector('.ssl-pct') as HTMLElement).textContent = `${pct}%`;
-  (el.querySelector('.ssl-tok') as HTMLElement).textContent = formatTokens(info.totalTokens);
+  (el.querySelector('.ssl-tok') as HTMLElement).textContent = formatTokenCount(info.totalTokens);
   el.title = `${info.totalTokens.toLocaleString()} / ${info.contextWindowSize.toLocaleString()} tokens`;
 
   // Context-fill state drives the meter hue (iris → amber → red) on the whole bar.
@@ -546,4 +451,15 @@ export function updateContextDisplay(sessionId: string, info: ContextWindowInfo)
   if (bar) bar.dataset.state = state;
 
   showStatusBar(instance);
+}
+
+/** Profile badges live in the tab/rail chrome; nothing in the pane needs
+ *  re-rendering when the profile set changes, but the export stays for callers. */
+export function refreshProfileLabels(): void {}
+
+/** 12_345 → "12.3k"; used by the context meter's token count. */
+function formatTokenCount(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
 }

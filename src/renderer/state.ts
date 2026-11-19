@@ -1,5 +1,5 @@
 import type { VibeyardApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, CostInfo, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename, isAbsolutePath } from '../shared/platform.js';
 import { isCliSession } from './session-utils.js';
@@ -712,13 +712,6 @@ class AppState {
 
   private findSessionById(sessionId: string): SessionRecord | undefined {
     return this.findSessionWithProject(sessionId)?.session;
-  }
-
-  updateSessionCost(sessionId: string, cost: CostInfo): void {
-    const session = this.findSessionById(sessionId);
-    if (!session) return;
-    session.cost = { ...cost };
-    this.persist();
   }
 
   updateSessionContext(sessionId: string, context: ContextWindowInfo): void {

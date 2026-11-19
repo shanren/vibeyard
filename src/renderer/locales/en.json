@@ -181,7 +181,7 @@
     "statusLineMissing": "Not configured",
     "statusLineForeign": "Overwritten by another tool",
     "statusLineLabel": "Status Line",
-    "statusLineDescription": "Required for cost tracking and context window monitoring.",
+    "statusLineDescription": "Required for context window monitoring.",
     "hooksComplete": "All hooks installed",
     "hooksMissing": "No hooks installed",
     "hooksPartial": "Some hooks missing",
@@ -208,9 +208,7 @@
     "tabBadgeUnreadLabel": "Unread",
     "tabBadgeUnreadDesc": "Background session needs attention",
     "statusBar": "Status Bar",
-    "statusBarSample1": "$1.23 · 5k in / 2k out",
-    "statusBarCostLabel": "Cost details",
-    "statusBarCostDesc": "Detailed cost with token counts",
+    "statusBarSample1": "ctx 12% · 5k in / 2k out",
     "statusBarSample2": "[====------] 50%",
     "statusBarCtxLabel": "Context usage",
     "statusBarCtxDesc": "How full the context window is",
@@ -316,7 +314,6 @@
   },
   "statusBar": {
     "branchTooltip": "Current branch: {branch}",
-    "costTooltip": "Session cost so far",
     "status": {
       "working": "Working",
       "waiting": "Waiting",
