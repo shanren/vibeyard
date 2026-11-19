@@ -27,7 +27,7 @@ function stubDom() {
     body: new FakeElement(),
   };
   vi.stubGlobal('document', doc);
-  vi.stubGlobal('window', { vibeyard: {} });
+  vi.stubGlobal('window', { rcode: {} });
 }
 
 describe('projectProfileLabel', () => {

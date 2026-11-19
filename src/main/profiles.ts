@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 /** Root directory holding all auto-managed profile config dirs. */
-export const PROFILES_ROOT = path.join(os.homedir(), '.vibeyard', 'profiles');
+export const PROFILES_ROOT = path.join(os.homedir(), '.rcode', 'profiles');
 
 /** Default managed config dir for a profile id. */
 export function managedProfileDir(profileId: string): string {

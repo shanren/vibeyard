@@ -11,7 +11,7 @@ vi.mock('../file-url.js', () => ({ pathToFileURL: (p: string) => `file://${p}` }
 
 import { renderFileTree, _resetForTesting, DirEntry, isExpanded } from './file-tree.js';
 
-// --- Fake filesystem backing window.vibeyard.fs ---
+// --- Fake filesystem backing window.rcode.fs ---
 let dirContents: Map<string, DirEntry[]>;
 let fsChangeCb: ((changes: FsChange[]) => void) | null = null;
 const watchedDirs = new Set<string>();
@@ -26,7 +26,7 @@ beforeEach(() => {
   fsChangeCb = null;
   watchedDirs.clear();
   (globalThis as any).window = globalThis;
-  (globalThis as any).vibeyard = {
+  (globalThis as any).rcode = {
     fs: {
       listDir: vi.fn((dir: string) => Promise.resolve(dirContents.get(dir) ?? [])),
       watchDir: vi.fn((dir: string) => { watchedDirs.add(dir); }),

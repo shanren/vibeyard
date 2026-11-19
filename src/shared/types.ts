@@ -130,7 +130,7 @@ export interface Profile {
   id: string;
   name: string;
   providerId: ProviderId;
-  /** Absolute, resolved config dir (managed under ~/.vibeyard/profiles/<id> or a custom path). */
+  /** Absolute, resolved config dir (managed under ~/.rcode/profiles/<id> or a custom path). */
   configDir: string;
   /** True when configDir is the auto-managed path; false when the user supplied a custom path. */
   managed: boolean;
@@ -164,7 +164,7 @@ export interface DeepSearchResult {
   projectCwd: string;
   snippet: string;
   score: number;
-  /** Title derived from the first user message — fallback when Vibeyard has no name for this session. */
+  /** Title derived from the first user message — fallback when RCode has no name for this session. */
   derivedName?: string;
   /** Profile whose config dir holds this transcript, so resume reopens under the right CLAUDE_CONFIG_DIR. */
   profileId?: string;
@@ -261,7 +261,7 @@ export interface Preferences {
 // --- Settings Validation ---
 
 export interface SettingsValidationResult {
-  statusLine: 'missing' | 'vibeyard' | 'foreign';
+  statusLine: 'missing' | 'rcode' | 'foreign';
   hooks: 'missing' | 'complete' | 'partial';
   foreignStatusLineCommand?: string;
   hookDetails: Record<string, boolean>;

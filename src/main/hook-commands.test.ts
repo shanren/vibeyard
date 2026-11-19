@@ -8,7 +8,7 @@ vi.mock('fs', () => ({
 import * as fs from 'fs';
 import { stopStatusCmd, installHookScripts, STOP_STALE_MS } from './hook-commands';
 
-const HOOK_MARKER = '# vibeyard-hook';
+const HOOK_MARKER = '# rcode-hook';
 
 describe('stopStatusCmd', () => {
   it('builds a python command invoking stop_status_writer.py with the expected argv', () => {
@@ -16,7 +16,7 @@ describe('stopStatusCmd', () => {
 
     expect(cmd).toContain('stop_status_writer.py');
     expect(cmd).toContain('CLAUDE_IDE_SESSION_ID');
-    expect(cmd).toContain('vibeyard'); // STATUS_DIR path segment
+    expect(cmd).toContain('rcode'); // STATUS_DIR path segment
     expect(cmd).toContain(String(STOP_STALE_MS));
     // Marker is passed as the last quoted argv so isIdeHook recognizes it.
     expect(cmd.trimEnd().endsWith(`"${HOOK_MARKER}"`)).toBe(true);

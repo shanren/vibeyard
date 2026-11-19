@@ -196,7 +196,7 @@ export async function spawnPty(
   }
 
   // Profile support: a Claude session bound to a profile uses an isolated
-  // config dir, so Vibeyard's hooks + statusLine (boot-installed into ~/.claude)
+  // config dir, so RCode's hooks + statusLine (boot-installed into ~/.claude)
   // must also be installed there or cost/activity tracking silently breaks.
   // Fresh profile dirs have no foreign statusLine, so install directly (the
   // guarded/consent flow stays bound to the shared ~/.claude). Both calls are

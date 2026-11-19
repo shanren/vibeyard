@@ -57,7 +57,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Top files by tokens widget: split button and .vibeyardignore filtering
+- Top files by tokens widget: split button and .rcodeignore filtering
 
 ### Fixes
 
@@ -330,7 +330,7 @@ All notable changes to this project will be documented in this file.
 
 - Windows platform compatibility and unify shortcut system
 - Setup badge showing for uninstalled providers
-- Auto-override legacy vibeyard statusline path on upgrade
+- Auto-override legacy rcode statusline path on upgrade
 - Cost attribution in session inspector tools and costs tabs
 
 ### Changes
@@ -363,7 +363,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Browser flow recording for capturing click/navigate sequences
-- New tab page with Vibeyard branding and dev port quick links
+- New tab page with RCode branding and dev port quick links
 - Viewport picker to browser tab for responsive testing
 - Custom size entry to browser tab viewport picker
 
@@ -403,7 +403,7 @@ All notable changes to this project will be documented in this file.
 - Tool alert misclassifying API 404 errors as "not installed"
 - Text selection in git diff panel disappearing on file changes
 - Readiness modal provider filter to only show registered providers
-- External CLI sessions triggering notifications from Vibeyard
+- External CLI sessions triggering notifications from RCode
 - Notification click to activate session and focus app window
 - Session inspector shortcut to use Cmd+Shift+I on Mac via menu accelerator
 - Path autocomplete showing only first 20 dirs before filtering
@@ -497,7 +497,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - P2P session sharing via WebRTC
-- CLI launcher for npm global install (npm i -g vibeyard)
+- CLI launcher for npm global install (npm i -g rcode)
 - MacOS Intel (x64) builds alongside ARM64
 - Middle-click to close session tabs
 - Right-click context menu to project items in sidebar
@@ -604,7 +604,7 @@ All notable changes to this project will be documented in this file.
 ### Changes
 - README logo to transparent background version
 - SoundOnSessionWaiting default to enabled
-- Rename app from CCIDE to Vibeyard
+- Rename app from CCIDE to RCode
 - Expand missing tool catalog and remove hardcoded install instructions
 - README with swarm mode and missing tool alerts features
 - Default layout mode to swarm for new projects
@@ -618,8 +618,8 @@ All notable changes to this project will be documented in this file.
 - Collapsible sidebar with toggle button and Cmd+B shortcut
 - Cmd+F search in file-reader and diff-viewer panes
 - Cmd+Click requirement to open files from terminal links
-- .vibeyardignore for AI readiness large-file scan exclusions
-- AI readiness scanner with auto-created .vibeyardignore for large-file exclusions
+- .rcodeignore for AI readiness large-file scan exclusions
+- AI readiness scanner with auto-created .rcodeignore for large-file exclusions
 - Default args per project with checkbox to persist across sessions
 - Insights preferences toggle and fix-in-new-session CTA button
 - Big initial context alert when pre-context exceeds 15% of context window

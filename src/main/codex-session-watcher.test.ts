@@ -21,7 +21,7 @@ vi.mock('electron', () => ({
 
 const { STATUS_DIR: MOCK_STATUS_DIR } = vi.hoisted(() => {
   const path = require('path');
-  return { STATUS_DIR: path.join('/tmp', 'vibeyard') };
+  return { STATUS_DIR: path.join('/tmp', 'rcode') };
 });
 
 vi.mock('./hook-status', () => ({

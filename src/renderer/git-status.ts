@@ -37,7 +37,7 @@ let unwatchGitChanged: (() => void) | null = null;
 
 async function refreshWorktrees(projectId: string, projectPath: string): Promise<void> {
   try {
-    const worktrees = await window.vibeyard.git.getWorktrees(projectPath) as GitWorktree[];
+    const worktrees = await window.rcode.git.getWorktrees(projectPath) as GitWorktree[];
     const prev = worktreeCache.get(projectId);
     worktreeCache.set(projectId, worktrees);
 
@@ -60,7 +60,7 @@ async function detectSessionWorktree(sessionId: string): Promise<void> {
   if (!project) return;
 
   try {
-    const cwd = await window.vibeyard.pty.getCwd(sessionId);
+    const cwd = await window.rcode.pty.getCwd(sessionId);
     if (!cwd) return;
 
     const worktrees = worktreeCache.get(project.id);
@@ -119,7 +119,7 @@ async function poll(): Promise<void> {
 
       // Query git status using the resolved worktree path
       const gitPath = getActiveGitPath(project.id);
-      const status = await window.vibeyard.git.getStatus(gitPath) as GitStatus;
+      const status = await window.rcode.git.getStatus(gitPath) as GitStatus;
       const cacheKey = `${project.id}:${gitPath}`;
       const prev = cache.get(cacheKey);
       cache.set(cacheKey, status);
@@ -212,12 +212,12 @@ export function startPolling(): void {
 
   // Subscribe to main-process file system watcher push events (once)
   if (!unwatchGitChanged) {
-    unwatchGitChanged = window.vibeyard.git.onChanged(() => poll());
+    unwatchGitChanged = window.rcode.git.onChanged(() => poll());
   }
 
   // Start watcher for current project
   if (appState.activeProject) {
-    window.vibeyard.git.watchProject(appState.activeProject.path);
+    window.rcode.git.watchProject(appState.activeProject.path);
   }
 
   // Pause/resume when window visibility changes
@@ -239,7 +239,7 @@ export function startPolling(): void {
       stopInterval();
       return;
     }
-    window.vibeyard.git.watchProject(appState.activeProject.path);
+    window.rcode.git.watchProject(appState.activeProject.path);
     startInterval(); // ensure the periodic timer is running
     poll(); // immediate refresh — startInterval() no-ops when a timer already exists
   };

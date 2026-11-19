@@ -1,6 +1,6 @@
 # Renderer dev harness (browser)
 
-The renderer only talks to the outside world through `window.vibeyard`, the
+The renderer only talks to the outside world through `window.rcode`, the
 preload bridge. This harness swaps that bridge for a fixture-backed stand-in so
 the real UI runs in a plain browser — no Electron rebuild/relaunch per tweak.
 

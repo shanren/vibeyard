@@ -102,7 +102,7 @@ describe('project-terminal Ctrl+Shift+C clipboard copy', () => {
 
     vi.stubGlobal('document', makeFakeDocument());
     vi.stubGlobal('window', {
-      vibeyard: {
+      rcode: {
         pty: { write: mockPtyWrite, kill: vi.fn(), resize: vi.fn(), createShell: vi.fn() },
       },
     });
@@ -183,7 +183,7 @@ describe('applyThemeToAllShells()', () => {
 
     vi.stubGlobal('document', makeFakeDocument());
     vi.stubGlobal('window', {
-      vibeyard: {
+      rcode: {
         pty: { write: mockPtyWrite, kill: vi.fn(), resize: vi.fn(), createShell: vi.fn() },
       },
     });

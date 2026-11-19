@@ -4,8 +4,8 @@ import * as os from 'os';
 import { BrowserWindow } from 'electron';
 import { isWin } from './platform';
 
-export const STATUS_DIR = path.join(os.tmpdir(), 'vibeyard');
-export const SCRIPT_DIR = path.join(os.homedir(), '.vibeyard', 'run');
+export const STATUS_DIR = path.join(os.tmpdir(), 'rcode');
+export const SCRIPT_DIR = path.join(os.homedir(), '.rcode', 'run');
 const STATUSLINE_SCRIPT = path.join(SCRIPT_DIR, isWin ? 'statusline.cmd' : 'statusline.sh');
 
 const KNOWN_EXTENSIONS = ['.status', '.sessionid', '.cost', '.toolfailure', '.events', '.subagents'];

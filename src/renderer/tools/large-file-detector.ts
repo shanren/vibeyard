@@ -37,12 +37,24 @@ function isExcludedPath(relative: string): boolean {
 type IgnoreMatchers = { basename: picomatch.Matcher; fullPath: picomatch.Matcher };
 const ignoreMatcherCache = new Map<string, IgnoreMatchers | null>();
 
-async function loadVibeyardignore(projectPath: string): Promise<IgnoreMatchers | null> {
+// `.vibeyardignore` is the pre-rename name; still honoured so existing projects
+// keep their exclusions. New files are written as `.rcodeignore`.
+const IGNORE_FILE_NAMES = ['.rcodeignore', '.vibeyardignore'];
+
+async function readIgnoreFile(projectPath: string): Promise<string | null> {
+  for (const name of IGNORE_FILE_NAMES) {
+    const result = await window.rcode.fs.readFile(projectPath + '/' + name);
+    if (result.ok) return result.content;
+  }
+  return null;
+}
+
+async function loadRcodeIgnore(projectPath: string): Promise<IgnoreMatchers | null> {
   try {
-    const result = await window.vibeyard.fs.readFile(projectPath + '/.vibeyardignore');
-    if (!result.ok) return null;
+    const content = await readIgnoreFile(projectPath);
+    if (content === null) return null;
     const patterns: string[] = [];
-    for (const raw of result.content.split('\n')) {
+    for (const raw of content.split('\n')) {
       const line = raw.trim();
       if (line && !line.startsWith('#')) patterns.push(line);
     }
@@ -56,9 +68,9 @@ async function loadVibeyardignore(projectPath: string): Promise<IgnoreMatchers |
   }
 }
 
-async function matchesVibeyardignore(projectPath: string, relative: string): Promise<boolean> {
+async function matchesRCodeignore(projectPath: string, relative: string): Promise<boolean> {
   if (!ignoreMatcherCache.has(projectPath)) {
-    ignoreMatcherCache.set(projectPath, await loadVibeyardignore(projectPath));
+    ignoreMatcherCache.set(projectPath, await loadRcodeIgnore(projectPath));
   }
   const matchers = ignoreMatcherCache.get(projectPath);
   if (!matchers) return false;
@@ -101,7 +113,7 @@ export async function handleToolFailure(sessionId: string, data: ToolFailureData
   const insightId = `large-file-read:${filePath}`;
   if (appState.isInsightDismissed(project.id, insightId)) return;
 
-  if (await matchesVibeyardignore(project.path, relative)) return;
+  if (await matchesRCodeignore(project.path, relative)) return;
 
   alerted.add(filePath);
 
@@ -109,7 +121,7 @@ export async function handleToolFailure(sessionId: string, data: ToolFailureData
 }
 
 export function initLargeFileDetector(): void {
-  window.vibeyard.session.onToolFailure((sessionId, data) => {
+  window.rcode.session.onToolFailure((sessionId, data) => {
     handleToolFailure(sessionId, data).catch(() => {});
   });
 

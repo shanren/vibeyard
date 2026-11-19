@@ -6,7 +6,7 @@ import type { ToolFailureData } from '../../shared/types.js';
 const mockReadFile = vi.fn().mockResolvedValue({ ok: true, content: '' });
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  rcode: {
     store: { load: vi.fn().mockResolvedValue(null), save: vi.fn() },
     session: { onToolFailure: vi.fn() },
     fs: { readFile: mockReadFile },
@@ -313,9 +313,9 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(0);
   });
 
-  // --- .vibeyardignore exclusions ---
+  // --- .rcodeignore exclusions ---
 
-  it('does not alert for files matching .vibeyardignore patterns', async () => {
+  it('does not alert for files matching .rcodeignore patterns', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -327,7 +327,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(0);
   });
 
-  it('still alerts for files not matching .vibeyardignore patterns', async () => {
+  it('still alerts for files not matching .rcodeignore patterns', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -339,7 +339,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(1);
   });
 
-  it('handles missing .vibeyardignore gracefully', async () => {
+  it('handles missing .rcodeignore gracefully', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];
@@ -351,7 +351,7 @@ describe('handleToolFailure', () => {
     expect(alerts).toHaveLength(1);
   });
 
-  it('caches .vibeyardignore patterns per project', async () => {
+  it('caches .rcodeignore patterns per project', async () => {
     const projectId = setupProject();
     const session = appState.addSession(projectId, 'Session 1')!;
     const alerts: LargeFileAlert[] = [];

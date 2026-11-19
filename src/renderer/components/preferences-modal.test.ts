@@ -230,7 +230,7 @@ describe('showPreferencesModal theme preference', () => {
     });
 
     vi.stubGlobal('window', {
-      vibeyard: {
+      rcode: {
         provider: {
           listProviders: vi.fn(async () => []),
           checkBinary: vi.fn(async () => true),

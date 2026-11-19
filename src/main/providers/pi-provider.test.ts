@@ -24,7 +24,7 @@ describe('PiProvider', () => {
     });
   });
 
-  it('creates-or-resumes with the id Vibeyard assigned', () => {
+  it('creates-or-resumes with the id RCode assigned', () => {
     expect(provider.buildArgs({ cliSessionId: 'abc-123', isResume: false, extraArgs: '' })).toEqual([
       '--session-id',
       'abc-123',

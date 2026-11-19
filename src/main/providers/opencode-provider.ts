@@ -8,7 +8,7 @@
  *     --prompt <string>    Prompt to use
  *     --standalone / --server / --auto
  *
- * `--session` is create-or-resume, so Vibeyard assigns the id at session creation
+ * `--session` is create-or-resume, so RCode assigns the id at session creation
  * and passes it on every spawn: first spawn creates that session, later spawns
  * (app restart, "Restart session") resume it.
  *
@@ -60,7 +60,7 @@ export class OpencodeProvider implements CliProvider {
   buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string; initialPrompt?: string }): string[] {
     const args: string[] = [];
 
-    // Create-or-resume with the id Vibeyard assigned to this session.
+    // Create-or-resume with the id RCode assigned to this session.
     if (opts.cliSessionId) {
       args.push('--session', opts.cliSessionId);
     } else if (opts.isResume) {

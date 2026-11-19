@@ -225,7 +225,7 @@ async function renderHistory(): Promise<FakeElement> {
 
 function stubCliTranscripts(transcripts: unknown[]): void {
   vi.stubGlobal('window', {
-    vibeyard: { session: { projectTranscripts: vi.fn(async () => transcripts) } },
+    rcode: { session: { projectTranscripts: vi.fn(async () => transcripts) } },
   });
 }
 
@@ -355,13 +355,13 @@ describe('renderSessionHistory — CLI transcript section', () => {
 
   it('fetches transcripts for the project path', async () => {
     const fetchFn = vi.fn(async () => []);
-    vi.stubGlobal('window', { vibeyard: { session: { projectTranscripts: fetchFn } } });
+    vi.stubGlobal('window', { rcode: { session: { projectTranscripts: fetchFn } } });
     await renderHistory();
     await flushAsync();
     expect(fetchFn).toHaveBeenCalledWith('/repo');
   });
 
-  it('does not duplicate sessions already in the Vibeyard archive', async () => {
+  it('does not duplicate sessions already in the RCode archive', async () => {
     // archived h1 is a codex session with cliSessionId 'cli-1'
     stubCliTranscripts([
       { providerId: 'codex', cliSessionId: 'cli-1', transcriptPath: '/dup', name: 'already archived', mtimeMs: 1 },
@@ -411,7 +411,7 @@ describe('renderSessionHistory — CLI transcript section', () => {
 
   it('tolerates an IPC failure when loading CLI transcripts', async () => {
     vi.stubGlobal('window', {
-      vibeyard: { session: { projectTranscripts: vi.fn(async () => { throw new Error('boom'); }) } },
+      rcode: { session: { projectTranscripts: vi.fn(async () => { throw new Error('boom'); }) } },
     });
     mockAppState.activeProject.sessionHistory = [];
     const container = await renderHistory();
@@ -438,7 +438,7 @@ describe('renderSessionHistory — CLI transcript section', () => {
     const fetchFn = vi.fn()
       .mockResolvedValueOnce([{ providerId: 'claude', cliSessionId: 'a', transcriptPath: '/a', name: 'first', mtimeMs: 1 }])
       .mockResolvedValueOnce([{ providerId: 'claude', cliSessionId: 'b', transcriptPath: '/b', name: 'second', mtimeMs: 2 }]);
-    vi.stubGlobal('window', { vibeyard: { session: { projectTranscripts: fetchFn } } });
+    vi.stubGlobal('window', { rcode: { session: { projectTranscripts: fetchFn } } });
 
     const container = await renderHistory();
     await flushAsync();

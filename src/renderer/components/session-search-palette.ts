@@ -146,7 +146,7 @@ async function searchSessions(): Promise<void> {
 
   let raw: DeepSearchResult[] = [];
   try {
-    raw = await window.vibeyard.session.deepSearch(query);
+    raw = await window.rcode.session.deepSearch(query);
   } catch {
     raw = [];
   }
@@ -246,7 +246,7 @@ function openResult(r: ResolvedResult): void {
     appState.setActiveProject(r.projectId);
     void appState.resumeFromHistorySafe(r.projectId, r.archivedId);
   } else {
-    // Not in Vibeyard — find or create project by cwd, then open session directly
+    // Not in RCode — find or create project by cwd, then open session directly
     let project = appState.projects.find(p => p.path === r.projectCwd);
     if (!project) {
       const name = deriveProjectName(r.projectCwd, r.projectSlug);

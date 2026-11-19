@@ -58,7 +58,7 @@
       "defaultProfileLabel": "Default profile"
     },
     "removeConfirm": {
-      "withDataMessage": "Remove project \"{name}\"? This will delete {parts} from Vibeyard. No files on disk will be affected.",
+      "withDataMessage": "Remove project \"{name}\"? This will delete {parts} from RCode. No files on disk will be affected.",
       "emptyMessage": "Remove project \"{name}\"? No files on disk will be affected.",
       "title": "Remove project",
       "confirmLabel": "Remove",
@@ -146,7 +146,7 @@
     "heading": "Claude profiles",
     "description": "Each profile runs Claude Code against its own config directory (CLAUDE_CONFIG_DIR), isolating login, settings, and history — handy for separate work and personal licenses. After creating a profile, start a session with it and run /login once to sign in.",
     "keychainUnsupported": "This version of Claude Code{version} stores every login under a single macOS keychain entry, so profiles can't keep accounts separate. Update Claude Code to create and use profiles.",
-    "keychainUnknown": "Vibeyard can't yet confirm this Claude Code build isolates profile logins in the macOS keychain. Sign in to a profile once and isolation will be verified automatically.",
+    "keychainUnknown": "RCode can't yet confirm this Claude Code build isolates profile logins in the macOS keychain. Sign in to a profile once and isolation will be verified automatically.",
     "defaultLabel": "Default profile",
     "empty": "No profiles yet.",
     "tagManaged": "managed",
@@ -240,12 +240,12 @@
     "gitAheadDesc": "Commits ahead/behind remote"
   },
   "about": {
-    "appName": "Vibeyard",
+    "appName": "RCode",
     "versionLoading": "Version: loading...",
     "githubLink": "GitHub",
     "bugLink": "Report a Bug",
     "contributeLink": "Contribute on GitHub",
-    "communityPrefix": "Vibeyard is open source. ",
+    "communityPrefix": "RCode is open source. ",
     "communitySuffix": " — and if you find it useful, give it a star!",
     "debugModeLabel": "Debug Mode",
     "versionLoaded": "Version: {ver}"
@@ -266,7 +266,7 @@
     "searchTooMany": "500+ matches — refine your query"
   },
   "titleBar": {
-    "brand": "Vibeyard",
+    "brand": "RCode",
     "file": {
       "label": "File",
       "newProject": "New Project",

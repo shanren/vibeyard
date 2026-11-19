@@ -66,7 +66,7 @@ function stubDom(): void {
   };
   vi.stubGlobal('document', doc);
   vi.stubGlobal('window', {
-    vibeyard: {
+    rcode: {
       store: { load: vi.fn(), save: vi.fn() },
       fs: { searchFiles: searchFilesMock },
     },

@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as path from 'path';
 import { isWin } from './platform';
 
-const STATUS_DIR = path.join('/tmp', 'vibeyard');
-const SCRIPT_DIR = path.join('/home/test', '.vibeyard', 'run');
+const STATUS_DIR = path.join('/tmp', 'rcode');
+const SCRIPT_DIR = path.join('/home/test', '.rcode', 'run');
 const STATUSLINE_SCRIPT = path.join(SCRIPT_DIR, isWin ? 'statusline.cmd' : 'statusline.sh');
 
 vi.mock('fs', () => ({

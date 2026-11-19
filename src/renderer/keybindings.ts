@@ -27,14 +27,14 @@ export function initKeybindings(): void {
   // Menu IPC listeners — handle clicks on Electron menu items.
   // Accelerators are display-only (registerAccelerator: false), so these
   // only fire on actual menu clicks, not keyboard shortcuts.
-  window.vibeyard.menu.onNewProject(promptNewProject);
-  window.vibeyard.menu.onNewSession(quickNewSession);
-  window.vibeyard.menu.onToggleSplit(() => appState.toggleSplit());
-  window.vibeyard.menu.onNextSession(() => appState.cycleSession(1));
-  window.vibeyard.menu.onPrevSession(() => appState.cycleSession(-1));
-  window.vibeyard.menu.onGotoSession((index) => appState.gotoSession(index));
-  window.vibeyard.menu.onToggleInspector(toggleInspector);
-  window.vibeyard.menu.onCloseSession(handleCloseSession);
+  window.rcode.menu.onNewProject(promptNewProject);
+  window.rcode.menu.onNewSession(quickNewSession);
+  window.rcode.menu.onToggleSplit(() => appState.toggleSplit());
+  window.rcode.menu.onNextSession(() => appState.cycleSession(1));
+  window.rcode.menu.onPrevSession(() => appState.cycleSession(-1));
+  window.rcode.menu.onGotoSession((index) => appState.gotoSession(index));
+  window.rcode.menu.onToggleInspector(toggleInspector);
+  window.rcode.menu.onCloseSession(handleCloseSession);
 
   // Register shortcut handlers — the single authority for keyboard shortcuts.
   shortcutManager.registerHandler('new-session', quickNewSession);

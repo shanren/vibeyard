@@ -9,14 +9,14 @@
  *     --session-dir <dir> where sessions are stored
  *     --model / --provider / --append-system-prompt
  *
- * `--session-id` is create-or-resume, which matches how Vibeyard already models a
+ * `--session-id` is create-or-resume, which matches how RCode already models a
  * session: we hand it the id we assigned at creation, so the first spawn creates
  * that session and every later spawn (app restart, "Restart session") resumes it —
  * no hooks or transcript scraping needed.
  *
  * Not implemented (and declared off through `capabilities`): status hooks, cost,
  * context window, config reading. `pi` also has `--session-dir`, so a future
- * version can point sessions at a Vibeyard-owned directory.
+ * version can point sessions at a RCode-owned directory.
  */
 
 import type { CliProvider } from './provider';
@@ -63,7 +63,7 @@ export class PiProvider implements CliProvider {
   buildArgs(opts: { cliSessionId: string | null; isResume: boolean; extraArgs: string; initialPrompt?: string }): string[] {
     const args: string[] = [];
 
-    // Create-or-resume with the id Vibeyard assigned to this session.
+    // Create-or-resume with the id RCode assigned to this session.
     if (opts.cliSessionId) {
       args.push('--session-id', opts.cliSessionId);
     } else if (opts.isResume) {

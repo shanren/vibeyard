@@ -9,7 +9,7 @@ export function createProfilesSection(ctx: PreferencesContext): SectionControlle
   let profileDefaultSelect: CustomSelectInstance | null = null;
   // Cached keychain-isolation status (macOS), fetched once per render and reused
   // by the Add Profile guard so it doesn't re-probe the keychain via IPC.
-  let cachedKeychainStatus: Awaited<ReturnType<typeof window.vibeyard.profiles.keychainStatus>> | null = null;
+  let cachedKeychainStatus: Awaited<ReturnType<typeof window.rcode.profiles.keychainStatus>> | null = null;
 
   function render(container: HTMLElement) {
     if (profileDefaultSelect) { profileDefaultSelect.destroy(); profileDefaultSelect = null; }
@@ -30,7 +30,7 @@ export function createProfilesSection(ctx: PreferencesContext): SectionControlle
     if (isMac) {
       const warnSlot = document.createElement('div');
       container.appendChild(warnSlot);
-      void window.vibeyard.profiles.keychainStatus().then((res) => {
+      void window.rcode.profiles.keychainStatus().then((res) => {
         cachedKeychainStatus = res;
         if (res.status === 'supported') return;
         const warn = document.createElement('div');
@@ -143,7 +143,7 @@ export function createProfilesSection(ctx: PreferencesContext): SectionControlle
       // macOS — otherwise the new profile would silently share the default
       // account's keychain login.
       if (isMac) {
-        const { status, version } = cachedKeychainStatus ?? await window.vibeyard.profiles.keychainStatus();
+        const { status, version } = cachedKeychainStatus ?? await window.rcode.profiles.keychainStatus();
         if (status === 'unsupported') {
           setModalError('profile-name', t('profiles.unsupportedMacError', { version: version ? ` ${version}` : '' }));
           return;

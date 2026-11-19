@@ -33,8 +33,8 @@ describe('validatePrerequisites', () => {
     try {
       // Give the PATH fallback a dir to search that no hardcoded candidate uses,
       // then make existsSync succeed only for a `claude` binary in that dir.
-      process.env.PATH = path.join(os.tmpdir(), 'vibeyard-prefix');
-      const found = path.join(os.tmpdir(), 'vibeyard-prefix', 'claude');
+      process.env.PATH = path.join(os.tmpdir(), 'rcode-prefix');
+      const found = path.join(os.tmpdir(), 'rcode-prefix', 'claude');
       vi.mocked(fs.existsSync).mockImplementation((p) => String(p) === found);
 
       const result = validatePrerequisites();

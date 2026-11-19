@@ -5,8 +5,36 @@ import type { PersistedState } from '../shared/types';
 
 export type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types';
 
-const STATE_DIR = path.join(os.homedir(), '.vibeyard');
-const STATE_FILE = path.join(STATE_DIR, 'state.json');
+const STATE_DIR = path.join(os.homedir(), '.rcode');
+const STATE_FILE = path.join(STATE_DIR, 'state.json');
+
+/**
+ * The product shipped as "Vibeyard" before 0.0.1 and kept everything in
+ * `~/.vibeyard`. That directory is moved into place once, on first boot after
+ * the rename, so nobody loses their projects and session history.
+ * The literal is spelled out on purpose — grepping `vibeyard` should always
+ * find this one line and nothing else.
+ */
+const LEGACY_STATE_DIR = path.join(os.homedir(), '.vibeyard');
+
+function migrateLegacyStateDir(): void {
+  try {
+    if (fs.existsSync(STATE_DIR) || !fs.existsSync(LEGACY_STATE_DIR)) return;
+    fs.renameSync(LEGACY_STATE_DIR, STATE_DIR);
+    console.log('[store] migrated state directory from ~/.vibeyard to ~/.rcode');
+  } catch (err) {
+    // Different volume, permissions, or a file in the way: fall back to a copy
+    // so a failed rename never leaves the user with an empty workspace.
+    try {
+      fs.cpSync(LEGACY_STATE_DIR, STATE_DIR, { recursive: true });
+      console.log('[store] copied state directory from ~/.vibeyard to ~/.rcode');
+    } catch (copyErr) {
+      console.warn('[store] could not migrate ~/.vibeyard:', copyErr);
+    }
+  }
+}
+
+migrateLegacyStateDir();
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 

@@ -5,7 +5,7 @@
  * module is the single place that decides both values:
  *
  *   family — the same system mono stack as `--app-font-mono` in styles/base.css.
- *            Vibeyard no longer bundles a font, so naming JetBrains Mono first
+ *            RCode no longer bundles a font, so naming JetBrains Mono first
  *            (as the old code did) silently fell through to the browser's
  *            generic mono face on any machine without it installed.
  *   size   — `preferences.terminalFontSize`, defaulting to TERMINAL_FONT_SIZE_DEFAULT.

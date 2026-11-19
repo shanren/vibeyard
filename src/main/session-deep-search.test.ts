@@ -300,12 +300,12 @@ describe('projectTranscripts()', () => {
   it('matches transcripts recorded under a different path casing (Windows)', async () => {
     providersForTest.push(fakeProvider({
       id: 'claude',
-      descriptors: [{ cliSessionId: 'c1', transcriptPath: '/e--workspace-vibeyard/c1.jsonl', projectSlug: 'e--workspace-vibeyard' }],
-      index: { '/e--workspace-vibeyard/c1.jsonl': { text: 'package the app', cwd: '' } },
+      descriptors: [{ cliSessionId: 'c1', transcriptPath: '/e--workspace-rcode/c1.jsonl', projectSlug: 'e--workspace-rcode' }],
+      index: { '/e--workspace-rcode/c1.jsonl': { text: 'package the app', cwd: '' } },
     }));
     mockStat.mockResolvedValue(makeStat(1));
 
-    const results = await projectTranscripts('E:\\workspace\\vibeyard');
+    const results = await projectTranscripts('E:\\workspace\\rcode');
     expect(results).toHaveLength(1);
     expect(results[0].cliSessionId).toBe('c1');
   });

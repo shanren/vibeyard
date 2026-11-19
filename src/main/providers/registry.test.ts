@@ -31,7 +31,7 @@ function makeFakeProvider(meta: CliProviderMeta): CliProvider {
     cleanup: () => {},
     getConfig: async () => ({ mcpServers: [], agents: [], skills: [], commands: [] }),
     getShiftEnterSequence: () => null,
-    validateSettings: () => ({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} }),
+    validateSettings: () => ({ statusLine: 'rcode', hooks: 'complete', hookDetails: {} }),
     reinstallSettings: () => {},
   };
 }

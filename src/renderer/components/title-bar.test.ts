@@ -108,7 +108,7 @@ describe('title-bar', () => {
     appState.activeSession = null;
     document.body.innerHTML = '';
     vi.clearAllMocks();
-    (window as any).vibeyard = {
+    (window as any).rcode = {
       menu: {
         runEditAction: vi.fn(),
         quitApp: vi.fn(),
@@ -125,7 +125,7 @@ describe('title-bar', () => {
   it('renders the brand, the app menu and the two title-bar actions', () => {
     const root = render();
     expect(root.classList.contains('active')).toBe(true);
-    expect(root.querySelector('.titlebar-brand')?.textContent).toBe('Vibeyard');
+    expect(root.querySelector('.titlebar-brand')?.textContent).toBe('RCode');
     expect(menuButton(root).getAttribute('aria-haspopup')).toBe('menu');
     // The sidebar-header buttons moved here.
     expect(root.querySelector('#btn-toggle-sidebar')).not.toBeNull();
@@ -173,7 +173,7 @@ describe('title-bar', () => {
 
     items = pick(root, 0);
     items[4].click();
-    expect((window as any).vibeyard.menu.quitApp).toHaveBeenCalledTimes(1);
+    expect((window as any).rcode.menu.quitApp).toHaveBeenCalledTimes(1);
   });
 
   it('Close Session only fires with an active project and session', () => {
@@ -203,12 +203,12 @@ describe('title-bar', () => {
 
     items[0].click();
     await Promise.resolve();
-    expect((window as any).vibeyard.menu.runEditAction).toHaveBeenCalledWith('undo');
+    expect((window as any).rcode.menu.runEditAction).toHaveBeenCalledWith('undo');
 
     items = pick(root, 1);
     items[6].click();
     await Promise.resolve();
-    expect((window as any).vibeyard.menu.runEditAction).toHaveBeenLastCalledWith('selectAll');
+    expect((window as any).rcode.menu.runEditAction).toHaveBeenLastCalledWith('selectAll');
   });
 
   it('View shows split and inspector, no debug items by default', () => {
@@ -236,9 +236,9 @@ describe('title-bar', () => {
     ]);
 
     items[2].click();
-    expect((window as any).vibeyard.menu.toggleDevTools).toHaveBeenCalledTimes(1);
+    expect((window as any).rcode.menu.toggleDevTools).toHaveBeenCalledTimes(1);
     pick(root, 2)[3].click();
-    expect((window as any).vibeyard.menu.reloadMainWindow).toHaveBeenCalledTimes(1);
+    expect((window as any).rcode.menu.reloadMainWindow).toHaveBeenCalledTimes(1);
   });
 
   it('Window wires sidebar and explorer toggles', () => {

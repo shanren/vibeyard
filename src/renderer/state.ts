@@ -1,4 +1,4 @@
-import type { VibeyardApi } from './types.js';
+import type { RCodeApi } from './types.js';
 import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename, isAbsolutePath } from '../shared/platform.js';
@@ -51,7 +51,7 @@ export const MAX_PROJECT_NAME_LENGTH = 80;
 
 declare global {
   interface Window {
-    vibeyard: VibeyardApi;
+    rcode: RCodeApi;
   }
 }
 
@@ -152,7 +152,7 @@ class AppState {
   }
 
   async load(): Promise<void> {
-    const loaded = (await window.vibeyard.store.load()) as PersistedState | null;
+    const loaded = (await window.rcode.store.load()) as PersistedState | null;
     if (loaded && loaded.version === 1) {
       this.state = loaded;
       hydrateLoadedState(this.state, defaultPreferences);
@@ -162,7 +162,7 @@ class AppState {
   }
 
   private persist(): void {
-    window.vibeyard.store.save(serializeForSave(this.state));
+    window.rcode.store.save(serializeForSave(this.state));
   }
 
   get projects(): ProjectRecord[] {
@@ -385,7 +385,7 @@ class AppState {
    */
   async addProfile(input: { name: string; providerId: ProviderId; customPath?: string }): Promise<Profile> {
     const id = crypto.randomUUID();
-    const { configDir, managed } = await window.vibeyard.profiles.provision(id, input.customPath);
+    const { configDir, managed } = await window.rcode.profiles.provision(id, input.customPath);
     const profile: Profile = {
       id,
       name: input.name.trim(),
@@ -521,7 +521,7 @@ class AppState {
   private isArchivable(session: SessionRecord, project: ProjectRecord): boolean {
     if (!session.cliSessionId) return false;
     const providerId = session.providerId ?? 'claude';
-    return window.vibeyard.session.transcriptExistsSync(
+    return window.rcode.session.transcriptExistsSync(
       providerId,
       session.cliSessionId,
       project.path,
@@ -591,7 +591,7 @@ class AppState {
     const archived = project.sessionHistory?.find((a) => a.id === archivedSessionId);
     if (!archived || !archived.cliSessionId) return undefined;
 
-    const exists = await window.vibeyard.session.transcriptExists(
+    const exists = await window.rcode.session.transcriptExists(
       archived.providerId,
       archived.cliSessionId,
       project.path,
@@ -605,7 +605,7 @@ class AppState {
     return this.resumeFromHistory(projectId, archivedSessionId);
   }
 
-  /** Open a CLI session by cliSessionId, bypassing Vibeyard history. Used for cross-project deep search results. */
+  /** Open a CLI session by cliSessionId, bypassing RCode history. Used for cross-project deep search results. */
   openCliSession(projectId: string, cliSessionId: string, name: string, providerId: ProviderId = 'claude', profileId?: string): SessionRecord | undefined {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
@@ -643,7 +643,7 @@ class AppState {
     // The source transcript lives under its profile's config dir (if any), so
     // pass it through to locate the right .jsonl when building the handoff.
     const sourceProfile = resolved.profileId ? this.profiles.find((p) => p.id === resolved.profileId && p.providerId === resolved.providerId) : undefined;
-    const initialPrompt = await window.vibeyard.session.buildResumeWithPrompt(
+    const initialPrompt = await window.rcode.session.buildResumeWithPrompt(
       resolved.providerId,
       resolved.cliSessionId ?? null,
       project.path,

@@ -20,7 +20,7 @@ import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../shared/token-estimate'
 import { expandUserPath, isBinaryBuffer, isLikelyBinaryFile, BINARY_SNIFF_BYTES } from './fs-utils';
 import { isMac, isWin } from './platform';
 import { shouldWarnStatusLine } from './settings-guard';
-import { buildVibeyardignoreMatcher } from './vibeyardignore';
+import { buildRcodeIgnoreMatcher } from './rcodeignore';
 import { searchProjectFiles } from './file-search';
 import { setCloseConfirmed } from './close-state';
 import { provisionProfileDir } from './profiles';
@@ -172,7 +172,7 @@ export function registerIpcHandlers(): void {
       if (statusLineIssue || hooksIssue) {
         win.webContents.send('settings:warning', {
           sessionId,
-          statusLine: statusLineIssue ? validation.statusLine : 'vibeyard',
+          statusLine: statusLineIssue ? validation.statusLine : 'rcode',
           hooks: validation.hooks,
         });
       }
@@ -540,7 +540,7 @@ export function registerIpcHandlers(): void {
         return { ok: false };
       }
       const clampedLimit = Math.max(1, Math.min(100, Math.floor(limit) || 10));
-      const isIgnored = buildVibeyardignoreMatcher(resolvedCwd);
+      const isIgnored = buildRcodeIgnoreMatcher(resolvedCwd);
       const relFiles = enumerateProjectFiles(resolvedCwd).filter((rel) => !isIgnored(rel));
 
       const results: TopFile[] = [];

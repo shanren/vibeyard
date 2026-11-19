@@ -30,9 +30,9 @@ vi.mock('../config-watcher', () => ({
 
 vi.mock('../codex-hooks', () => ({
   installCodexHooks: vi.fn(),
-  validateCodexHooks: vi.fn(() => ({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} })),
+  validateCodexHooks: vi.fn(() => ({ statusLine: 'rcode', hooks: 'complete', hookDetails: {} })),
   cleanupCodexHooks: vi.fn(),
-  SESSION_ID_VAR: 'VIBEYARD_SESSION_ID',
+  SESSION_ID_VAR: 'RCODE_SESSION_ID',
 }));
 
 import * as fs from 'fs';
@@ -162,9 +162,9 @@ describe('buildEnv', () => {
     expect(env.PATH).toBe(isWin ? '/usr/local/bin;/usr/bin' : '/usr/local/bin:/usr/bin');
   });
 
-  it('sets VIBEYARD_SESSION_ID to the session ID', () => {
+  it('sets RCODE_SESSION_ID to the session ID', () => {
     const env = provider.buildEnv('sess-123', {});
-    expect(env.VIBEYARD_SESSION_ID).toBe('sess-123');
+    expect(env.RCODE_SESSION_ID).toBe('sess-123');
   });
 
   it('preserves existing env vars', () => {
@@ -226,7 +226,7 @@ describe('hooks integration', () => {
   it('validateSettings delegates to validateCodexHooks', () => {
     const result = provider.validateSettings();
     expect(mockValidateCodexHooks).toHaveBeenCalled();
-    expect(result).toEqual({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} });
+    expect(result).toEqual({ statusLine: 'rcode', hooks: 'complete', hookDetails: {} });
   });
 
   it('cleanup calls cleanupCodexHooks and stopConfigWatcher', () => {

@@ -3,8 +3,8 @@ import { t } from '../../i18n.js';
 import type { SectionController } from './section.js';
 import { toggleRow } from './shared.js';
 
-const GITHUB_URL = 'https://github.com/elirantutia/vibeyard';
-const ISSUES_URL = 'https://github.com/elirantutia/vibeyard/issues';
+const GITHUB_URL = 'https://github.com/elirantutia/rcode';
+const ISSUES_URL = 'https://github.com/elirantutia/rcode/issues';
 
 export function createAboutSection(): SectionController {
   let debugModeCheckbox: HTMLInputElement | null = null;
@@ -29,13 +29,13 @@ export function createAboutSection(): SectionController {
       ghLink.className = 'about-link';
       ghLink.textContent = t('about.githubLink');
       ghLink.href = '#';
-      ghLink.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal(GITHUB_URL); });
+      ghLink.addEventListener('click', (e) => { e.preventDefault(); window.rcode.app.openExternal(GITHUB_URL); });
 
       const bugLink = document.createElement('a');
       bugLink.className = 'about-link';
       bugLink.textContent = t('about.bugLink');
       bugLink.href = '#';
-      bugLink.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal(ISSUES_URL); });
+      bugLink.addEventListener('click', (e) => { e.preventDefault(); window.rcode.app.openExternal(ISSUES_URL); });
 
       linksDiv.appendChild(ghLink);
       linksDiv.appendChild(bugLink);
@@ -46,7 +46,7 @@ export function createAboutSection(): SectionController {
       contributeLink.className = 'about-link';
       contributeLink.href = '#';
       contributeLink.textContent = t('about.contributeLink');
-      contributeLink.addEventListener('click', (e) => { e.preventDefault(); window.vibeyard.app.openExternal(GITHUB_URL); });
+      contributeLink.addEventListener('click', (e) => { e.preventDefault(); window.rcode.app.openExternal(GITHUB_URL); });
       communityDiv.append(
         t('about.communityPrefix'),
         contributeLink,
@@ -64,7 +64,7 @@ export function createAboutSection(): SectionController {
       aboutDiv.appendChild(debugRow);
       container.appendChild(aboutDiv);
 
-      window.vibeyard.app.getVersion().then((ver) => {
+      window.rcode.app.getVersion().then((ver) => {
         versionLine.textContent = t('about.versionLoaded', { ver });
       });
     },
@@ -72,7 +72,7 @@ export function createAboutSection(): SectionController {
     save() {
       if (debugModeCheckbox && debugModeCheckbox.checked !== appState.preferences.debugMode) {
         appState.setPreference('debugMode', debugModeCheckbox.checked);
-        window.vibeyard.menu.rebuild(debugModeCheckbox.checked);
+        window.rcode.menu.rebuild(debugModeCheckbox.checked);
       }
     },
   };

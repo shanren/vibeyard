@@ -24,7 +24,7 @@ describe('i18n', () => {
         name: 'demo',
         parts: 'x and y',
       });
-      expect(out).toBe('Remove project "demo"? This will delete x and y from Vibeyard. No files on disk will be affected.');
+      expect(out).toBe('Remove project "demo"? This will delete x and y from RCode. No files on disk will be affected.');
     });
 
     it('leaves placeholders intact when the variable is missing', () => {

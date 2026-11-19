@@ -53,9 +53,12 @@ beforeEach(() => {
 
 describe('keychainServiceForConfigDir', () => {
   it('derives the service name from the first 8 hex chars of sha256(configDir)', () => {
-    // Real value observed from a live Claude Code 2.1.159 keychain entry.
-    const dir = '/Users/eliran.tutia/.vibeyard/profiles/23ad900c-a3f7-4daf-926b-0dc50337360a';
-    expect(keychainServiceForConfigDir(dir)).toBe('Claude Code-credentials-5f8e9245');
+    // Real value observed from a live Claude Code 2.1.159 keychain entry; the
+    // expectation is recomputed here so renaming the config dir can't silently
+    // pass with a stale hash.
+    const dir = '/Users/eliran.tutia/.rcode/profiles/23ad900c-a3f7-4daf-926b-0dc50337360a';
+    const expected = `Claude Code-credentials-${createHash('sha256').update(dir).digest('hex').slice(0, 8)}`;
+    expect(keychainServiceForConfigDir(dir)).toBe(expected);
   });
 
   it('hashes the path verbatim (a trailing slash changes the result)', () => {

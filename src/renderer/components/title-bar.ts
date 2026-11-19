@@ -232,7 +232,7 @@ function buildFileMenu(menu: HTMLElement): void {
   addSeparator(menu);
   addItem(menu, t('titleBar.file.settings'), showPreferencesModal);
   addSeparator(menu);
-  addItem(menu, t('titleBar.file.quit'), () => void window.vibeyard.menu.quitApp());
+  addItem(menu, t('titleBar.file.quit'), () => void window.rcode.menu.quitApp());
 }
 
 function buildEditMenu(menu: HTMLElement): void {
@@ -243,7 +243,7 @@ function buildEditMenu(menu: HTMLElement): void {
   const dispatch = (action: EditAction): void => {
     queueMicrotask(() => {
       prevFocus?.focus?.();
-      void window.vibeyard.menu.runEditAction(action);
+      void window.rcode.menu.runEditAction(action);
     });
   };
 
@@ -262,8 +262,8 @@ function buildViewMenu(menu: HTMLElement): void {
   addItem(menu, t('titleBar.view.toggleInspector'), toggleInspector, keysFor('toggle-inspector'));
   if (appState.preferences.debugMode) {
     addSeparator(menu);
-    addItem(menu, t('titleBar.view.toggleDevTools'), () => void window.vibeyard.menu.toggleDevTools());
-    addItem(menu, t('titleBar.view.reloadMainWindow'), () => void window.vibeyard.menu.reloadMainWindow());
+    addItem(menu, t('titleBar.view.toggleDevTools'), () => void window.rcode.menu.toggleDevTools());
+    addItem(menu, t('titleBar.view.reloadMainWindow'), () => void window.rcode.menu.reloadMainWindow());
   }
 }
 

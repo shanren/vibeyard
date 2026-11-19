@@ -310,7 +310,7 @@ function buildProjectActions(
   const filesBtn = makeActionButton(t('sidebar.files'), ICON_FILES, false, t('sidebar.openFolderTooltip'));
   filesBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    void window.vibeyard.fs.openInFolder(project.path);
+    void window.rcode.fs.openInFolder(project.path);
   });
   actions.appendChild(filesBtn);
 
@@ -369,7 +369,7 @@ export function promptNewProject(): void {
       label: t('sidebar.newProject.pathLabel'), id: 'project-path', placeholder: t('sidebar.newProject.pathPlaceholder'),
       buttonLabel: t('sidebar.newProject.browseButton'),
       onButtonClick: async (input) => {
-        const dir = await window.vibeyard.fs.browseDirectory();
+        const dir = await window.rcode.fs.browseDirectory();
         if (!dir) return;
         input.value = dir;
         autoFillName(dir);
@@ -393,8 +393,8 @@ export function promptNewProject(): void {
     const rawPath = values['project-path']?.trim();
     if (!name || !rawPath) return;
 
-    const projectPath = await window.vibeyard.fs.expandPath(rawPath);
-    const isDir = await window.vibeyard.fs.isDirectory(projectPath);
+    const projectPath = await window.rcode.fs.expandPath(rawPath);
+    const isDir = await window.rcode.fs.isDirectory(projectPath);
     if (!isDir) {
       setModalError('project-path', t('sidebar.newProject.directoryNotExist'));
       return;
@@ -461,7 +461,7 @@ export function promptNewProject(): void {
       const dirPart = value.substring(0, lastSlash + 1);
       const namePart = value.substring(lastSlash + 1).toLowerCase();
 
-      const dirs = await window.vibeyard.fs.listDirs(dirPart, namePart || undefined);
+      const dirs = await window.rcode.fs.listDirs(dirPart, namePart || undefined);
       showSuggestions(dirs, dirPart);
     });
 

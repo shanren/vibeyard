@@ -3,16 +3,16 @@ import { deriveProjectName } from './project-name';
 
 describe('deriveProjectName', () => {
   it('extracts the basename from POSIX paths', () => {
-    expect(deriveProjectName('/Users/me/dev/vibeyard')).toBe('vibeyard');
+    expect(deriveProjectName('/Users/me/dev/rcode')).toBe('rcode');
   });
 
   it('extracts the basename from Windows paths', () => {
-    expect(deriveProjectName('C:\\Users\\lauferism\\git\\vibeyard')).toBe('vibeyard');
+    expect(deriveProjectName('C:\\Users\\lauferism\\git\\rcode')).toBe('rcode');
   });
 
   it('strips trailing separators', () => {
-    expect(deriveProjectName('/Users/me/dev/vibeyard/')).toBe('vibeyard');
-    expect(deriveProjectName('C:\\Users\\me\\vibeyard\\')).toBe('vibeyard');
+    expect(deriveProjectName('/Users/me/dev/rcode/')).toBe('rcode');
+    expect(deriveProjectName('C:\\Users\\me\\rcode\\')).toBe('rcode');
   });
 
   it('returns the fallback when cwd is empty', () => {

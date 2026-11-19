@@ -51,7 +51,7 @@ function stubDom() {
   };
   vi.stubGlobal('document', doc);
   vi.stubGlobal('window', {
-    vibeyard: { store: { load: vi.fn(), save: vi.fn() } },
+    rcode: { store: { load: vi.fn(), save: vi.fn() } },
   });
 }
 

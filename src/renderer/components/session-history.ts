@@ -193,7 +193,7 @@ export function renderSessionHistory(
   }
 
   // The provider's own on-disk session history (e.g. Claude Code transcripts) for
-  // this project — shown in its own section below the Vibeyard archive. Loaded once
+  // this project — shown in its own section below the RCode archive. Loaded once
   // per panel open, then cached so re-renders (history-changed, search) don't refetch.
   const cached = cliTranscriptsByProject.get(project.id);
   if (cached) {
@@ -218,7 +218,7 @@ async function loadCliTranscripts(project: ProjectRecord, container: HTMLElement
   cliLoadTokens.set(project.id, token);
   let list: ProjectTranscript[] = [];
   try {
-    list = await window.vibeyard.session.projectTranscripts(project.path);
+    list = await window.rcode.session.projectTranscripts(project.path);
   } catch {
     list = [];
   }
@@ -239,7 +239,7 @@ function renderCliSection(
 ): void {
   container.querySelector('.history-cli')?.remove();
 
-  // Skip sessions already archived in Vibeyard so the same session isn't listed twice.
+  // Skip sessions already archived in RCode so the same session isn't listed twice.
   const archivedKeys = new Set<string>();
   for (const a of history) {
     if (!a.cliSessionId) continue;

@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="build/vibeyard-black.png" alt="Vibeyard" width="128" />
+  <img src="build/rcode-black.png" alt="RCode" width="128" />
 </p>
 
-<h1 align="center">Vibeyard</h1>
+<h1 align="center">RCode</h1>
 
 <p align="center">
-  <a href="https://github.com/elirantutia/vibeyard/releases"><img src="https://img.shields.io/github/v/release/elirantutia/vibeyard" alt="GitHub Release" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elirantutia/vibeyard" alt="License" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/issues"><img src="https://img.shields.io/github/issues/elirantutia/vibeyard" alt="Issues" /></a>
-  <a href="https://github.com/elirantutia/vibeyard/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
-  <a href="https://star-history.com/#elirantutia/vibeyard&Date"><img src="https://img.shields.io/github/stars/elirantutia/vibeyard?style=social" alt="GitHub Stars" /></a>
+  <a href="https://github.com/elirantutia/rcode/releases"><img src="https://img.shields.io/github/v/release/elirantutia/rcode" alt="GitHub Release" /></a>
+  <a href="https://github.com/elirantutia/rcode/blob/main/LICENSE"><img src="https://img.shields.io/github/license/elirantutia/rcode" alt="License" /></a>
+  <a href="https://github.com/elirantutia/rcode/issues"><img src="https://img.shields.io/github/issues/elirantutia/rcode" alt="Issues" /></a>
+  <a href="https://github.com/elirantutia/rcode/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs Welcome" /></a>
+  <a href="https://star-history.com/#elirantutia/rcode&Date"><img src="https://img.shields.io/github/stars/elirantutia/rcode?style=social" alt="GitHub Stars" /></a>
   <a href="https://x.com/EliranTutia"><img src="https://img.shields.io/badge/Follow-%40EliranTutia-black?logo=x" alt="Follow on X" /></a>
 </p>
 
@@ -21,20 +21,20 @@
 ---
 
 <p align="center">
-  <img src="assets/vibyard_720.gif" alt="Vibeyard Demo" width="800" />
+  <img src="assets/vibyard_720.gif" alt="RCode Demo" width="800" />
 </p>
 
 <p align="center">
-  <img src="assets/web-ui-short.gif" alt="Vibeyard UI Edit Demo" width="800" />
+  <img src="assets/web-ui-short.gif" alt="RCode UI Edit Demo" width="800" />
 </p>
 
 <p align="center">
-  <img src="assets/kanban.gif" alt="Vibeyard Kanban Board Demo" width="800" />
+  <img src="assets/kanban.gif" alt="RCode Kanban Board Demo" width="800" />
 </p>
 
-## Why Vibeyard?
+## Why RCode?
 
-Running AI coding agents in a bare terminal gets messy fast. Vibeyard gives you a lean workspace — multi-session management, split panes, cost tracking, and session resume — that opens instantly, so you can focus on building, not juggling terminals.
+Running AI coding agents in a bare terminal gets messy fast. RCode gives you a lean workspace — multi-session management, split panes, cost tracking, and session resume — that opens instantly, so you can focus on building, not juggling terminals.
 
 ## Highlights
 
@@ -56,30 +56,30 @@ Requires at least one supported CLI installed and authenticated: [Claude Code](h
 
 ### macOS
 
-Download the latest `.dmg` from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases), drag to Applications, and launch. Signed and notarized by Apple.
+Download the latest `.dmg` from [GitHub Releases](https://github.com/elirantutia/rcode/releases), drag to Applications, and launch. Signed and notarized by Apple.
 
 ### Linux
 
-Download the latest `.deb` (Debian/Ubuntu) or `.AppImage` (universal) from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases).
+Download the latest `.deb` (Debian/Ubuntu) or `.AppImage` (universal) from [GitHub Releases](https://github.com/elirantutia/rcode/releases).
 
 ```bash
 # Debian/Ubuntu
-sudo dpkg -i vibeyard_*.deb
+sudo dpkg -i rcode_*.deb
 
 # AppImage
-chmod +x Vibeyard-*.AppImage
-./Vibeyard-*.AppImage
+chmod +x RCode-*.AppImage
+./RCode-*.AppImage
 ```
 
 ### Windows
 
-Download the latest Setup `.exe` (NSIS installer) or portable `.exe` from [GitHub Releases](https://github.com/elirantutia/vibeyard/releases). Run the installer and launch Vibeyard from the Start menu, or run the portable build directly.
+Download the latest Setup `.exe` (NSIS installer) or portable `.exe` from [GitHub Releases](https://github.com/elirantutia/rcode/releases). Run the installer and launch RCode from the Start menu, or run the portable build directly.
 
 ### npm (macOS, Linux & Windows)
 
 ```bash
-npm i -g vibeyard
-vibeyard
+npm i -g rcode
+rcode
 ```
 
 On first run, the app is automatically downloaded and launched. No extra steps needed.
@@ -87,8 +87,8 @@ On first run, the app is automatically downloaded and launched. No extra steps n
 ### Build from Source
 
 ```bash
-git clone https://github.com/elirantutia/vibeyard.git
-cd vibeyard
+git clone https://github.com/elirantutia/rcode.git
+cd rcode
 npm install && npm start
 ```
 
@@ -105,13 +105,13 @@ PRs welcome! See the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct]
 ---
 
 <p align="center">
-  <a href="https://github.com/elirantutia/vibeyard"><img src="https://img.shields.io/badge/Star%20Vibeyard%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
+  <a href="https://github.com/elirantutia/rcode"><img src="https://img.shields.io/badge/Star%20RCode%20on%20GitHub-%E2%AD%90-yellow?style=for-the-badge&logo=github" alt="Star on GitHub" /></a>
 </p>
 
 <p align="center">
-  If Vibeyard helps your workflow, a star helps us grow. Thanks for the support!
+  If RCode helps your workflow, a star helps us grow. Thanks for the support!
 </p>
 
 <p align="center">
-  <sub>Vibeyard is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
+  <sub>RCode is an independent project and is not affiliated with or endorsed by Anthropic.</sub>
 </p>

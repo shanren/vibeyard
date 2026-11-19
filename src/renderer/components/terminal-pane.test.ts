@@ -190,7 +190,7 @@ const mockClipboardWrite = vi.fn().mockResolvedValue(undefined);
 
 function makeWindowStub() {
   return {
-    vibeyard: {
+    rcode: {
       pty: {
         write: mockPtyWrite,
         kill: mockPtyKill,
@@ -216,7 +216,7 @@ describe('terminal pending prompt injection', () => {
 
   it('passes pending prompt as initialPrompt to pty.create for claude', async () => {
     const { createTerminalPane, setPendingPrompt, spawnTerminal } = await import('./terminal-pane.js');
-    const mockPtyCreate = (window as any).vibeyard.pty.create;
+    const mockPtyCreate = (window as any).rcode.pty.create;
 
     createTerminalPane('claude-1', '/project', null, false, '', 'claude');
     setPendingPrompt('claude-1', 'fix the bug');
@@ -228,7 +228,7 @@ describe('terminal pending prompt injection', () => {
 
   it('passes pending prompt as initialPrompt to pty.create for codex', async () => {
     const { createTerminalPane, setPendingPrompt, spawnTerminal } = await import('./terminal-pane.js');
-    const mockPtyCreate = (window as any).vibeyard.pty.create;
+    const mockPtyCreate = (window as any).rcode.pty.create;
 
     createTerminalPane('codex-1', '/project', null, false, '', 'codex');
     setPendingPrompt('codex-1', 'fix the bug');
@@ -240,7 +240,7 @@ describe('terminal pending prompt injection', () => {
 
   it('does not pass initialPrompt when no pending prompt is set', async () => {
     const { createTerminalPane, spawnTerminal } = await import('./terminal-pane.js');
-    const mockPtyCreate = (window as any).vibeyard.pty.create;
+    const mockPtyCreate = (window as any).rcode.pty.create;
 
     createTerminalPane('claude-2', '/project', null, false, '', 'claude');
     await spawnTerminal('claude-2');

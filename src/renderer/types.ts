@@ -4,5 +4,5 @@ import type { CostData, ProviderConfig, GitWorktree, McpResult, ProviderId, CliP
 // The renderer's view of the preload bridge. Deliberately the SAME type
 // preload declares, so a namespace removed from preload becomes a compile
 // error here instead of a runtime TypeError (esbuild does not type-check).
-export type { VibeyardApi } from '../preload/preload.js';
+export type { RCodeApi } from '../preload/preload.js';
 

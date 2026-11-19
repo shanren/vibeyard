@@ -43,7 +43,7 @@ function setStatus(sessionId: string, status: SessionStatus): void {
  */
 export function setHookStatus(sessionId: string, status: 'working' | 'waiting' | 'completed' | 'input', hookName?: string): void {
   const state = sessions.get(sessionId);
-  if (!state) return;  // Ignore events for sessions not managed by Vibeyard
+  if (!state) return;  // Ignore events for sessions not managed by RCode
 
   // Any hook event is fresh activity — cancel a pending Stop fallback. It is
   // re-armed below only if this event is itself a Stop that resolved to 'working'.

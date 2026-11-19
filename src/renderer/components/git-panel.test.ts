@@ -60,7 +60,7 @@ beforeEach(() => {
   _resetForTesting();
   getFiles.mockReset();
   document.body.innerHTML = '';
-  (window as unknown as { vibeyard: unknown }).vibeyard = { git: { getFiles } };
+  (window as unknown as { rcode: unknown }).rcode = { git: { getFiles } };
 });
 
 describe('git-panel loadFiles — cold-load vs refresh', () => {

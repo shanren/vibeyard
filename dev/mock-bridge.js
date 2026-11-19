@@ -1,7 +1,7 @@
 /**
  * Browser harness for the renderer.
  *
- * The renderer talks to the outside world only through `window.vibeyard`
+ * The renderer talks to the outside world only through `window.rcode`
  * (the preload bridge). This file installs a fixture-backed stand-in for that
  * bridge so `dist/renderer/index.html` can be opened in a plain browser and the
  * whole UI can be iterated on without rebuilding/relaunching Electron.
@@ -109,7 +109,7 @@ const state = {
     activeSessionStatuses: { working: true, waiting: false, input: true, completed: true },
   },
   profiles: [
-    { id: 'prof-work', name: 'Work', providerId: 'claude', configDir: 'C:\\Users\\dev\\.vibeyard\\profiles\\work', managed: true, createdAt: NOW },
+    { id: 'prof-work', name: 'Work', providerId: 'claude', configDir: 'C:\\Users\\dev\\.rcode\\profiles\\work', managed: true, createdAt: NOW },
   ],
   sidebarWidth: 300,
   sidebarCollapsed: false,
@@ -190,7 +190,7 @@ export class AppState {
 }
 `,
   'package.json': `{
-  "name": "vibeyard",
+  "name": "rcode",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc -p tsconfig.main.json && npm run build:renderer",
@@ -347,7 +347,7 @@ const api = {
     onConflictDialog: unsubscribe,
     respondConflictDialog: noop,
     reinstall: () => resolved(),
-    validate: () => resolved({ statusLine: 'vibeyard', hooks: 'complete', hookDetails: {} }),
+    validate: () => resolved({ statusLine: 'rcode', hooks: 'complete', hookDetails: {} }),
   },
   clipboard: {
     write: (text) => navigator.clipboard?.writeText(text),
@@ -372,8 +372,8 @@ const api = {
   },
 };
 
-window.vibeyard = api;
+window.rcode = api;
 // Exposed so a harness page can simulate main-process pushes.
 window.__mock = { state, emit, listeners };
 
-console.info('[mock] window.vibeyard installed (browser harness)');
+console.info('[mock] window.rcode installed (browser harness)');

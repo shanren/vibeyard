@@ -37,7 +37,7 @@ import { rerenderOpenPreferencesModal } from './components/preferences-modal.js'
 import type { Locale } from '../shared/types.js';
 
 // Startup timing (see the matching instrumentation in src/main/main.ts).
-// Enabled by main passing ?timing=1 when VIBEYARD_TIMING is set.
+// Enabled by main passing ?timing=1 when RCODE_TIMING is set.
 const TIMING = new URLSearchParams(location.search).has('timing');
 function mark(label: string): void {
   if (TIMING) console.log(`[startup] ${label} ${Math.round(performance.now())}ms`);
@@ -58,17 +58,17 @@ import { getZoomFactor } from './zoom.js';
 import { confirmAppClose } from './session-close.js';
 
 let isQuitting = false;
-window.vibeyard.app.onQuitting(() => {
+window.rcode.app.onQuitting(() => {
   isQuitting = true;
 });
 
-window.vibeyard.app.onConfirmClose(() => {
-  confirmAppClose(() => window.vibeyard.app.closeConfirmed());
+window.rcode.app.onConfirmClose(() => {
+  confirmAppClose(() => window.rcode.app.closeConfirmed());
 });
 
 async function main(): Promise<void> {
   // Wire PTY data/exit events from main process
-  window.vibeyard.pty.onData((sessionId, data) => {
+  window.rcode.pty.onData((sessionId, data) => {
     if (isShellSessionId(sessionId)) {
       handleShellPtyData(sessionId, data);
     } else if (!isMcpSession(sessionId)) {
@@ -80,7 +80,7 @@ async function main(): Promise<void> {
     }
   });
 
-  window.vibeyard.session.onCostData((sessionId, costData) => {
+  window.rcode.session.onCostData((sessionId, costData) => {
     if (!appState.hasSession(sessionId)) return;
     const contextBefore = getContext(sessionId);
     setContextData(sessionId, costData.context_window);
@@ -109,17 +109,17 @@ async function main(): Promise<void> {
     appState.updateSessionContext(sessionId, info);
   });
 
-  window.vibeyard.session.onHookStatus((sessionId, status, hookName) => {
+  window.rcode.session.onHookStatus((sessionId, status, hookName) => {
     if (!appState.hasSession(sessionId)) return;
     setHookStatus(sessionId, status, hookName);
   });
 
-  window.vibeyard.session.onInspectorEvents((sessionId, events) => {
+  window.rcode.session.onInspectorEvents((sessionId, events) => {
     if (!appState.hasSession(sessionId)) return;
     addInspectorEvents(sessionId, events);
   });
 
-  window.vibeyard.session.onCliSessionId((sessionId, cliSessionId) => {
+  window.rcode.session.onCliSessionId((sessionId, cliSessionId) => {
     // Find the project containing this session and persist the CLI session ID
     const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
     if (project) {
@@ -128,7 +128,7 @@ async function main(): Promise<void> {
     }
   });
 
-  window.vibeyard.pty.onExit((sessionId, exitCode) => {
+  window.rcode.pty.onExit((sessionId, exitCode) => {
     if (isShellSessionId(sessionId)) {
       handleShellPtyExit(sessionId, exitCode);
     } else if (!isMcpSession(sessionId) && !isQuitting) {
@@ -203,7 +203,7 @@ async function main(): Promise<void> {
   // Windows title-bar overlay must follow the theme (VS Code does the same).
   const syncTitleBarOverlay = (theme: 'dark' | 'light') => {
     const dark = theme !== 'light';
-    void window.vibeyard.app.setTitleBarOverlay({
+    void window.rcode.app.setTitleBarOverlay({
       color: dark ? '#181818' : '#f8f8f8',
       symbolColor: dark ? '#cccccc' : '#1e1e1e',
       height: 35,
@@ -241,7 +241,7 @@ async function main(): Promise<void> {
   appState.on('profiles-changed', () => refreshProfileLabels());
 
   const savedZoom = getZoomFactor();
-  if (savedZoom !== 1.0) window.vibeyard.zoom.set(savedZoom);
+  if (savedZoom !== 1.0) window.rcode.zoom.set(savedZoom);
 
   // Auto-open new project modal when no projects exist
   if (appState.projects.length === 0) {

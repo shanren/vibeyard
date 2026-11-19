@@ -4,7 +4,7 @@ const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  rcode: {
     store: { load: mockLoad, save: mockSave },
     session: { transcriptExistsSync: vi.fn().mockReturnValue(true) },
   },

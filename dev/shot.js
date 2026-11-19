@@ -38,7 +38,7 @@ const getJson = (p) => new Promise((res, rej) => {
     `--remote-debugging-port=${PORT}`,
     `--force-device-scale-factor=${DSF}`,
     '--hide-scrollbars', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
-    '--user-data-dir=' + fs.mkdtempSync(require('path').join(os.tmpdir(), 'vibeyard-shot-')),
+    '--user-data-dir=' + fs.mkdtempSync(require('path').join(os.tmpdir(), 'rcode-shot-')),
     URL_,
   ], { stdio: 'ignore' });
 

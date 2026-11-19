@@ -144,7 +144,7 @@ function getEnabledPlugins(): Set<string> {
   return new Set(Object.entries(enabled).filter(([, v]) => v).map(([k]) => k));
 }
 
-export const HOOK_MARKER = '# vibeyard-hook';
+export const HOOK_MARKER = '# rcode-hook';
 
 /** The default Claude config dir (~/.claude). Profiles override this via CLAUDE_CONFIG_DIR. */
 export function defaultClaudeDir(): string {
@@ -192,7 +192,7 @@ function prepareSettings(configDir: string = defaultClaudeDir()): { settings: Re
 
   const existingHooks: HooksConfig = (settings.hooks ?? {}) as HooksConfig;
 
-  // Remove any previously-installed vibeyard hooks from all event types
+  // Remove any previously-installed rcode hooks from all event types
   const cleaned: HooksConfig = {};
   for (const [event, matchers] of Object.entries(existingHooks)) {
     const filteredMatchers = matchers

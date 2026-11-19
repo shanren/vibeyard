@@ -1,7 +1,7 @@
 /**
  * Custom CLI provider — runs any user-supplied command as a session.
  *
- * This is the escape hatch for CLIs Vibeyard has no adapter for (pi, opencode,
+ * This is the escape hatch for CLIs RCode has no adapter for (pi, opencode,
  * aider, …). You type the command once per project and it becomes a real
  * session: its own PTY, tab, and entry in the sidebar.
  *

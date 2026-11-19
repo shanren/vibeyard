@@ -4,7 +4,7 @@ import { ZOOM_MIN, ZOOM_MAX } from '../shared/types';
 
 export type { CostData } from '../shared/types';
 
-export interface VibeyardApi {
+export interface RCodeApi {
   pty: {
     create(sessionId: string, cwd: string, cliSessionId: string | null, isResume: boolean, extraArgs?: string, providerId?: ProviderId, initialPrompt?: string, envVars?: string, configDir?: string, customCommand?: string): Promise<void>;
     createShell(sessionId: string, cwd: string): Promise<void>;
@@ -137,7 +137,7 @@ function onChannel(channel: string, callback: (...args: unknown[]) => void): () 
   return () => ipcRenderer.removeListener(channel, listener);
 }
 
-const api: VibeyardApi = {
+const api: RCodeApi = {
   pty: {
     create: (sessionId, cwd, cliSessionId, isResume, extraArgs, providerId, initialPrompt, envVars, configDir, customCommand) =>
       ipcRenderer.invoke('pty:create', sessionId, cwd, cliSessionId, isResume, extraArgs || '', providerId || 'claude', initialPrompt, envVars || '', configDir, customCommand),
@@ -291,4 +291,4 @@ const api: VibeyardApi = {
   },
 };
 
-contextBridge.exposeInMainWorld('vibeyard', api);
+contextBridge.exposeInMainWorld('rcode', api);

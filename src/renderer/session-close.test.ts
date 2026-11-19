@@ -4,7 +4,7 @@ const mockLoad = vi.fn();
 const mockSave = vi.fn();
 
 vi.stubGlobal('window', {
-  vibeyard: {
+  rcode: {
     store: { load: mockLoad, save: mockSave },
   },
 });
@@ -401,7 +401,7 @@ describe('confirmAppClose', () => {
 
     expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
     const [title, message, options] = mockShowConfirmDialog.mock.calls[0];
-    expect(title).toBe('Quit Vibeyard');
+    expect(title).toBe('Quit RCode');
     expect(message).toBe('A session is still active. Quitting will interrupt it.');
     expect(options.confirmLabel).toBe('Quit');
     expect(onConfirm).not.toHaveBeenCalled();
@@ -443,7 +443,7 @@ describe('confirmAppClose', () => {
 
     expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
     const [title, message, options] = mockShowConfirmDialog.mock.calls[0];
-    expect(title).toBe('Quit Vibeyard');
+    expect(title).toBe('Quit RCode');
     expect(message).toBe('3 sessions are still active. Quitting will interrupt them.');
     expect(options.confirmLabel).toBe('Quit');
   });

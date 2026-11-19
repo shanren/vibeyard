@@ -16,7 +16,7 @@ export function checkPythonAvailable(): string | null {
   } catch {
     return (
       'Python not found.\n\n' +
-      'Vibeyard uses Python on Windows for session tracking (status, events).\n' +
+      'RCode uses Python on Windows for session tracking (status, events).\n' +
       'These features will not work until Python is installed and available on PATH.\n\n' +
       'Install Python from https://www.python.org/downloads/ or via:\n' +
       '  winget install Python.Python.3\n'
@@ -88,9 +88,9 @@ export function validatePrerequisites(): { ok: boolean; message: string } {
     ok: false,
     message:
       'Claude CLI not found.\n\n' +
-      'Vibeyard requires the Claude Code CLI to be installed.\n\n' +
+      'RCode requires the Claude Code CLI to be installed.\n\n' +
       'Install it with:\n' +
       '  npm install -g @anthropic-ai/claude-code\n\n' +
-      'After installing, restart Vibeyard.',
+      'After installing, restart RCode.',
   };
 }

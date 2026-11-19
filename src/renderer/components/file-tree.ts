@@ -32,7 +32,7 @@ function watchFolder(projectId: string, folderPath: string): void {
   const set = getWatchedSet(projectId);
   if (set.has(folderPath)) return;
   set.add(folderPath);
-  window.vibeyard.fs.watchDir(folderPath);
+  window.rcode.fs.watchDir(folderPath);
 }
 
 /**
@@ -46,7 +46,7 @@ function unwatchSubtree(projectId: string, folderPath: string, clearExpanded = f
     for (const p of [...set]) {
       if (!isPathUnder(p, folderPath)) continue;
       set.delete(p);
-      window.vibeyard.fs.unwatchDir(p);
+      window.rcode.fs.unwatchDir(p);
     }
   }
   for (const p of [...entryCache.keys()]) {
@@ -95,7 +95,7 @@ function flushPendingDirs(): void {
 
 function ensureChangeSubscription(): void {
   if (unsubFileChanged) return;
-  unsubFileChanged = window.vibeyard.fs.onFsChange((changes) => {
+  unsubFileChanged = window.rcode.fs.onFsChange((changes) => {
     if (changes.length === 0) return;
     // flushPendingDirs filters to dirs actually rendered in a tree; collecting
     // every changed dir here (dirs from open reader/viewer panes included) is
@@ -143,7 +143,7 @@ export function clearProjectState(projectId: string): void {
 export function closeFileTree(projectId: string): void {
   const watched = watchedByProject.get(projectId);
   if (watched) {
-    for (const p of watched) window.vibeyard.fs.unwatchDir(p);
+    for (const p of watched) window.rcode.fs.unwatchDir(p);
     watched.clear();
   }
   activeTrees.delete(projectId);
@@ -170,7 +170,7 @@ async function loadEntries(folderPath: string): Promise<DirEntry[]> {
   const pending = inflight.get(folderPath);
   if (pending) return pending;
 
-  const promise = window.vibeyard.fs.listDir(folderPath).then((entries) => {
+  const promise = window.rcode.fs.listDir(folderPath).then((entries) => {
     const sorted = sortEntries(entries);
     entryCache.set(folderPath, sorted);
     inflight.delete(folderPath);
@@ -381,8 +381,8 @@ async function reconcileChildren(
 
 async function showFileProperties(entry: DirEntry): Promise<void> {
   const [statResult, readResult] = await Promise.all([
-    window.vibeyard.fs.stat(entry.path),
-    window.vibeyard.fs.readFile(entry.path),
+    window.rcode.fs.stat(entry.path),
+    window.rcode.fs.readFile(entry.path),
   ]);
 
   const rows: Array<{ label: string; value: string; mono?: boolean }> = [];
@@ -454,7 +454,7 @@ function confirmAndTrash(entry: DirEntry): void {
     `Delete ${kind}`,
     message,
     async () => {
-      const result = await window.vibeyard.fs.trashItem(entry.path);
+      const result = await window.rcode.fs.trashItem(entry.path);
       if (!result.ok) {
         console.warn(`Failed to trash ${entry.path}: ${result.error ?? 'unknown error'}`);
       }

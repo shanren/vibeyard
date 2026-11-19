@@ -50,7 +50,7 @@ async function runSearch(): Promise<void> {
   const seq = ++searchSeq;
   let result: SearchFilesResult;
   try {
-    result = await window.vibeyard.fs.searchFiles(project.path, query);
+    result = await window.rcode.fs.searchFiles(project.path, query);
   } catch {
     result = { files: [], truncated: false };
   }

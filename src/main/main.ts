@@ -14,11 +14,11 @@ import { isCloseConfirmed, setCloseConfirmed } from './close-state';
 
 let mainWindow: BrowserWindow | null = null;
 
-// Startup timing instrumentation. Enable with VIBEYARD_TIMING=1; every mark
+// Startup timing instrumentation. Enable with RCODE_TIMING=1; every mark
 // prints "[startup] <label> <ms since process start>" so cold-start work can be
 // attributed to a phase. Used as the verification instrument for the
 // fast-startup effort; harmless when disabled.
-const TIMING = !!process.env.VIBEYARD_TIMING;
+const TIMING = !!process.env.RCODE_TIMING;
 function mark(label: string): void {
   if (TIMING) console.log(`[startup] ${label} ${Math.round(process.uptime() * 1000)}ms`);
 }
@@ -40,7 +40,7 @@ function createWindow(): void {
     height: 900,
     minWidth: 800,
     minHeight: 500,
-    title: 'Vibeyard',
+    title: 'RCode',
     icon: path.join(__dirname, '..', '..', '..', 'build', 'icon.png'),
     backgroundColor: '#000000',
     // The app draws its own 35px title bar on every platform, so the native
@@ -119,9 +119,9 @@ app.whenReady().then(async () => {
   if (missing.length === providers.length) {
     const bullets = providers.map(p => `  • ${p.meta.displayName}`).join('\n');
     dialog.showErrorBox(
-      'Vibeyard — No CLI Provider Found',
-      `Vibeyard needs at least one supported CLI provider installed to run.\n\n` +
-        `Install one of the following, then restart Vibeyard:\n\n${bullets}`,
+      'RCode — No CLI Provider Found',
+      `RCode needs at least one supported CLI provider installed to run.\n\n` +
+        `Install one of the following, then restart RCode:\n\n${bullets}`,
     );
     app.quit();
     return;
@@ -143,7 +143,7 @@ app.whenReady().then(async () => {
     console.warn(pythonWarning);
     dialog.showMessageBox(mainWindow!, {
       type: 'warning',
-      title: 'Vibeyard — Python Not Found',
+      title: 'RCode — Python Not Found',
       message: pythonWarning,
     });
   }

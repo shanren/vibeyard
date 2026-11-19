@@ -20,7 +20,7 @@ vi.mock('../pty-manager', () => ({
 }));
 
 vi.mock('../hook-status', () => ({
-  getStatusLineScriptPath: vi.fn(() => '/tmp/vibeyard/statusline.sh'),
+  getStatusLineScriptPath: vi.fn(() => '/tmp/rcode/statusline.sh'),
   installStatusLineScript: vi.fn(),
   cleanupAll: vi.fn(),
 }));
@@ -170,8 +170,8 @@ describe('buildEnv', () => {
   });
 
   it('sets CLAUDE_CONFIG_DIR when a profile configDir is given', () => {
-    const env = provider.buildEnv('sess-123', {}, { configDir: '/mock/home/.vibeyard/profiles/work' });
-    expect(env.CLAUDE_CONFIG_DIR).toBe('/mock/home/.vibeyard/profiles/work');
+    const env = provider.buildEnv('sess-123', {}, { configDir: '/mock/home/.rcode/profiles/work' });
+    expect(env.CLAUDE_CONFIG_DIR).toBe('/mock/home/.rcode/profiles/work');
   });
 
   it('does not set CLAUDE_CONFIG_DIR when no configDir is given', () => {
@@ -245,8 +245,8 @@ describe('getTranscriptPath', () => {
 
   it('resolves under a profile config dir when given', () => {
     mockExistsSync.mockReturnValue(true);
-    const out = provider.getTranscriptPath('abc-123', '/tmp/proj', '/mock/home/.vibeyard/profiles/work');
-    expect(out).toBe(path.join('/mock/home/.vibeyard/profiles/work', 'projects', '-tmp-proj', 'abc-123.jsonl'));
+    const out = provider.getTranscriptPath('abc-123', '/tmp/proj', '/mock/home/.rcode/profiles/work');
+    expect(out).toBe(path.join('/mock/home/.rcode/profiles/work', 'projects', '-tmp-proj', 'abc-123.jsonl'));
   });
 });
 

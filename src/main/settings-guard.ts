@@ -7,7 +7,7 @@ import { readJsonSafe } from './fs-utils';
 import { loadState, saveState } from './store';
 import type { SettingsValidationResult } from '../shared/types';
 
-const LEGACY_STATUSLINE_RE = /[/\\]vibeyard[/\\]statusline\.(sh|cmd)$/;
+const LEGACY_STATUSLINE_RE = /[/\\]rcode[/\\]statusline\.(sh|cmd)$/;
 
 const CANDIDATE_HOOK_EVENTS = [
   'SessionStart', 'UserPromptSubmit', 'PostToolUse',
@@ -29,11 +29,11 @@ function readClaudeSettings(configDir: string = path.join(homedir(), '.claude'))
   return readJsonSafe(path.join(configDir, 'settings.json')) ?? {};
 }
 
-export function isVibeyardStatusLine(statusLine: unknown): boolean {
+export function isRCodeStatusLine(statusLine: unknown): boolean {
   if (!statusLine || typeof statusLine !== 'object') return false;
   const sl = statusLine as Record<string, unknown>;
   if (sl.command === getStatusLineScriptPath()) return true;
-  // Recognize legacy Vibeyard statusline paths (e.g. /tmp/vibeyard/statusline.sh)
+  // Recognize legacy RCode statusline paths (e.g. /tmp/rcode/statusline.sh)
   // so upgrades silently replace them without showing a conflict dialog.
   if (typeof sl.command === 'string') {
     return LEGACY_STATUSLINE_RE.test(sl.command);
@@ -48,8 +48,8 @@ export function validateSettings(configDir?: string): SettingsValidationResult {
   let statusLine: SettingsValidationResult['statusLine'] = 'missing';
   let foreignStatusLineCommand: string | undefined;
   if (settings.statusLine) {
-    if (isVibeyardStatusLine(settings.statusLine)) {
-      statusLine = 'vibeyard';
+    if (isRCodeStatusLine(settings.statusLine)) {
+      statusLine = 'rcode';
     } else {
       statusLine = 'foreign';
       const sl = settings.statusLine as Record<string, unknown>;
@@ -91,7 +91,7 @@ export function shouldWarnStatusLine(
   consentCommand: string | null | undefined,
   currentForeignCommand: string | null | undefined,
 ): boolean {
-  if (statusLine === 'vibeyard') return false;
+  if (statusLine === 'rcode') return false;
   if (
     statusLine === 'foreign' &&
     consent === 'declined' &&
@@ -115,7 +115,7 @@ export async function guardedInstall(win: BrowserWindow | null): Promise<void> {
   // Always install hooks (additive, non-destructive)
   installHooksOnly();
 
-  if (validation.statusLine === 'vibeyard' || validation.statusLine === 'missing') {
+  if (validation.statusLine === 'rcode' || validation.statusLine === 'missing') {
     installStatusLine();
     return;
   }
@@ -188,7 +188,7 @@ export function reinstallSettings(): void {
 
   const state = loadState();
   state.preferences.statusLineConsent = 'granted';
-  // No specific foreign command anymore — Vibeyard now owns the statusLine.
+  // No specific foreign command anymore — RCode now owns the statusLine.
   state.preferences.statusLineConsentCommand = null;
   saveState(state);
 }

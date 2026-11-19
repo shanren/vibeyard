@@ -73,7 +73,7 @@ export function closeSessionById(sessionId: string): void {
 }
 
 export async function closeSessionIfFileMissing(sessionId: string, fullPath: string): Promise<boolean> {
-  if (await window.vibeyard.fs.exists(fullPath)) return false;
+  if (await window.rcode.fs.exists(fullPath)) return false;
   closeSessionById(sessionId);
   return true;
 }
@@ -140,7 +140,7 @@ export function confirmAppClose(onConfirm: () => void): void {
   }
   const isSingle = count === 1;
   showConfirmDialog(
-    'Quit Vibeyard',
+    'Quit RCode',
     isSingle
       ? 'A session is still active. Quitting will interrupt it.'
       : `${count} sessions are still active. Quitting will interrupt them.`,

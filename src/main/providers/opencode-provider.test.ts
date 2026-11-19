@@ -24,7 +24,7 @@ describe('OpencodeProvider', () => {
     });
   });
 
-  it('creates-or-resumes with the id Vibeyard assigned', () => {
+  it('creates-or-resumes with the id RCode assigned', () => {
     expect(provider.buildArgs({ cliSessionId: 'sess-9', isResume: false, extraArgs: '' })).toEqual(['--session', 'sess-9']);
     expect(provider.buildArgs({ cliSessionId: 'sess-9', isResume: true, extraArgs: '' })).toEqual(['--session', 'sess-9']);
   });
