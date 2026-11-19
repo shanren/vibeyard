@@ -203,24 +203,7 @@ if (!gotSingleInstanceLock) {
 
 app.whenReady().then(async () => {
   initProviders();
-
-  const providers = getAllProviders();
-  const missing = providers.filter(p => !p.validatePrerequisites());
-  for (const p of missing) {
-    console.warn(`Provider "${p.meta.displayName}" not available`);
-  }
-  if (missing.length === providers.length) {
-    const bullets = providers.map(p => `  • ${p.meta.displayName}`).join('\n');
-    dialog.showErrorBox(
-      'RCode — No CLI Provider Found',
-      `RCode needs at least one supported CLI provider installed to run.\n\n` +
-        `Install one of the following, then restart RCode:\n\n${bullets}`,
-    );
-    app.quit();
-    return;
-  }
-
-  mark('main:providers-ready');
+  mark('main:providers-inited');
 
   registerIpcHandlers();
   mark('main:ipc-registered');
@@ -249,6 +232,24 @@ app.whenReady().then(async () => {
   // main thread and stalled the renderer's `store:load` for seconds — on Windows
   // that delayed the first usable window and could drop an OS hand-off entirely.
   const runDeferredStartupWork = async (): Promise<void> => {
+    // Provider validation used to run before the window existed, so every launch
+    // paid for seven `where`/`which` spawns before anything was on screen. Its
+    // only job is the "no CLI installed" error box, so it belongs here.
+    const providers = getAllProviders();
+    const missing = providers.filter((p) => !p.validatePrerequisites());
+    for (const p of missing) console.warn('Provider not available: ' + p.meta.displayName);
+    if (providers.length > 0 && missing.length === providers.length) {
+      const bullets = providers.map((p) => '  - ' + p.meta.displayName).join('\n');
+      dialog.showErrorBox(
+        'RCode - No CLI Provider Found',
+        'RCode needs at least one supported CLI provider installed to run.\n\n' +
+          'Install one of the following, then restart RCode:\n\n' + bullets,
+      );
+      setCloseConfirmed(true);
+      app.quit();
+      return;
+    }
+
     const pythonWarning = checkPythonAvailable();
     if (pythonWarning) {
       console.warn(pythonWarning);
