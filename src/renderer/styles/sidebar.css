@@ -22,52 +22,6 @@
   background: var(--accent);
 }
 
-#sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 16px 12px;
-  gap: 10px;
-}
-
-.sidebar-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-#sidebar-header .icon-btn svg {
-  display: block;
-}
-
-/* Primary header action (the + new-project button) — accent-tinted pill. */
-#sidebar-header .icon-btn.primary {
-  background: transparent;
-  color: var(--app-text-secondary);
-  border: var(--app-line-width) solid var(--app-line-input);
-  border-radius: var(--app-radius-control);
-}
-
-#sidebar-header .icon-btn.primary:hover {
-  background: var(--app-hover-bg);
-  color: var(--app-text);
-}
-
-/* Preferences gear — borderless rounded-square with a soft fill on hover
-   (matches the toolbar reference look and the adjacent + button's radius). */
-#sidebar-header .icon-btn:not(.primary) {
-  border: none;
-  border-radius: var(--radius-sm);
-}
-
-#sidebar-header .icon-btn:not(.primary):hover,
-#sidebar-header .icon-btn:not(.primary):focus-visible {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border: none;
-  outline: none;
-}
-
 /* Collapsed rail — a 58px vertical strip: expand button, divider, active
    project avatar, nav icons, then Discussions pinned to the bottom. */
 #sidebar.collapsed {
@@ -128,12 +82,6 @@
   height: 1px;
   background: var(--border);
   margin: 2px auto 12px;
-}
-
-#sidebar.collapsed #sidebar-header {
-  border-bottom: none;
-  padding: 10px 0 4px;
-  justify-content: center;
 }
 
 /* Discussions — pinned to the bottom by #sidebar-content's flex:1 (footer hidden). */

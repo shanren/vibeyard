@@ -24,12 +24,9 @@ const projectPanelOpen = new Map<string, ProjectPanel>();
 const projectListEl = document.getElementById('project-list')!;
 let activeProjectContextMenu: HTMLElement | null = null;
 let renamingProjectId: string | null = null;
-const btnAddProject = document.getElementById('btn-add-project')!;
-const btnPreferences = document.getElementById('btn-preferences')!;
 const sidebarEl = document.getElementById('sidebar')!;
 const resizeHandle = document.getElementById('sidebar-resize-handle')!;
 
-const btnToggleSidebar = document.getElementById('btn-toggle-sidebar')!;
 
 const SIDEBAR_MIN = 150;
 const SIDEBAR_MAX = 500;
@@ -45,9 +42,6 @@ function applySidebarCollapsed(): void {
 }
 
 export function initSidebar(): void {
-  btnAddProject.addEventListener('click', promptNewProject);
-  btnPreferences.addEventListener('click', () => showPreferencesModal());
-  btnToggleSidebar.addEventListener('click', toggleSidebar);
 
   initResizeHandle();
   appState.on('state-loaded', () => {

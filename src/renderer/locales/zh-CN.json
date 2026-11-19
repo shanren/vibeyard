@@ -270,6 +270,7 @@
       "newProject": "新建项目",
       "newSession": "新建会话",
       "closeSession": "关闭会话",
+      "settings": "设置",
       "quit": "退出"
     },
     "edit": {
@@ -288,6 +289,19 @@
       "toggleInspector": "切换会话检查器",
       "toggleDevTools": "开发者工具",
       "reloadMainWindow": "重新加载主窗口"
+    },
+    "appMenu": "菜单",
+    "toggleSidebar": "切换侧栏 (Ctrl+B)",
+    "newProject": "新建项目 (Ctrl+Shift+P)",
+    "window": {
+      "label": "窗口",
+      "toggleSidebar": "切换侧栏",
+      "toggleExplorer": "切换资源管理器"
+    },
+    "help": {
+      "label": "帮助",
+      "preferences": "设置",
+      "shortcuts": "键盘快捷键"
     }
   },
   "activityBar": {

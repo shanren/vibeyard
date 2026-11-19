@@ -1,13 +1,15 @@
-/* Custom in-app title bar (Windows). Hidden by default; .active is added by
-   title-bar.ts when the bar is built (Windows only). */
+/* In-app title bar — the app's only top row.
+   brand · "⋯" application menu · spacer · sidebar toggle · new project.
+   On Windows it is also the drag region and leaves room for the system
+   min/max/close buttons, which Electron overlays on the top-right. */
 
 #title-bar {
   display: none;
   align-items: center;
-  gap: 6px;
+  gap: var(--app-space-2);
   height: var(--app-titlebar-height);
   min-height: var(--app-titlebar-height);
-  padding: 0 var(--app-space-2);
+  padding: 0 var(--app-space-2) 0 var(--app-space-3);
   background: var(--vscode-titleBar-activeBackground);
   color: var(--vscode-titleBar-activeForeground);
   border-bottom: var(--app-line-width) solid var(--vscode-titleBar-border);
@@ -19,44 +21,121 @@
   display: flex;
 }
 
-/* Reserve space for the system min/max/close buttons, which overlay the
-   top-right corner on Windows (titleBarStyle: hidden). */
+/* Reserve space for the system window buttons (titleBarStyle: hidden). */
 #title-bar.win {
   padding-right: 140px;
 }
 
-.titlebar-brand {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-right: 8px;
-  letter-spacing: 0.01em;
+/* macOS traffic lights sit inset at the left of the bar. */
+#title-bar.mac {
+  padding-left: 80px;
 }
 
-.titlebar-menu-btn {
+.titlebar-brand {
+  font-size: var(--app-font-size-base);
+  font-weight: var(--app-font-weight-bold);
+  letter-spacing: 0.01em;
+  color: var(--app-text);
+  margin-right: var(--app-space-2);
+}
+
+.titlebar-spacer {
+  flex: 1;
+}
+
+/* Square icon buttons: 26px box, 16px glyph, hover fill only. */
+.titlebar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   border: none;
+  border-radius: var(--app-radius-control);
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
+  color: var(--app-text-secondary);
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
 
-.titlebar-menu-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+.titlebar-icon-btn:hover {
+  background: var(--app-hover-bg);
+  color: var(--app-text);
 }
 
-.titlebar-menu-btn.open {
-  background: var(--accent-soft);
-  color: var(--accent);
+.titlebar-icon-btn.open {
+  background: var(--vscode-list-inactiveSelectionBackground);
+  color: var(--app-text);
 }
 
-/* Dropdown menus — reuse .tab-context-menu base; tune radius/width to match
-   the app's rounded dark surfaces. */
-.titlebar-menu {
+.titlebar-icon-btn.primary {
+  border: var(--app-line-width) solid var(--app-line-input);
+}
+
+/* ── Application menu ──────────────────────────────────────────────────────
+   One button, two columns: categories on the left, the hovered category's items
+   on the right. Condensed form of the old File / Edit / View menu bar. */
+
+.titlebar-app-menu {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  padding: 0;
+  border-radius: var(--app-radius-overlay);
+  overflow: hidden;
+}
+
+.app-menu-categories {
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: var(--app-space-1) 0;
+  border-right: var(--app-line-width) solid var(--vscode-widget-border);
+}
+
+.app-menu-category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-4);
+  height: 26px;
+  padding: 0 var(--app-space-4) 0 var(--app-space-5);
+  font-size: var(--app-font-size-base);
+  color: var(--app-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.app-menu-category:hover,
+.app-menu-category.active {
+  background: var(--vscode-list-inactiveSelectionBackground);
+}
+
+.app-menu-chevron {
+  color: var(--app-text-secondary);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.app-menu-items {
+  display: flex;
+  flex-direction: column;
   min-width: 190px;
-  border-radius: var(--radius-sm);
+  padding: var(--app-space-1) 0;
+}
+
+.app-menu-items:empty {
+  display: none;
+}
+
+/* Menu rows inside the popup reuse .tab-context-menu-item. */
+.titlebar-app-menu .tab-context-menu-item {
+  height: 26px;
+  padding: 0 var(--app-space-5);
+}
+
+.titlebar-app-menu .tab-context-menu-item:hover:not(.disabled) {
+  background: var(--vscode-menu-selectionBackground);
+  color: var(--vscode-menu-selectionForeground);
 }

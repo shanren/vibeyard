@@ -5,10 +5,12 @@ import { join } from 'node:path';
 import { renderTitleBar, initTitleBar } from './title-bar.js';
 import { appState } from '../state.js';
 import { isWin } from '../platform.js';
-import { promptNewProject } from './sidebar.js';
+import { promptNewProject, toggleSidebar } from './sidebar.js';
+import { showPreferencesModal } from './preferences-modal.js';
 import { quickNewSession } from './tab-bar/session-menu.js';
 import { closeSessionWithConfirm } from '../session-close.js';
 import { toggleInspector } from './session-inspector.js';
+import { toggleExplorerPanel } from './explorer-panel.js';
 import { hideTabContextMenu } from './tab-bar/menu.js';
 
 // title-bar.ts pulls in a wide module graph (state, sidebar, session-menu, …)
@@ -26,9 +28,12 @@ const m = vi.hoisted(() => {
   return {
     appState: appStateMock,
     promptNewProject: vi.fn(),
+    toggleSidebar: vi.fn(),
+    showPreferencesModal: vi.fn(),
     quickNewSession: vi.fn(),
     closeSessionWithConfirm: vi.fn(),
     toggleInspector: vi.fn(),
+    toggleExplorerPanel: vi.fn(),
     shortcutManager: {
       getKeys: (id: string) =>
         ({
@@ -44,10 +49,12 @@ const m = vi.hoisted(() => {
 });
 
 vi.mock('../state.js', () => ({ appState: m.appState }));
-vi.mock('./sidebar.js', () => ({ promptNewProject: m.promptNewProject }));
+vi.mock('./sidebar.js', () => ({ promptNewProject: m.promptNewProject, toggleSidebar: m.toggleSidebar }));
+vi.mock('./preferences-modal.js', () => ({ showPreferencesModal: m.showPreferencesModal }));
 vi.mock('./tab-bar/session-menu.js', () => ({ quickNewSession: m.quickNewSession }));
 vi.mock('../session-close.js', () => ({ closeSessionWithConfirm: m.closeSessionWithConfirm }));
 vi.mock('./session-inspector.js', () => ({ toggleInspector: m.toggleInspector }));
+vi.mock('./explorer-panel.js', () => ({ toggleExplorerPanel: m.toggleExplorerPanel }));
 vi.mock('../shortcuts.js', () => ({
   shortcutManager: m.shortcutManager,
   displayKeys: m.displayKeys,
@@ -62,21 +69,36 @@ function render(): HTMLElement {
   return root;
 }
 
-function buttons(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll('.titlebar-menu-btn')) as HTMLElement[];
+/** The single "⋯" application-menu button. */
+function menuButton(root: HTMLElement): HTMLElement {
+  return root.querySelector('#btn-app-menu') as HTMLElement;
 }
 
-/** Click a menu button and return its dropdown's `.tab-context-menu-item`s. */
-function openItems(btn: HTMLElement): HTMLElement[] {
-  btn.click();
-  const menu = document.querySelector('.tab-context-menu') as HTMLElement | null;
-  return Array.from(menu?.querySelectorAll('.tab-context-menu-item') ?? []) as HTMLElement[];
+/** Open the app menu and return the popup plus its two columns. */
+function openAppMenu(root: HTMLElement) {
+  menuButton(root).click();
+  const popup = document.querySelector('.titlebar-app-menu') as HTMLElement;
+  const categories = Array.from(popup.querySelectorAll('.app-menu-category')) as HTMLElement[];
+  const items = () => Array.from(popup.querySelectorAll('.app-menu-items .tab-context-menu-item')) as HTMLElement[];
+  return { popup, categories, items };
 }
 
-/** Label text of an item, skipping the trailing shortcut hint span. */
+/** Category row label, e.g. "File". */
+function categoryLabel(row: HTMLElement): string {
+  return row.querySelector('span')?.textContent ?? '';
+}
+
+/** Item label text, skipping the trailing shortcut hint span. */
 function itemLabel(item: HTMLElement): string {
   const label = item.querySelector(':scope > span:not(.shortcut-hint)');
   return label?.textContent ?? item.textContent ?? '';
+}
+
+/** Switch the popup to a category by index and return its items. */
+function pick(root: HTMLElement, index: number): HTMLElement[] {
+  const menu = openAppMenu(root);
+  menu.categories[index].click();
+  return menu.items();
 }
 
 describe('title-bar', () => {
@@ -100,94 +122,112 @@ describe('title-bar', () => {
     hideTabContextMenu();
   });
 
-  it('renders the brand and File/Edit/View buttons', () => {
+  it('renders the brand, the app menu and the two title-bar actions', () => {
     const root = render();
     expect(root.classList.contains('active')).toBe(true);
-    const brand = root.querySelector('.titlebar-brand') as HTMLElement;
-    expect(brand.textContent).toBe('Vibeyard');
-    const btns = buttons(root);
-    expect(btns.map((b) => b.textContent)).toEqual(['File', 'Edit', 'View']);
-    expect(btns[0].getAttribute('aria-haspopup')).toBe('menu');
+    expect(root.querySelector('.titlebar-brand')?.textContent).toBe('Vibeyard');
+    expect(menuButton(root).getAttribute('aria-haspopup')).toBe('menu');
+    // The sidebar-header buttons moved here.
+    expect(root.querySelector('#btn-toggle-sidebar')).not.toBeNull();
+    expect(root.querySelector('#btn-add-project')).not.toBeNull();
   });
 
-  it('File menu lists actions and wires New Project / New Session', () => {
+  it('title-bar actions wire toggleSidebar / promptNewProject', () => {
     const root = render();
-    const items = openItems(buttons(root)[0]);
-    expect(items.map(itemLabel)).toEqual(['New Project', 'New Session', 'Close Session', 'Quit']);
+    (root.querySelector('#btn-toggle-sidebar') as HTMLElement).click();
+    expect(toggleSidebar).toHaveBeenCalledTimes(1);
+    (root.querySelector('#btn-add-project') as HTMLElement).click();
+    expect(promptNewProject).toHaveBeenCalledTimes(1);
+  });
 
+  it('the app menu is a two-column popup with five categories', () => {
+    const root = render();
+    const { categories } = openAppMenu(root);
+    expect(categories.map(categoryLabel)).toEqual(['File', 'Edit', 'View', 'Window', 'Help']);
+    // First category is selected by default, so its items show immediately.
+    expect(document.querySelectorAll('.app-menu-category.active')).toHaveLength(1);
+  });
+
+  it('hovering a category swaps the right-hand item column', () => {
+    const root = render();
+    const { categories, items } = openAppMenu(root);
+    expect(items().map(itemLabel)).toEqual(['New Project', 'New Session', 'Close Session', 'Settings', 'Quit']);
+
+    categories[1].dispatchEvent(new MouseEvent('mouseenter'));
+    expect(items().map(itemLabel)).toEqual(['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Delete', 'Select All']);
+  });
+
+  it('File lists actions and wires New Project / New Session / Settings / Quit', () => {
+    const root = render();
+    let items = pick(root, 0);
     items[0].click();
     expect(promptNewProject).toHaveBeenCalledTimes(1);
 
-    const again = openItems(buttons(root)[0]);
-    again[1].click();
+    items = pick(root, 0);
+    items[1].click();
     expect(quickNewSession).toHaveBeenCalledTimes(1);
+
+    items = pick(root, 0);
+    items[3].click();
+    expect(showPreferencesModal).toHaveBeenCalledTimes(1);
+
+    items = pick(root, 0);
+    items[4].click();
+    expect((window as any).vibeyard.menu.quitApp).toHaveBeenCalledTimes(1);
   });
 
   it('Close Session only fires with an active project and session', () => {
     const root = render();
-    const items = openItems(buttons(root)[0]);
-    items[2].click();
+    pick(root, 0)[2].click();
     expect(closeSessionWithConfirm).not.toHaveBeenCalled();
 
     appState.activeProject = { id: 'p1' } as any;
     appState.activeSession = { id: 's1' } as any;
-    const again = openItems(buttons(root)[0]);
-    again[2].click();
+    pick(root, 0)[2].click();
     expect(closeSessionWithConfirm).toHaveBeenCalledWith('p1', 's1');
   });
 
-  it('File > Quit calls quitApp', () => {
+  it('File shows shortcut hints', () => {
     const root = render();
-    const items = openItems(buttons(root)[0]);
-    items[3].click();
-    expect((window as any).vibeyard.menu.quitApp).toHaveBeenCalledTimes(1);
-  });
-
-  it('File menu shows shortcut hints', () => {
-    render();
-    openItems(buttons(render())[0]);
+    pick(root, 0);
     const hints = Array.from(
-      document.querySelectorAll('.tab-context-menu .shortcut-hint'),
+      document.querySelectorAll('.titlebar-app-menu .shortcut-hint'),
     ) as HTMLElement[];
     expect(hints.map((h) => h.textContent)).toEqual(['Ctrl+Shift+P', 'Ctrl+Shift+N', 'Ctrl+W']);
   });
 
-  it('Edit menu dispatches webContents edit actions', async () => {
+  it('Edit dispatches webContents edit actions', async () => {
     const root = render();
-    const items = openItems(buttons(root)[1]);
+    let items = pick(root, 1);
     expect(items.map(itemLabel)).toEqual(['Undo', 'Redo', 'Cut', 'Copy', 'Paste', 'Delete', 'Select All']);
 
-    items[0].click(); // Undo
+    items[0].click();
     await Promise.resolve();
     expect((window as any).vibeyard.menu.runEditAction).toHaveBeenCalledWith('undo');
 
-    const again = openItems(buttons(root)[1]);
-    again[6].click(); // Select All
+    items = pick(root, 1);
+    items[6].click();
     await Promise.resolve();
     expect((window as any).vibeyard.menu.runEditAction).toHaveBeenLastCalledWith('selectAll');
   });
 
-  it('View menu shows split and inspector, no debug items by default', () => {
+  it('View shows split and inspector, no debug items by default', () => {
     const root = render();
-    const items = openItems(buttons(root)[2]);
-    expect(items.map(itemLabel)).toEqual(['Toggle Split Mode', 'Toggle Session Inspector']);
+    expect(pick(root, 2).map(itemLabel)).toEqual(['Toggle Split Mode', 'Toggle Session Inspector']);
   });
 
-  it('View > Toggle Split / Toggle Inspector wire to appState / toggleInspector', () => {
+  it('View wires Toggle Split / Toggle Inspector', () => {
     const root = render();
-    const items = openItems(buttons(root)[2]);
-    items[0].click();
+    pick(root, 2)[0].click();
     expect(appState.toggleSplit).toHaveBeenCalledTimes(1);
-
-    const again = openItems(buttons(root)[2]);
-    again[1].click();
+    pick(root, 2)[1].click();
     expect(toggleInspector).toHaveBeenCalledTimes(1);
   });
 
-  it('View menu adds debug items and wires them when debug mode is on', () => {
+  it('View adds debug items and wires them when debug mode is on', () => {
     appState.preferences.debugMode = true;
     const root = render();
-    const items = openItems(buttons(root)[2]);
+    const items = pick(root, 2);
     expect(items.map(itemLabel)).toEqual([
       'Toggle Split Mode',
       'Toggle Session Inspector',
@@ -197,35 +237,47 @@ describe('title-bar', () => {
 
     items[2].click();
     expect((window as any).vibeyard.menu.toggleDevTools).toHaveBeenCalledTimes(1);
-
-    const again = openItems(buttons(root)[2]);
-    again[3].click();
+    pick(root, 2)[3].click();
     expect((window as any).vibeyard.menu.reloadMainWindow).toHaveBeenCalledTimes(1);
   });
 
-  it('only one menu is open at a time and clicking the button toggles it', () => {
+  it('Window wires sidebar and explorer toggles', () => {
     const root = render();
-    const btns = buttons(root);
-    btns[0].click();
-    btns[1].click();
-    expect(document.querySelectorAll('.tab-context-menu')).toHaveLength(1);
+    const items = pick(root, 3);
+    expect(items.map(itemLabel)).toEqual(['Toggle Sidebar', 'Toggle Explorer']);
+    items[0].click();
+    expect(toggleSidebar).toHaveBeenCalledTimes(1);
+    pick(root, 3)[1].click();
+    expect(toggleExplorerPanel).toHaveBeenCalledTimes(1);
+  });
 
-    btns[1].click(); // toggle closed
+  it('Help opens preferences', () => {
+    const root = render();
+    const items = pick(root, 4);
+    expect(items.map(itemLabel)).toEqual(['Preferences', 'Keyboard Shortcuts']);
+    items[0].click();
+    expect(showPreferencesModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('clicking the menu button again closes the popup', () => {
+    const root = render();
+    openAppMenu(root);
+    expect(document.querySelectorAll('.tab-context-menu')).toHaveLength(1);
+    menuButton(root).click();
     expect(document.querySelector('.tab-context-menu')).toBeNull();
   });
 
-  it('initTitleBar leaves the bar inert on non-Windows platforms', () => {
+  it('initTitleBar builds the bar on every platform', () => {
     const bar = document.createElement('div');
     bar.id = 'title-bar';
     document.body.appendChild(bar);
     initTitleBar();
-    if (!isWin) {
-      expect(bar.classList.contains('active')).toBe(false);
-      expect(bar.classList.contains('win')).toBe(false);
-    }
+    expect(bar.classList.contains('active')).toBe(true);
+    // The Windows drag-region class is platform-specific.
+    expect(bar.classList.contains('win')).toBe(isWin);
   });
 
-  it('CSS reserves a drag region and no-drag on the menu buttons', () => {
+  it('CSS reserves a drag region and no-drag on the buttons', () => {
     const css = readFileSync(join(process.cwd(), 'src', 'renderer', 'styles', 'title-bar.css'), 'utf8');
     expect(css).toContain('-webkit-app-region: drag');
     expect(css).toContain('-webkit-app-region: no-drag');

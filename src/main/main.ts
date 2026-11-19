@@ -43,13 +43,19 @@ function createWindow(): void {
     title: 'Vibeyard',
     icon: path.join(__dirname, '..', '..', '..', 'build', 'icon.png'),
     backgroundColor: '#000000',
-    // Windows: hide the native title bar and draw a custom in-app nav bar.
-    // titleBarOverlay keeps the system min/max/close buttons but tints them
-    // to match the dark UI so there's no white system-bar seam.
+    // The app draws its own 35px title bar on every platform, so the native
+    // frame is hidden everywhere. Windows keeps the system min/max/close
+    // buttons via titleBarOverlay (tinted to the dark chrome); macOS keeps its
+    // traffic lights inset at the same height.
     ...(isWin ? {
       titleBarStyle: 'hidden' as const,
       titleBarOverlay: { color: '#181818', symbolColor: '#cccccc', height: 35 },
-    } : {}),
+    } : isMac ? {
+      titleBarStyle: 'hiddenInset' as const,
+      trafficLightPosition: { x: 12, y: 11 },
+    } : {
+      titleBarStyle: 'hidden' as const,
+    }),
     webPreferences: {
       preload: path.join(__dirname, '..', '..', 'preload', 'preload', 'preload.js'),
       nodeIntegration: false,

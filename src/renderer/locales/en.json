@@ -270,6 +270,7 @@
       "newProject": "New Project",
       "newSession": "New Session",
       "closeSession": "Close Session",
+      "settings": "Settings",
       "quit": "Quit"
     },
     "edit": {
@@ -288,6 +289,19 @@
       "toggleInspector": "Toggle Session Inspector",
       "toggleDevTools": "Toggle DevTools",
       "reloadMainWindow": "Reload Main Window"
+    },
+    "appMenu": "Menu",
+    "toggleSidebar": "Toggle Sidebar (Ctrl+B)",
+    "newProject": "New Project (Ctrl+Shift+P)",
+    "window": {
+      "label": "Window",
+      "toggleSidebar": "Toggle Sidebar",
+      "toggleExplorer": "Toggle Explorer"
+    },
+    "help": {
+      "label": "Help",
+      "preferences": "Preferences",
+      "shortcuts": "Keyboard Shortcuts"
     }
   },
   "activityBar": {
