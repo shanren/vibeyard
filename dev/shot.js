@@ -17,7 +17,9 @@ const os = require('os');
 const CHROME = process.env.CHROME
   || 'C:/Program Files/Google/Chrome/Application/chrome.exe'
   || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const PORT = Number(process.env.CDP_PORT || 9400);
+// Random port per run: a stray headless instance from an earlier run must never
+// be picked up instead of the fresh one (that silently serves stale CSS).
+const PORT = Number(process.env.CDP_PORT || (9300 + Math.floor(Math.random() * 600)));
 const URL_ = process.env.URL || 'http://localhost:5173/?noreload';
 const OUT = process.argv[2] || 'dev-shot.png';
 const W = Number(process.argv[3] || 1400);

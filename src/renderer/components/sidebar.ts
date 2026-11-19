@@ -3,7 +3,7 @@ import { showModal, setModalError, closeModal, showConfirmDialog, FieldDef } fro
 import { showPreferencesModal } from './preferences-modal.js';
 import { hasUnreadInProject, onChange as onUnreadChange } from '../session-unread.js';
 import { onChange as onActivityChange } from '../session-activity.js';
-import { getProjectStatus, projectInitial } from '../project-status.js';
+import { getProjectStatus } from '../project-status.js';
 import { basename, lastSeparatorIndex } from '../../shared/platform.js';
 import { deriveProjectName } from '../../shared/project-name.js';
 import { esc } from '../dom-utils.js';
@@ -14,7 +14,7 @@ import {
 } from './session-history.js';
 import { attachHoverCard } from './hover-card.js';
 import { mountGitPanel, closeGitPanel } from './git-panel.js';
-import { gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
+import { getGitStatus, gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
 import { ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
@@ -72,34 +72,18 @@ export function initSidebar(): void {
   appState.on('layout-changed', render);
 
   onUnreadChange(render);
-  // Keep the active project's Git tab badge in sync. Surgical when the button is
-  // already present; a full render only when repo-ness first becomes known (the
-  // button needs to appear/disappear).
-  onGitStatusChange((projectId) => {
-    if (projectId !== appState.activeProjectId) return;
-    const gitBtn = projectListEl.querySelector('.project-row.active .project-action-btn.git-toggle');
-    const count = gitChangeCount(projectId);
-    const gitEnabled = appState.preferences.sidebarViews?.gitPanel ?? true;
-    if (!gitBtn) {
-      if (count !== null && gitEnabled) render();
-      return;
-    }
-    if (count === null || !gitEnabled) { render(); return; } // repo went away / disabled
-    const badge = gitBtn.querySelector('.project-action-badge');
-    if (badge) {
-      badge.textContent = String(count);
-      badge.classList.toggle('hidden', count === 0);
-    }
-  });
+  // Branch + change counts are part of every row now, so a git status change
+  // re-renders the list (it is a handful of rows, not a virtualised view).
+  onGitStatusChange(() => render());
   // Status ticks are frequent — update just the affected row's dot rather than
   // rebuilding the whole list (mirrors the tab-bar's surgical update).
   onActivityChange((sessionId) => {
     const project = appState.projects.find((p) => p.sessions.some((s) => s.id === sessionId));
     if (!project || project.id === appState.activeProjectId) return;
     const dot = projectListEl.querySelector(
-      `.project-item[data-project-id="${project.id}"] .project-status`,
+      `.project-item[data-project-id="${project.id}"] .project-dot`,
     );
-    if (dot) dot.className = `project-status ${getProjectStatus(project)}`;
+    if (dot) dot.className = `project-dot ${getProjectStatus(project)}`;
   });
   appState.on('preferences-changed', () => {
     render();
@@ -178,41 +162,50 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
   el.className = 'project-item' + (isActive ? ' active' : '');
   el.dataset.projectId = project.id;
   el.draggable = true;
-  // Leading glyph: the active project shows an avatar initial; others show a
-  // status dot reflecting their aggregate session activity.
-  const lead = isActive
-    ? `<div class="project-avatar" aria-hidden="true">${esc(projectInitial(project.name))}</div>`
-    : `<span class="project-status ${getProjectStatus(project)}" aria-hidden="true"></span>`;
+
+  const git = getGitStatus(project.id);
+  const branch = git?.isGitRepo ? git.branch : null;
+  const status = getProjectStatus(project);
+
+  // Three levels, largest first: project name, then its branch (the thing you
+  // actually switch between), then a quiet detail line. Same shape whether the
+  // project is active or not, so the list reads as one rhythm.
   const countPill = project.sessions.length
-    ? `<span class="project-session-count">${project.sessions.length}</span>`
+    ? `<span class="project-session-count" title="Open sessions">${project.sessions.length}</span>`
     : '';
-  // Only the active card surfaces the profile badge, and only when multiple
-  // Claude profiles exist (the session count is hidden on the active card, so
-  // the badge takes that slot).
-  const profileLabel = isActive ? projectProfileLabel(project) : undefined;
+  const profileLabel = projectProfileLabel(project);
   const profileBadge = profileLabel
     ? `<span class="project-profile-badge" title="${esc(t('sidebar.claudeProfileTooltip'))}">${esc(profileLabel)}</span>`
     : '';
+  const repoBadge = git?.isGitRepo
+    ? `<span class="project-badge" title="Uncommitted changes">${gitChangeCount(project.id) ?? 0}</span>`
+    : '';
+
+  const detail = branch ?? project.path;
+  const ab: string[] = [];
+  if (git?.ahead) ab.push(`↑${git.ahead}`);
+  if (git?.behind) ab.push(`↓${git.behind}`);
+
   el.innerHTML = `
-    ${lead}
-    <div class="project-main">
-      <div class="project-name${hasUnreadInProject(project.id) ? ' unread' : ''}">${esc(project.name)}</div>
-      <div class="project-path">${esc(project.path)}</div>
+    <div class="project-head">
+      <span class="project-folder" aria-hidden="true">
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M1.8 3.9h4.1l1.5 1.7h6.8v7.2a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z"/></svg>
+      </span>
+      <span class="project-name${hasUnreadInProject(project.id) ? ' unread' : ''}">${esc(project.name)}</span>
+      ${profileBadge}
+      ${countPill}
     </div>
-    ${profileBadge}
-    ${countPill}
-    <span class="project-delete" title="${esc(t('sidebar.removeProjectTooltip'))}">&times;</span>
+    <div class="project-sub">
+      <span class="project-dot ${status}" aria-hidden="true"></span>
+      <span class="project-branch${branch ? '' : ' is-path'}" title="${esc(detail)}">${esc(detail)}</span>
+      ${ab.length ? `<span class="project-ab">${ab.join(' ')}</span>` : ''}
+      ${repoBadge}
+    </div>
   `;
 
-  el.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('project-delete')) return;
+  el.addEventListener('click', () => {
     if (isActive) return;
     appState.setActiveProject(project.id);
-  });
-
-  el.querySelector('.project-delete')!.addEventListener('click', () => {
-    confirmRemoveProject(project);
   });
 
   el.addEventListener('contextmenu', (e) => {
@@ -333,13 +326,6 @@ function buildProjectActions(
   if (opts.gitEnabled && gitCount !== null) {
     const gitBtn = makeActionButton(t('sidebar.git'), ICON_GIT, openPanel === 'git');
     gitBtn.classList.add('panel-toggle', 'git-toggle');
-    const badge = document.createElement('span');
-    badge.className = 'project-action-badge' + (gitCount === 0 ? ' hidden' : '');
-    badge.textContent = String(gitCount);
-    // Anchor the count to the icon (not the wide button) so it reads as part of
-    // the glyph instead of floating at the button edge.
-    const iconWrap = gitBtn.querySelector('.action-icon');
-    (iconWrap ?? gitBtn).appendChild(badge);
     gitBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       setProjectPanel(project.id, openPanel === 'git' ? null : 'git');

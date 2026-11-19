@@ -76,20 +76,47 @@
   max-width: 58px;
 }
 
-#sidebar.collapsed .sidebar-header-actions,
-#sidebar.collapsed #git-panel,
-#sidebar.collapsed .project-row:not(.active),
-#sidebar.collapsed .project-main,
+#sidebar.collapsed #project-list {
+  padding: var(--app-space-2) 0;
+}
+
+/* Rail mode: one folder glyph per project, view buttons stacked underneath. */
+#sidebar.collapsed .project-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-2);
+  padding: var(--app-space-3) 0;
+}
+
+#sidebar.collapsed .project-head {
+  justify-content: center;
+  min-height: 0;
+}
+
+#sidebar.collapsed .project-name,
 #sidebar.collapsed .project-session-count,
 #sidebar.collapsed .project-profile-badge,
-#sidebar.collapsed .project-delete,
-#sidebar.collapsed .project-panel,
-#sidebar.collapsed .project-action-btn.panel-toggle {
+#sidebar.collapsed .project-sub {
   display: none;
 }
 
-#sidebar.collapsed #project-list {
-  padding: 7px 6px;
+#sidebar.collapsed .project-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-1);
+  margin: var(--app-space-1) 0 0;
+}
+
+#sidebar.collapsed .project-action-btn {
+  width: 36px;
+  height: 26px;
+  padding: 0;
+}
+
+#sidebar.collapsed .project-action-btn .action-label {
+  display: none;
 }
 
 /* Short centered divider between the expand button and the avatar (the mock's
@@ -103,127 +130,15 @@
   margin: 2px auto 12px;
 }
 
-/* Flatten the active-project card in collapsed mode — only the avatar + icon
-   stack show. */
-#sidebar.collapsed .project-row.active {
-  margin: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-
-  overflow: visible;
-}
-
-#sidebar.collapsed .project-item {
-  padding: 0;
-  background: transparent;
-  justify-content: center;
-}
-
-/* Project avatar — the mock's `.rav`: gradient tile with a soft purple glow. */
-#sidebar.collapsed .project-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--app-radius-control);
-  background: var(--vscode-widget-border);
-  color: var(--app-text);
-  font-size: 15px;
-
-  margin: 0 auto;
-}
-
 #sidebar.collapsed #sidebar-header {
   border-bottom: none;
   padding: 10px 0 4px;
   justify-content: center;
 }
 
-/* Rail buttons (the mock's `.rbtn`): expand button, nav icons, Discussions —
-   shared 44px hit area, muted icon, hover lift. */
-#sidebar.collapsed #btn-toggle-sidebar,
-#sidebar.collapsed .project-action-btn,
-#sidebar.collapsed #sidebar-discussions {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--app-radius-control);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#sidebar.collapsed #btn-toggle-sidebar:hover,
-#sidebar.collapsed .project-action-btn:hover,
-#sidebar.collapsed #sidebar-discussions:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-/* The rail reuses the compact 14px sidebar icons — scale them up to fill the
-   larger rail buttons. */
-#sidebar.collapsed #btn-toggle-sidebar svg,
-#sidebar.collapsed .project-action-btn .action-icon svg,
-#sidebar.collapsed #sidebar-discussions .action-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-#sidebar.collapsed .project-actions {
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 4px 0;
-  background: transparent;
-  align-items: center;
-}
-
-#sidebar.collapsed .project-action-btn {
-  flex: 0 0 auto;
-  padding: 0;
-}
-
-/* Active nav button uses a soft accent tint in the rail (`.rbtn.on`), not the
-   solid accent the expanded sidebar uses. */
-#sidebar.collapsed .project-action-btn.active,
-#sidebar.collapsed .project-action-btn.active:hover {
-  background: var(--accent-soft);
-  color: var(--accent);
-
-}
-
-#sidebar.collapsed .project-action-btn .action-label {
-  display: none;
-}
-
-#sidebar.collapsed .project-action-btn .action-icon {
-  display: flex;
-}
-
 /* Discussions — pinned to the bottom by #sidebar-content's flex:1 (footer hidden). */
-#sidebar.collapsed #sidebar-discussions {
-  margin: 6px auto;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-#sidebar.collapsed #sidebar-discussions .discussions-text {
-  display: none;
-}
-
-#sidebar.collapsed #sidebar-discussions .action-icon {
-  display: flex;
-  position: relative;
-}
-
 /* Unread dot (the mock's `.rdot`) — base .discussions-icon-dot already supplies
    position/color/radius; the rail just drops the ring and bumps the size. */
-#sidebar.collapsed .discussions-icon-dot {
-  width: 8px;
-  height: 8px;
-  border: none;
-}
-
 #sidebar-content {
   flex: 1;
   overflow-y: auto;
@@ -361,41 +276,35 @@
 }
 
 #project-list {
-  padding: 4px 10px 8px;
+  padding: 0;
 }
 
-/* Inactive project = compact row. */
+/* ── Project row ───────────────────────────────────────────────────────────
+   Three levels, largest first (the hierarchy the reference list uses):
+     1. folder icon + project name      14px / 500 / bright
+     2. status dot + branch             13px / 400 / secondary
+     3. counts, ahead/behind, badges    11px / tertiary
+   One rhythm for every project, active or not; the active one adds a 2px
+   accent edge and the view buttons underneath.
+   ──────────────────────────────────────────────────────────────────────── */
+
 .project-item {
   position: relative;
-  margin-top: 0;
-  padding: var(--app-space-2) 10px;
+  padding: var(--app-space-4) var(--app-space-5) 10px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: var(--app-space-3);
-  color: var(--app-text-secondary);
-  font-size: var(--app-font-size-base);
-  border-radius: 0;
+  border-bottom: var(--app-line-width) solid var(--app-line-subtle);
 }
 
 .project-item:hover {
-  background: var(--bg-hover);
+  background: var(--app-hover-bg);
 }
 
-/* Active project = card. The whole row wrapper becomes the card so the header,
-   the segmented tabs, and any open panel read as one surface. */
 .project-row.active {
-  position: relative;
-  margin: 0;
   background: var(--vscode-list-inactiveSelectionBackground);
-  border: none;
-  border-bottom: var(--app-line-width) solid var(--app-line-subtle);
-  border-radius: 0;
-  overflow: hidden;
 }
 
-/* 2px 竖线是 VS Code 标记"当前项"的方式，比整行蓝底安静得多 */
-.project-row.active::before {
+/* 2px 竖线标记"当前项目"，比整行蓝底安静，但一眼能定位 */
+.project-row.active > .project-item::before {
   content: '';
   position: absolute;
   left: 0;
@@ -403,289 +312,201 @@
   bottom: 0;
   width: 2px;
   background: var(--vscode-focusBorder);
-  z-index: 1;
 }
 
 .project-item.active {
-  margin-top: 0;
-  padding: 14px 14px 12px;
-  gap: 9px;
-  color: var(--text-primary);
-  background: transparent;
   cursor: default;
 }
 
-.project-item.active:hover {
-  background: transparent;
-}
-
-/* Avatar initial for the active project. */
-.project-avatar {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+.project-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: var(--app-radius-control);
-  background: var(--vscode-widget-border);
-  color: var(--app-text);
-  font-weight: var(--app-font-weight-medium);
-  font-size: 11px;
-  font-weight: 700;
-
+  gap: var(--app-space-3);
+  min-height: 22px;
 }
 
-/* Aggregate session status dot on inactive rows. */
-.project-status {
+.project-folder {
+  display: inline-flex;
   flex-shrink: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-muted);
+  color: var(--app-text-secondary);
 }
 
-.project-status.working {
-  background: var(--status-working);
-
+.project-item.active .project-folder {
+  color: var(--app-text);
 }
 
-.project-status.waiting {
-  background: var(--status-waiting);
-}
-
-.project-status.input {
-  background: var(--status-input);
-
-}
-
-.project-status.completed {
-  background: var(--status-completed);
-}
-
-.project-main {
+.project-name {
   flex: 1;
   min-width: 0;
-}
-
-.project-item .project-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: var(--app-font-weight-normal);
-  color: var(--app-text);
+  font-size: 15px;
+  font-weight: var(--app-font-weight-bold);
+  letter-spacing: 0.01em;
+  color: var(--vscode-foreground);
 }
 
 .project-item.active .project-name {
-  font-weight: 700;
+  color: #f4f5f7;
 }
 
 .project-item .project-name.unread {
-  color: var(--accent);
+  color: var(--vscode-textLink-foreground);
 }
 
 .project-item .project-name input {
-  background: transparent;
-  border: 1px solid var(--accent);
+  background: var(--vscode-input-background);
+  border: var(--app-line-width) solid var(--vscode-focusBorder);
   border-radius: var(--app-radius-control);
-  color: inherit;
+  color: var(--vscode-input-foreground);
   font: inherit;
-  padding: 0 2px;
+  padding: 0 4px;
   outline: none;
   width: 100%;
   min-width: 40px;
 }
 
-.project-item .project-path {
-  font-size: var(--app-font-size-xs);
-  color: var(--app-text-disabled);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 400;
-}
-
-/* Session-count pill on inactive rows. */
-.project-session-count {
-  flex-shrink: 0;
-  min-width: 20px;
-  padding: 2px 7px;
-  border-radius: var(--app-radius-control);
-  background: var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.project-item.active .project-session-count {
-  display: none;
-}
-
-/* Claude-profile badge on the active card (shown only with multiple profiles). */
-.project-profile-badge {
-  flex-shrink: 0;
-  max-width: 120px;
-  padding: 2px 8px;
-  border-radius: var(--app-radius-control);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.project-item.dragging {
-  opacity: 0.4;
-}
-
-.project-item.drag-over-top {
-  box-shadow: inset 0 2px 0 0 var(--accent);
-}
-
-.project-item.drag-over-bottom {
-  box-shadow: inset 0 -2px 0 0 var(--accent);
-}
-
-.project-item .project-delete {
-  opacity: 0;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1;
-}
-
-.project-item:hover .project-delete {
-  opacity: 1;
-}
-
-.project-item .project-delete:hover {
-  color: var(--accent);
-}
-
-/* Segmented icon-only tab control inside the active card. */
-.project-actions {
+.project-sub {
   display: flex;
   align-items: center;
   gap: var(--app-space-3);
-  height: 22px;
-  padding: 0 10px var(--app-space-2) 10px;
-  margin: 0;
-  background: transparent;
-  border-radius: 0;
+  margin-top: var(--app-space-3);
+  padding-left: calc(16px + var(--app-space-3));
+  min-height: 20px;
 }
 
-.project-action-btn {
-  position: relative;
-  flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-family: inherit;
-  background: transparent;
-  color: var(--app-text-secondary);
-  border: none;
-  border-radius: var(--app-radius-control);
-  cursor: pointer;
-}
-
-/* Change-count pill overlaid on the Git tab for passive awareness. */
-.project-action-badge {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  pointer-events: none;
-  min-width: 12px;
-  height: 12px;
-  padding: 0 3px;
-  border-radius: var(--app-radius-control);
-  background: var(--vscode-badge-background);
-  color: var(--vscode-badge-foreground);
-  font-size: 9px;
-  font-weight: var(--app-font-weight-medium);
-  line-height: 12px;
-  text-align: center;
-}
-
-.project-action-badge.hidden {
-  display: none;
-}
-
-.action-icon {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  color: currentColor;
+.project-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
+  background: var(--app-status-idle);
 }
 
-.action-icon svg {
-  display: block;
-}
+.project-dot.working { background: var(--app-status-working); }
+.project-dot.waiting { background: var(--app-status-waiting); }
+.project-dot.input   { background: var(--app-status-input); }
+.project-dot.completed { background: var(--app-status-completed); }
 
-/* Labels are hidden in the segmented control — icons carry the meaning, with a
-   hover-card tooltip per button. */
-.project-action-btn .action-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-}
-
-.project-action-btn .action-icon svg {
-  width: 16px;
-  height: 16px;
-}
-
-.project-action-btn .action-label {
-  display: none;
-}
-
-.action-label {
-  display: inline-block;
+.project-branch {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
-  vertical-align: middle;
+  font-size: 13px;
+  color: var(--app-text-secondary);
+}
+
+.project-branch.is-path {
+  font-size: 12px;
+  color: var(--app-text-disabled);
+}
+
+.project-ab {
+  flex-shrink: 0;
+  font-size: var(--app-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-text-secondary);
+}
+
+.project-badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: var(--app-radius-control);
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  font-size: var(--app-font-size-xs);
+  line-height: 16px;
+  text-align: center;
+}
+
+.project-session-count {
+  flex-shrink: 0;
+  font-size: var(--app-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-text-secondary);
+}
+
+.project-profile-badge {
+  flex-shrink: 0;
+  padding: 0 5px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: var(--app-radius-control);
+  background: var(--vscode-widget-border);
+  color: var(--app-text);
+  font-size: var(--app-font-size-xs);
+}
+
+/* ── View buttons (Sessions / Files / Git) ────────────────────────────────
+   The reference has no microscopic icon buttons: these are a full-width
+   segmented control, 30px tall, icon + label, 1px dividers between.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.project-actions {
+  display: flex;
+  align-items: stretch;
+  gap: var(--app-space-1);
+  margin: 10px 0 0;
+}
+
+.project-action-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-2);
+  padding: 0 var(--app-space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--app-radius-control);
+  color: var(--app-text-secondary);
+  font-family: inherit;
+  font-size: var(--app-font-size-sm);
+  cursor: pointer;
 }
 
 .project-action-btn:hover {
-  color: var(--app-text);
   background: var(--app-hover-bg);
+  color: var(--app-text);
 }
 
-/* 打开的视图用选中底 + 一行蓝线标记，而不是整块蓝填充 */
-.project-action-btn.active,
-.project-action-btn.active:hover {
+/* 打开中的视图：底部 1px 蓝线 + 提亮，不整块刷蓝 */
+.project-action-btn.active {
   color: var(--app-text);
   background: var(--vscode-list-inactiveSelectionBackground);
-  box-shadow: inset 0 -1px 0 0 var(--vscode-focusBorder);
+  box-shadow: inset 0 -2px 0 0 var(--vscode-focusBorder);
+}
+
+.project-action-btn .action-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.project-action-btn .action-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.project-action-btn .action-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-panel {
-  background: transparent;
-  margin: 0 6px 8px;
+  margin-top: var(--app-space-3);
 }
 
-.project-panel.hidden {
-  display: none;
-}
-
-.project-panel-history {
-  padding-bottom: 4px;
-}
-
-.project-panel-git {
-  padding-bottom: 4px;
-}
+.project-panel.hidden { display: none; }
