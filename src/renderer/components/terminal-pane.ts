@@ -5,7 +5,7 @@ import { SearchAddon } from '@xterm/addon-search';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { initSession, removeSession } from '../session-activity.js';
 import { markFreshSession } from '../session-insights.js';
-import { removeSession as removeContextSession, getContextSeverity, type ContextWindowInfo } from '../session-context.js';
+import { removeSession as removeContextSession, type ContextWindowInfo } from '../session-context.js';
 import type { ProviderId } from '../types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
@@ -72,15 +72,6 @@ export function createTerminalPane(
   const xtermWrap = document.createElement('div');
   xtermWrap.className = 'xterm-wrap';
   element.appendChild(xtermWrap);
-
-  const statusBar = document.createElement('div');
-  statusBar.className = 'session-status-bar';
-  const contextIndicator = document.createElement('div');
-  contextIndicator.className = 'context-indicator';
-  const caps = getProviderCapabilities(providerId);
-  contextIndicator.classList.toggle('hidden', caps?.contextWindow === false);
-  statusBar.appendChild(contextIndicator);
-  element.appendChild(statusBar);
 
   const terminal = new Terminal({
     theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
@@ -407,11 +398,6 @@ export function destroyTerminal(sessionId: string): void {
   removeContextSession(sessionId);
 }
 
-function showStatusBar(instance: TerminalInstance): void {
-  const bar = instance.element.querySelector('.session-status-bar');
-  if (bar) bar.classList.remove('hidden');
-}
-
 /** Resolve the display name of the profile backing this session, or null when
  *  there is only a single (implicit) profile for the provider. */
 function resolveProfileName(providerId: ProviderId, configDir?: string): string | null {
@@ -421,55 +407,15 @@ function resolveProfileName(providerId: ProviderId, configDir?: string): string 
   return profile?.name ?? 'Default';
 }
 
-export function updateContextDisplay(sessionId: string, info: ContextWindowInfo): void {
-  const instance = instances.get(sessionId);
-  if (!instance) return;
-  if (getProviderCapabilities(instance.providerId)?.contextWindow === false) return;
-  const el = instance.element.querySelector('.context-indicator') as HTMLElement | null;
-  if (!el) return;
+/**
+ * The terminal pane no longer renders its own status rail (the bottom bar was
+ * removed). Context data keeps flowing into the session inspector's Context tab;
+ * this stays as a no-op seam so callers do not need to know that.
+ */
+export function updateContextDisplay(_sessionId: string, _info: ContextWindowInfo): void {}
 
-  // Lazily build the rail's left cluster once (graphical meter + % + tokens),
-  // then update values in place so the meter width can transition smoothly.
-  let fill = el.querySelector('.ssl-meter-fill') as HTMLElement | null;
-  if (!fill) {
-    el.replaceChildren();
-    const label = document.createElement('span');
-    label.className = 'ssl-label';
-    label.textContent = 'Context';
-    const meter = document.createElement('div');
-    meter.className = 'ssl-meter';
-    fill = document.createElement('div');
-    fill.className = 'ssl-meter-fill';
-    meter.appendChild(fill);
-    const pctEl = document.createElement('span');
-    pctEl.className = 'ssl-pct';
-    const tokEl = document.createElement('span');
-    tokEl.className = 'ssl-tok';
-    el.append(label, meter, pctEl, tokEl);
-  }
-
-  const pct = Math.min(Math.round(info.usedPercentage), 100);
-  fill.style.width = `${pct}%`;
-  (el.querySelector('.ssl-pct') as HTMLElement).textContent = `${pct}%`;
-  (el.querySelector('.ssl-tok') as HTMLElement).textContent = formatTokenCount(info.totalTokens);
-  el.title = `${info.totalTokens.toLocaleString()} / ${info.contextWindowSize.toLocaleString()} tokens`;
-
-  // Context-fill state drives the meter hue (iris → amber → red) on the whole bar.
-  const severity = getContextSeverity(pct);
-  const state = severity === 'critical' ? 'crit' : severity === 'warning' ? 'warn' : 'ok';
-  const bar = instance.element.querySelector('.session-status-bar') as HTMLElement | null;
-  if (bar) bar.dataset.state = state;
-
-  showStatusBar(instance);
-}
 
 /** Profile badges live in the tab/rail chrome; nothing in the pane needs
  *  re-rendering when the profile set changes, but the export stays for callers. */
 export function refreshProfileLabels(): void {}
 
-/** 12_345 → "12.3k"; used by the context meter's token count. */
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
-  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
