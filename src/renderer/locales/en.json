@@ -75,7 +75,6 @@
       "statusPrefix": "Status: {status}",
       "sessionPrefix": "Session: {cliSessionId}",
       "diff": "Diff: {name}",
-      "mcpInspector": "MCP Inspector",
       "file": "File: {name}"
     },
     "title": {},
@@ -88,8 +87,7 @@
     },
     "moreMenu": {
       "splitLayoutActive": "Split Layout ✓",
-      "splitLayout": "Split Layout",
-      "mcpInspector": "MCP Inspector"
+      "splitLayout": "Split Layout"
     },
     "newSessionModal": {
       "nameLabel": "Name",
@@ -108,9 +106,6 @@
       "customCommandLabel": "Command",
       "customCommandPlaceholder": "pi  (or any CLI on your PATH, e.g. opencode, aider)",
       "customCommandRequired": "Enter the command to run"
-    },
-    "newMcpInspector": {
-      "defaultName": "Inspector {num}"
     },
     "newSessionMenu": {
       "moreOptions": "More options…"

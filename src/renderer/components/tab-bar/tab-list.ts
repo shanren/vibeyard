@@ -263,19 +263,18 @@ export function render(): void {
   for (const session of project.sessions) {
     const tab = document.createElement('div');
     const isActive = session.id === project.activeSessionId;
-    const isMcp = session.type === 'mcp-inspector';
     const isDiff = session.type === 'diff-viewer';
     const isFileReader = session.type === 'file-reader';
     const unread = !isActive && isUnread(session.id);
-    const isSpecial = isMcp || isDiff || isFileReader;
+    const isSpecial = isDiff || isFileReader;
     const displayName = session.name;
     tab.className = 'tab-item' + (isActive ? ' active' : '') + (unread ? ' unread' : '');
     tab.dataset.sessionId = session.id;
     tab.draggable = true;
-    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isMcp ? t('tab.tooltip.mcpInspector') : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId ?? undefined);
+    tab.title = isDiff ? t('tab.tooltip.diff', { name: session.diffFilePath || session.name }) : isFileReader ? t('tab.tooltip.file', { name: session.fileReaderPath || session.name }) : buildTooltip(getStatus(session.id), session.cliSessionId ?? undefined);
     const providerId = session.providerId || 'claude';
     const providerIcon = hasMultipleAvailableProviders() ? providerTabIcon(providerId) : '';
-    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isMcp ? '<span class="tab-mcp-badge">MCP</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : !isSpecial ? providerIcon : '';
+    const namePrefix = isDiff ? '<span class="tab-diff-badge">DIFF</span> ' : isFileReader ? '<span class="tab-file-badge">FILE</span> ' : !isSpecial ? providerIcon : '';
     const statusDot = isSpecial ? '' : `<span class="tab-status ${getStatus(session.id)}"></span>`;
     tab.innerHTML = `
       ${statusDot}

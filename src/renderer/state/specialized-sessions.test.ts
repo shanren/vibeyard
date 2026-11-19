@@ -126,20 +126,6 @@ describe('addFileReaderSession()', () => {
   });
 });
 
-describe('addMcpInspectorSession()', () => {
-  it('creates an mcp-inspector session', () => {
-    const project = addProject();
-    const session = appState.addMcpInspectorSession(project.id, 'Inspector')!;
-    expect(session.type).toBe('mcp-inspector');
-    expect(session.name).toBe('Inspector');
-  });
-
-  it('returns undefined for nonexistent project', () => {
-    expect(appState.addMcpInspectorSession('nope', 'I')).toBeUndefined();
-  });
-});
-
-
 describe('addPlanSession()', () => {
   it('uses providerIdOverride when provided', () => {
     const project = addProject();

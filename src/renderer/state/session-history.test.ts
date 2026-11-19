@@ -163,13 +163,6 @@ describe('archiveSession via removeSession()', () => {
     expect(appState.getSessionHistory(project.id)).toHaveLength(0);
   });
 
-  it('does NOT archive mcp-inspector sessions', () => {
-    const project = addProject();
-    const session = appState.addMcpInspectorSession(project.id, 'Inspector')!;
-    appState.removeSession(project.id, session.id);
-    expect(appState.getSessionHistory(project.id)).toHaveLength(0);
-  });
-
   it('deduplicates by cliSessionId', () => {
     const project = addProject();
     const session = appState.addSession(project.id, 'S1')!;

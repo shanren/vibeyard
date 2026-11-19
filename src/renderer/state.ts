@@ -19,7 +19,6 @@ import {
   buildCliSession,
   buildDiffViewerSession,
   buildFileReaderSession,
-  buildMcpInspectorSession,
 } from './state/session-factory.js';
 import { NavHistory } from './state/nav-history.js';
 import { hydrateLoadedState, serializeForSave } from './state/persistence.js';
@@ -485,16 +484,6 @@ class AppState {
     }
 
     const session = buildFileReaderSession({ name: basename(normalizedPath), filePath: normalizedPath, lineNumber });
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  addMcpInspectorSession(projectId: string, name: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    const session = buildMcpInspectorSession({ name });
     attachSessionToProject(project, session);
     this.commitNewSession(projectId, session);
     return session;

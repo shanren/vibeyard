@@ -45,7 +45,7 @@ describe('hydrateLoadedState', () => {
   });
 
   it('keeps every session type that survived', () => {
-    const types = [undefined, 'file-reader', 'diff-viewer', 'mcp-inspector'] as const;
+    const types = [undefined, 'file-reader', 'diff-viewer'] as const;
     const sessions = types.map((type, i) => ({
       id: `s${i}`, name: `S${i}`, cliSessionId: null, createdAt: '0', ...(type ? { type } : {}),
     })) as SessionRecord[];

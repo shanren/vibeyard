@@ -113,7 +113,7 @@ async function poll(): Promise<void> {
 
       // Detect active session's worktree
       const activeSession = appState.activeSession;
-      if (activeSession && activeSession.type !== 'diff-viewer' && activeSession.type !== 'file-reader' && activeSession.type !== 'mcp-inspector') {
+      if (activeSession && activeSession.type !== 'diff-viewer' && activeSession.type !== 'file-reader') {
         await detectSessionWorktree(activeSession.id);
       }
 
@@ -250,7 +250,7 @@ export function startPolling(): void {
   // Detect worktree on session change
   appState.on('session-changed', () => {
     const activeSession = appState.activeSession;
-    if (activeSession && activeSession.type !== 'diff-viewer' && activeSession.type !== 'file-reader' && activeSession.type !== 'mcp-inspector') {
+    if (activeSession && activeSession.type !== 'diff-viewer' && activeSession.type !== 'file-reader') {
       detectSessionWorktree(activeSession.id);
     }
     // Clear manual override on session switch so auto-detection takes effect

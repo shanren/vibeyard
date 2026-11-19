@@ -10,7 +10,6 @@ import { startCodexSessionWatcher, registerPendingCodexSession, unregisterCodexS
 import { getGitStatus, getGitFiles, getGitDiff, getGitWorktrees, gitStageFile, gitUnstageFile, gitDiscardFile, getGitRemoteUrl, listGitBranches, checkoutGitBranch, createGitBranch } from './git-status';
 import { startGitWatcher, stopGitWatcher, notifyGitChanged } from './git-watcher';
 import { watchDir, unwatchDir, setFileWatcherWindow } from './file-watcher';
-import { registerMcpHandlers } from './mcp-ipc-handlers';
 import { createAppMenu } from './menu';
 import { getProvider, getProviderMeta, getAllProviderMetas, getAllProviders } from './providers/registry';
 import { buildHandoffPrompt } from './providers/resume-handoff';
@@ -757,5 +756,4 @@ export function registerIpcHandlers(): void {
     return provider.validateSettings();
   });
 
-  registerMcpHandlers();
 }

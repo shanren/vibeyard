@@ -86,7 +86,6 @@ export interface ContextWindowInfo {
 // --- Session / State ---
 
 export type SessionType =
-  | 'mcp-inspector'
   | 'diff-viewer'
   | 'file-reader'
 ;
@@ -105,7 +104,6 @@ export interface SessionRecord {
    */
   customCommand?: string;
   cliSessionId: string | null;
-  mcpServerUrl?: string;
   diffFilePath?: string;
   diffArea?: string;
   worktreePath?: string;

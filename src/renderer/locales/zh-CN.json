@@ -75,7 +75,6 @@
       "statusPrefix": "状态：{status}",
       "sessionPrefix": "会话：{cliSessionId}",
       "diff": "差异：{name}",
-      "mcpInspector": "MCP 检查器",
       "file": "文件：{name}"
     },
     "title": {},
@@ -88,8 +87,7 @@
     },
     "moreMenu": {
       "splitLayoutActive": "分屏布局 ✓",
-      "splitLayout": "分屏布局",
-      "mcpInspector": "MCP 检查器"
+      "splitLayout": "分屏布局"
     },
     "newSessionModal": {
       "nameLabel": "名称",
@@ -108,9 +106,6 @@
       "customCommandLabel": "命令",
       "customCommandPlaceholder": "pi（或任意在 PATH 里的 CLI，如 opencode、aider）",
       "customCommandRequired": "请填写要运行的命令"
-    },
-    "newMcpInspector": {
-      "defaultName": "检查器 {num}"
     },
     "newSessionMenu": {
       "moreOptions": "更多选项…"

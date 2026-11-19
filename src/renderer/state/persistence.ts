@@ -9,7 +9,6 @@ import { restoreContext } from '../session-context.js';
 const KEPT_SESSION_TYPES: ReadonlySet<string> = new Set([
   'file-reader',
   'diff-viewer',
-  'mcp-inspector',
 ]);
 
 /**

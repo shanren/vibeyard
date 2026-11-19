@@ -47,17 +47,6 @@ export function buildFileReaderSession(opts: BaseOpts & { name: string; filePath
   };
 }
 
-export function buildMcpInspectorSession(opts: BaseOpts & { name: string }): SessionRecord {
-  const { name, id = crypto.randomUUID(), createdAt = new Date().toISOString() } = opts;
-  return {
-    id,
-    name,
-    type: 'mcp-inspector',
-    cliSessionId: null,
-    createdAt,
-  };
-}
-
 /**
  * Append a session to a project and mark it active. Does not call persist() or
  * emit events — those remain the caller's responsibility.

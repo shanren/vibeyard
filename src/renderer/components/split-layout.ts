@@ -19,15 +19,6 @@ import {
   destroyTerminal,
   getTerminalInstance,
 } from './terminal-pane.js';
-import {
-  createInspectorPane,
-  destroyInspectorPane,
-  showInspectorPane,
-  hideAllInspectorPanes,
-  attachInspectorToContainer,
-  getInspectorInstance,
-  disconnectInspector,
-} from './mcp-inspector.js';
 import { isInspectorOpen } from './session-inspector.js';
 import { promptNewProject } from './sidebar.js';
 import {
@@ -85,9 +76,6 @@ function onSessionAdded(data: unknown): void {
   } else if (session.type === 'diff-viewer') {
     createFileViewerPane(session.id, session.diffFilePath || '', session.diffArea || '', session.worktreePath);
     renderLayout();
-  } else if (session.type === 'mcp-inspector') {
-    createInspectorPane(session.id);
-    renderLayout();
   } else {
     // Create and spawn immediately
     const cliProviderId = (session.providerId as ProviderId) || 'claude';
@@ -113,9 +101,6 @@ function onSessionRemoved(data: unknown): void {
     destroyFileReaderPane(sessionId);
   } else if (getFileViewerInstance(sessionId)) {
     destroyFileViewerPane(sessionId);
-  } else if (getInspectorInstance(sessionId)) {
-    disconnectInspector(sessionId);
-    destroyInspectorPane(sessionId);
   } else {
     destroyTerminal(sessionId);
   }
@@ -127,7 +112,6 @@ export function renderLayout(): void {
 
   if (!project || project.sessions.length === 0) {
     hideAllPanes();
-    hideAllInspectorPanes();
     hideAllFileViewerPanes();
     hideAllFileReaderPanes();
     setContainerClass('');
@@ -146,10 +130,6 @@ export function renderLayout(): void {
       if (!getFileViewerInstance(session.id)) {
         createFileViewerPane(session.id, session.diffFilePath || '', session.diffArea || '', session.worktreePath);
       }
-    } else if (session.type === 'mcp-inspector') {
-      if (!getInspectorInstance(session.id)) {
-        createInspectorPane(session.id);
-      }
     } else {
       if (!getTerminalInstance(session.id)) {
         const cliProviderId = session.providerId || 'claude';
@@ -160,7 +140,6 @@ export function renderLayout(): void {
   }
 
   hideAllPanes();
-  hideAllInspectorPanes();
   hideAllFileViewerPanes();
   hideAllFileReaderPanes();
 
@@ -184,9 +163,6 @@ function attachNonCliPane(session: { id: string; type?: string; fileReaderLine?:
   } else if (session.type === 'diff-viewer') {
     attachFileViewerToContainer(session.id, target);
     showFileViewerPane(session.id, inSplit);
-  } else if (session.type === 'mcp-inspector') {
-    attachInspectorToContainer(session.id, target);
-    showInspectorPane(session.id, inSplit);
   }
 }
 

@@ -17,7 +17,6 @@ import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSes
 import { startPolling as startGitPolling } from './git-status.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initActiveSessions } from './components/active-sessions-panel.js';
-import { disconnectInspector } from './components/mcp-inspector.js';
 import { initFilePrompt } from './components/file-prompt.js';
 import { initSessionHistory } from './components/session-history.js';
 import { captureInitialContext } from './session-insights.js';
@@ -72,7 +71,7 @@ async function main(): Promise<void> {
   window.rcode.pty.onData((sessionId, data) => {
     if (isShellSessionId(sessionId)) {
       handleShellPtyData(sessionId, data);
-    } else if (!isMcpSession(sessionId)) {
+    } else {
       handlePtyData(sessionId, data);
       parseTitle(sessionId, data);
       if (data.includes('Interrupted')) {
@@ -168,7 +167,7 @@ async function main(): Promise<void> {
   window.rcode.pty.onExit((sessionId, exitCode) => {
     if (isShellSessionId(sessionId)) {
       handleShellPtyExit(sessionId, exitCode);
-    } else if (!isMcpSession(sessionId) && !isQuitting) {
+    } else if (!isQuitting) {
       // Auto-close the session when CLI exits (skip during app quit to preserve session state)
       const project = appState.projects.find(p => p.sessions.some(s => s.id === sessionId));
       if (project) {
@@ -207,14 +206,6 @@ async function main(): Promise<void> {
   initFilePrompt();
   startGitPolling();
   mark('renderer:components-init');
-
-  function isMcpSession(sessionId: string): boolean {
-    for (const project of appState.projects) {
-      const session = project.sessions.find(s => s.id === sessionId);
-      if (session) return session.type === 'mcp-inspector';
-    }
-    return false;
-  }
 
   // Log AppState events to debug panel
   const stateEvents = [

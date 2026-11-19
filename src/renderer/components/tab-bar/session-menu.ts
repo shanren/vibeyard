@@ -121,7 +121,6 @@ export function showMoreMenu(x: number, y: number): void {
 
   const splitActive = appState.activeProject?.layout.mode === 'split';
   addItem(splitActive ? t('tab.moreMenu.splitLayoutActive') : t('tab.moreMenu.splitLayout'), () => appState.toggleSplit());
-  addItem(t('tab.moreMenu.mcpInspector'), () => addMcpInspector());
 
 
   document.body.appendChild(menu);
@@ -258,12 +257,4 @@ function setCustomCommandFieldVisible(visible: boolean): void {
 function setProfileFieldVisible(visible: boolean): void {
   const wrapper = document.getElementById('modal-profile')?.closest('.modal-field') as HTMLElement | null;
   if (wrapper) wrapper.style.display = visible ? '' : 'none';
-}
-
-function addMcpInspector(): void {
-  const project = appState.activeProject;
-  if (!project) return;
-
-  const inspectorNum = project.sessions.filter(s => s.type === 'mcp-inspector').length + 1;
-  appState.addMcpInspectorSession(project.id, t('tab.newMcpInspector.defaultName', { num: inspectorNum }));
 }
