@@ -8,6 +8,7 @@ import { markFreshSession } from '../session-insights.js';
 import { removeSession as removeContextSession, getContextSeverity, type ContextWindowInfo } from '../session-context.js';
 import type { ProviderId } from '../types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
+import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 import { appState } from '../state.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
 import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback, wrapBracketedPaste } from './terminal-utils.js';
@@ -83,8 +84,8 @@ export function createTerminalPane(
 
   const terminal = new Terminal({
     theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
-    fontSize: 14,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
+    fontSize: getTerminalFontSize(),
+    fontFamily: TERMINAL_FONT_FAMILY,
     cursorBlink: true,
     allowProposedApi: true,
     linkHandler: {
@@ -212,6 +213,15 @@ export function getTerminalInstance(sessionId: string): TerminalInstance | undef
 
 export function getAllInstances(): Map<string, TerminalInstance> {
   return instances;
+}
+
+/** Re-font every open CLI terminal after the preference changes, then refit. */
+export function applyFontSizeToAllTerminals(): void {
+  const size = getTerminalFontSize();
+  for (const instance of instances.values()) {
+    instance.terminal.options.fontSize = size;
+    instance.fitAddon.fit();
+  }
 }
 
 export function applyThemeToAllTerminals(theme: 'dark' | 'light'): void {

@@ -8,6 +8,7 @@ import { destroySearchBar, hideSearchBar } from './search-bar.js';
 import { shortcutManager, displayKeys } from '../shortcuts.js';
 import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
 import { esc } from '../dom-utils.js';
+import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 
 interface ShellTerminalInstance {
   id: string;
@@ -69,8 +70,8 @@ function createShell(projectId: string): ShellTerminalInstance {
 
   const terminal = new Terminal({
     theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
-    fontSize: 14,
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace",
+    fontSize: getTerminalFontSize(),
+    fontFamily: TERMINAL_FONT_FAMILY,
     cursorBlink: true,
     allowProposedApi: true,
   });
@@ -464,6 +465,17 @@ export function getActiveShellSessionId(): string | null {
 }
 
 export { isShellSessionId };
+
+/** Re-font every open project shell after the preference changes, then refit. */
+export function applyFontSizeToAllShells(): void {
+  const size = getTerminalFontSize();
+  for (const list of shells.values()) {
+    for (const instance of list) {
+      instance.terminal.options.fontSize = size;
+      instance.fitAddon.fit();
+    }
+  }
+}
 
 export function applyThemeToAllShells(theme: 'dark' | 'light'): void {
   const termTheme = getTerminalTheme(theme);

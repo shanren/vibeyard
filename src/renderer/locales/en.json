@@ -30,7 +30,8 @@
     "gitPanel": "Git Panel",
     "sessionHistory": "Session History",
     "activeSessions": "Active Sessions",
-    "activeSessionStatuses": "Active Session Statuses"
+    "activeSessionStatuses": "Active Session Statuses",
+    "terminalFontSize": "Terminal font size"
   },
   "sidebar": {
     "default": "Default",

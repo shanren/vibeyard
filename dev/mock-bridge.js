@@ -243,8 +243,10 @@ const api = {
     resize: noop,
     kill: () => resolved(),
     getCwd: () => resolved('E:\\Project\\QIS'),
-    onData: unsubscribe,
-    onExit: unsubscribe,
+    // Real channel registration so the harness can push fake PTY output:
+    //   window.__mock.emit('pty:data', sessionId, 'text')
+    onData: (cb) => on('pty:data', cb),
+    onExit: (cb) => on('pty:exit', cb),
   },
   session: {
     buildResumeWithPrompt: () => '',

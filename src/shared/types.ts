@@ -224,6 +224,8 @@ export interface Preferences {
   autoTitleEnabled: boolean;
   confirmCloseWorkingSession: boolean;
   zoomFactor?: number;
+  /** Terminal font size in px. Absent ⇒ 13 (TERMINAL_FONT_SIZE_DEFAULT). */
+  terminalFontSize?: number;
   defaultProvider?: ProviderId;
   /** UI language tag. See `Locale` for the supported set. */
   locale?: Locale;

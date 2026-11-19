@@ -1,6 +1,7 @@
 import { appState } from '../../state.js';
 import { createCustomSelect, type CustomSelectInstance } from '../custom-select.js';
 import { applyZoom, getZoomFactor, ZOOM_STEPS } from '../../zoom.js';
+import { TERMINAL_FONT_SIZES, getTerminalFontSize } from '../../terminal-font.js';
 import { t } from '../../i18n.js';
 import type { PreferencesContext, SectionController } from './section.js';
 import { toggleRow } from './shared.js';
@@ -13,6 +14,7 @@ type ActiveStatuses = NonNullable<Preferences['activeSessionStatuses']>;
 export function createAppearanceSection(ctx: PreferencesContext): SectionController {
   let themeSelect: CustomSelectInstance | null = null;
   let zoomSelect: CustomSelectInstance | null = null;
+  let fontSelect: CustomSelectInstance | null = null;
   let zoomPrefUnsub: (() => void) | null = null;
   let sidebarCheckboxes: Record<keyof SidebarViews, HTMLInputElement> | null = null;
   let statusCheckboxes: Record<keyof ActiveStatuses, HTMLInputElement> | null = null;
@@ -26,6 +28,7 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
     render(container) {
       if (themeSelect) themeSelect.destroy();
       if (zoomSelect) zoomSelect.destroy();
+      if (fontSelect) fontSelect.destroy();
 
       const themeRow = document.createElement('div');
       themeRow.className = 'modal-toggle-field';
@@ -54,9 +57,23 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       zoomRow.appendChild(zoomSelect.element);
       container.appendChild(zoomRow);
 
+      const fontRow = document.createElement('div');
+      fontRow.className = 'modal-toggle-field';
+      const fontLabel = document.createElement('label');
+      fontLabel.textContent = t('appearance.terminalFontSize');
+      const fontOptions = TERMINAL_FONT_SIZES.map((v) => ({ value: String(v), label: `${v}px` }));
+      fontSelect = createCustomSelect('pref-terminal-font-size', fontOptions, String(getTerminalFontSize()), (value) => {
+        const n = Number(value);
+        if (!Number.isNaN(n)) appState.setPreference('terminalFontSize', n);
+      });
+      fontRow.appendChild(fontLabel);
+      fontRow.appendChild(fontSelect.element);
+      container.appendChild(fontRow);
+
       unsubZoom();
       zoomPrefUnsub = appState.on('preferences-changed', () => {
         zoomSelect?.setValue(String(getZoomFactor()));
+        fontSelect?.setValue(String(getTerminalFontSize()));
       });
 
       const sidebarHeading = document.createElement('div');

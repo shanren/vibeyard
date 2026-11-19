@@ -30,7 +30,8 @@
     "gitPanel": "Git 面板",
     "sessionHistory": "会话历史",
     "activeSessions": "活动会话",
-    "activeSessionStatuses": "活动会话状态"
+    "activeSessionStatuses": "活动会话状态",
+    "terminalFontSize": "终端字号"
   },
   "sidebar": {
     "default": "默认",

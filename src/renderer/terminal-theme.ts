@@ -1,49 +1,71 @@
 import type { ITheme } from '@xterm/xterm';
 
+/**
+ * Terminal palettes.
+ *
+ * xterm renders to a canvas, so it cannot read CSS: the colours have to be a JS
+ * object handed to `new Terminal({ theme })`. Both themes therefore duplicate
+ * values that also exist as `--vscode-*` tokens in styles/base.css — keep them in
+ * step by hand.
+ *
+ * Values are VS Code's Dark Modern / Light Modern terminal defaults
+ * (`terminal.background`, `terminal.foreground`, `terminal.ansi*`,
+ * `terminal.selectionBackground`, `editorCursor.foreground`), so the terminal is
+ * the same colour family as the chrome around it instead of the old Studio
+ * palette (purple cursor, coral ANSI red).
+ */
+
 export const darkTerminalTheme: ITheme = {
-  background: '#0e0f13',
-  foreground: '#e9eaf1',
-  cursor: '#8588f2',
-  selectionBackground: '#8588f259',
-  black: '#0e0f13',
-  red: '#e94560',
-  green: '#0f9b58',
-  yellow: '#f4b400',
-  blue: '#4285f4',
-  magenta: '#ab47bc',
-  cyan: '#00acc1',
-  white: '#e9eaf1',
-  brightBlack: '#5d6172',
-  brightRed: '#ff6b85',
-  brightGreen: '#2dbf73',
-  brightYellow: '#f6c453',
-  brightBlue: '#6ea8ff',
-  brightMagenta: '#c36be0',
-  brightCyan: '#39d3e3',
-  brightWhite: '#ffffff',
+  background: '#1f1f1f',
+  foreground: '#cccccc',
+  cursor: '#aeafad',
+  cursorAccent: '#1f1f1f',
+  selectionBackground: '#264f78',
+
+  black: '#000000',
+  red: '#cd3131',
+  green: '#0dbc79',
+  yellow: '#e5e510',
+  blue: '#2472c8',
+  magenta: '#bc3fbc',
+  cyan: '#11a8cd',
+  white: '#e5e5e5',
+
+  brightBlack: '#666666',
+  brightRed: '#f14c4c',
+  brightGreen: '#23d18b',
+  brightYellow: '#f5f543',
+  brightBlue: '#3b8eea',
+  brightMagenta: '#d670d6',
+  brightCyan: '#29b8db',
+  brightWhite: '#e5e5e5',
 };
 
 export const lightTerminalTheme: ITheme = {
-  background: '#f7f7fb',
-  foreground: '#1c1e26',
-  cursor: '#5a5ee6',
-  selectionBackground: '#5a5ee633',
-  black: '#1c1e26',
-  red: '#e94560',
-  green: '#0f7a46',
-  yellow: '#b07800',
-  blue: '#1a5cbf',
-  magenta: '#7b27a0',
-  cyan: '#0080a0',
-  white: '#6b7280',
-  brightBlack: '#8b8b99',
-  brightRed: '#c83f56',
-  brightGreen: '#0b6a3d',
-  brightYellow: '#8d6200',
-  brightBlue: '#144c9f',
-  brightMagenta: '#67208a',
-  brightCyan: '#006c88',
-  brightWhite: '#2c2c2c',
+  background: '#ffffff',
+  foreground: '#3b3b3b',
+  cursor: '#000000',
+  cursorAccent: '#ffffff',
+  selectionBackground: '#add6ff',
+
+  black: '#000000',
+  red: '#cd3131',
+  green: '#00bc00',
+  yellow: '#949800',
+  blue: '#0451a5',
+  magenta: '#bc05bc',
+  cyan: '#0598bc',
+  // VS Code ships #555555 here because #ffffff would vanish on white.
+  white: '#555555',
+
+  brightBlack: '#666666',
+  brightRed: '#cd3131',
+  brightGreen: '#14ce14',
+  brightYellow: '#b5ba00',
+  brightBlue: '#0451a5',
+  brightMagenta: '#bc05bc',
+  brightCyan: '#0598bc',
+  brightWhite: '#a5a5a5',
 };
 
 export function getTerminalTheme(theme: 'dark' | 'light'): ITheme {
