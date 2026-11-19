@@ -30,6 +30,11 @@ export interface CliProviderCapabilities {
    * id at session creation, so resume works without hooks or transcript scraping.
    */
   preassignedSessionId?: boolean;
+  /**
+   * Prefix the provider requires on session ids (`opencode` rejects anything not
+   * starting with `ses`). Applied to the id we generated at session creation.
+   */
+  sessionIdPrefix?: string;
   contextWindow: boolean;
   hookStatus: boolean;
   configReading: boolean;

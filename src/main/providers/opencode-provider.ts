@@ -33,6 +33,8 @@ export class OpencodeProvider implements CliProvider {
       // `--session` creates or resumes, driven by the id we assign up front.
       sessionResume: true,
       preassignedSessionId: true,
+      // OpenCode validates the id shape: `Error: Expected a string starting with "ses"`.
+      sessionIdPrefix: 'ses_',
       contextWindow: false,
       hookStatus: false,
       configReading: false,

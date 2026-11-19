@@ -28,7 +28,7 @@ vi.mock('../provider-availability.js', () => ({
 }));
 
 import { appState, _resetForTesting } from '../state';
-import { resolveProfile } from './specialized-sessions.js';
+import { resolveProfile, makePreassignedSessionId, isStoredSessionIdInvalid } from './specialized-sessions.js';
 import type { Profile } from '../../shared/types.js';
 
 const PROFILES: Profile[] = [
@@ -240,3 +240,31 @@ describe('removeProfile reference cleanup', () => {
   });
 });
 
+
+describe('makePreassignedSessionId', () => {
+  it('returns undefined for providers that do not take a pre-assigned id', () => {
+    expect(makePreassignedSessionId(null, 'uuid-1')).toBeUndefined();
+    expect(makePreassignedSessionId({}, 'uuid-1')).toBeUndefined();
+    expect(makePreassignedSessionId({ preassignedSessionId: false }, 'uuid-1')).toBeUndefined();
+  });
+
+  it('uses the bare uuid when no prefix is required (pi)', () => {
+    expect(makePreassignedSessionId({ preassignedSessionId: true }, 'uuid-1')).toBe('uuid-1');
+  });
+
+  it('applies the provider prefix (opencode needs "ses")', () => {
+    expect(makePreassignedSessionId({ preassignedSessionId: true, sessionIdPrefix: 'ses_' }, 'uuid-1')).toBe('ses_uuid-1');
+  });
+});
+
+describe('isStoredSessionIdInvalid', () => {
+  it('is false when the provider has no prefix or there is no id', () => {
+    expect(isStoredSessionIdInvalid({}, 'anything')).toBe(false);
+    expect(isStoredSessionIdInvalid({ sessionIdPrefix: 'ses_' }, null)).toBe(false);
+  });
+
+  it('flags a bare uuid stored for a prefixed provider', () => {
+    expect(isStoredSessionIdInvalid({ sessionIdPrefix: 'ses_' }, 'uuid-1')).toBe(true);
+    expect(isStoredSessionIdInvalid({ sessionIdPrefix: 'ses_' }, 'ses_uuid-1')).toBe(false);
+  });
+});

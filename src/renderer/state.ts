@@ -27,6 +27,8 @@ import {
   buildPlanSessionArgs,
   findExistingDiffViewer,
   findExistingFileReader,
+  isStoredSessionIdInvalid,
+  makePreassignedSessionId,
   resolveCliProvider,
   resolvePlanProvider,
   resolveProfile,
@@ -156,9 +158,28 @@ class AppState {
     if (loaded && loaded.version === 1) {
       this.state = loaded;
       hydrateLoadedState(this.state, defaultPreferences);
+      this.dropInvalidSessionIds();
     }
 
     this.emit('state-loaded');
+  }
+
+  /**
+   * Clear ids that no longer match the provider's expected shape. Older builds
+   * handed OpenCode a bare UUID and it refused to start with
+   * `Expected a string starting with "ses"`; dropping the id makes the next spawn
+   * create a fresh session instead of replaying a broken resume.
+   */
+  private dropInvalidSessionIds(): void {
+    for (const project of this.state.projects) {
+      for (const session of project.sessions) {
+        if (!session.cliSessionId) continue;
+        const caps = getProviderCapabilities(session.providerId ?? 'claude');
+        if (isStoredSessionIdInvalid(caps, session.cliSessionId)) {
+          session.cliSessionId = null;
+        }
+      }
+    }
   }
 
   private persist(): void {
@@ -327,7 +348,7 @@ class AppState {
       customCommand: cliProviderId === 'custom' ? customCommand?.trim() || undefined : undefined,
       // Providers whose flag is create-or-resume (pi --session-id, opencode --session)
       // get their id now: the first spawn creates it, later spawns resume it.
-      cliSessionId: getProviderCapabilities(cliProviderId)?.preassignedSessionId ? crypto.randomUUID() : undefined,
+      cliSessionId: makePreassignedSessionId(getProviderCapabilities(cliProviderId), crypto.randomUUID()),
     });
     // Remember the command so the next New Session in this project prefills it.
     if (cliProviderId === 'custom' && customCommand?.trim()) {

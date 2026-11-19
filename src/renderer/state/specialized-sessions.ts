@@ -59,3 +59,29 @@ export function findExistingDiffViewer(
 export function findExistingFileReader(project: ProjectRecord, filePath: string): SessionRecord | undefined {
   return project.sessions.find((s) => s.type === 'file-reader' && s.fileReaderPath === filePath);
 }
+/**
+ * Build the session id we assign up front for providers whose flag creates-or-
+ * resumes (`pi --session-id`, `opencode --session`). OpenCode rejects ids that do
+ * not start with `ses`, hence `sessionIdPrefix`. Returns undefined when the
+ * provider does not take a pre-assigned id.
+ */
+export function makePreassignedSessionId(
+  capabilities: { preassignedSessionId?: boolean; sessionIdPrefix?: string } | null | undefined,
+  uuid: string,
+): string | undefined {
+  if (!capabilities?.preassignedSessionId) return undefined;
+  return (capabilities.sessionIdPrefix ?? '') + uuid;
+}
+
+/**
+ * True when a stored session id does not match the provider's expected shape —
+ * older builds handed OpenCode a bare UUID and it refused to start.
+ */
+export function isStoredSessionIdInvalid(
+  capabilities: { sessionIdPrefix?: string } | null | undefined,
+  cliSessionId: string | null | undefined,
+): boolean {
+  const prefix = capabilities?.sessionIdPrefix;
+  if (!prefix || !cliSessionId) return false;
+  return !cliSessionId.startsWith(prefix);
+}
