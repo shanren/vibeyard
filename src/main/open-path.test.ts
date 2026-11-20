@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 // main.ts pulls in Electron; only the pure argv parser is under test here.
 vi.mock('electron', () => ({
-  app: { getAppPath: () => '', getPath: () => '', whenReady: () => Promise.resolve(), on: vi.fn(), quit: vi.fn(), requestSingleInstanceLock: () => true },
+  app: { getAppPath: () => '', getPath: () => '', whenReady: () => Promise.resolve(), on: vi.fn(), quit: vi.fn(), requestSingleInstanceLock: () => true, disableHardwareAcceleration: vi.fn(), getGPUFeatureStatus: () => ({ gpu_compositing: 'enabled' }), getVersion: () => '0.0.1' },
   BrowserWindow: class {},
   dialog: {},
   powerMonitor: { on: vi.fn() },

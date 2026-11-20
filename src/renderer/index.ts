@@ -39,11 +39,51 @@ import type { Locale } from '../shared/types.js';
 // Startup timing (see the matching instrumentation in src/main/main.ts).
 // Enabled by main passing ?timing=1 when RCODE_TIMING is set.
 const TIMING = new URLSearchParams(location.search).has('timing');
+const rendererMarks: [string, number][] = [];
 function mark(label: string): void {
-  if (TIMING) console.log(`[startup] ${label} ${Math.round(performance.now())}ms`);
+  const at = performance.now();
+  rendererMarks.push([label, Math.round(at)]);
+  if (TIMING) console.log(`[startup] ${label} ${Math.round(at)}ms`);
 }
-mark('renderer:module-loaded');
 
+/**
+ * Hand the renderer's own timing to the main process once pixels are actually on
+ * screen. Reading paint entries any earlier reports nothing, and the gap between
+ * "window exists" and "first paint" is exactly what a user perceives as a black
+ * screen, so it is worth recording rather than inferring.
+ */
+function reportStartupTiming(): void {
+  const readPaint = (name: string): number | undefined => {
+    const entry = performance.getEntriesByName(name)[0];
+    return entry ? Math.round(entry.startTime) : undefined;
+  };
+  const send = (): void => {
+    const longFrames = (performance.getEntriesByType('long-animation-frame') as PerformanceEntry[]).map((e) => {
+      const frame = e as PerformanceEntry & { duration: number };
+      return { start: frame.startTime, duration: frame.duration };
+    });
+    window.rcode.app.startupReport({
+      fcp: readPaint('first-contentful-paint'),
+      fp: readPaint('first-paint'),
+      timeOrigin: performance.timeOrigin,
+      marks: rendererMarks,
+      longFrames,
+    });
+  };
+
+  // Paint entries appear only after the frame is painted, and `buffered: true`
+  // does not deliver them here, so poll briefly instead of guessing with rAF.
+  let waited = 0;
+  const poll = (): void => {
+    if (readPaint('first-contentful-paint') !== undefined || waited >= 3000) {
+      send();
+      return;
+    }
+    waited += 50;
+    setTimeout(poll, 50);
+  };
+  poll();
+}
 function initI18n(): void {
   const saved = appState.preferences.locale;
   const initial: Locale = saved ?? resolveSystemLocale(navigator.language);
@@ -266,6 +306,7 @@ async function main(): Promise<void> {
   if (savedZoom !== 1.0) window.rcode.zoom.set(savedZoom);
 
   mark('renderer:ready');
+  reportStartupTiming();
 }
 
 main().catch(console.error);

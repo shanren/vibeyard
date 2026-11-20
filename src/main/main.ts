@@ -2,7 +2,8 @@ import { app, BrowserWindow, dialog, powerMonitor, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ipcMain } from 'electron';
-import { registerIpcHandlers, resetHookWatcher } from './ipc-handlers';
+import { registerIpcHandlers, resetHookWatcher } from './ipc-handlers';
+import { computeBlackScreenMs, markValue, recordStartupMark, writeStartupReport } from './startup-log';
 import { killAllPtys } from './pty-manager';
 import { flushState, loadState } from './store';
 import { createAppMenu } from './menu';
@@ -14,6 +15,18 @@ import { checkPythonAvailable } from './prerequisites';
 import { isMac, isWin } from './platform';
 import { isCloseConfirmed, setCloseConfirmed } from './close-state';
 import { isAbsolutePath, normalizeShellPath } from '../shared/platform';
+import { readGpuPrefs, shouldUseSoftwareCompositing, writeGpuPrefs } from './gpu-prefs';
+
+/**
+ * Must run before `app.whenReady()` resolves. On machines whose GPU process needs
+ * seconds for its first frame (measured 3.5s vs 0.2s), software compositing is
+ * enormously faster, and the verdict from a previous launch is applied here.
+ */
+const gpuPrefs = readGpuPrefs();
+const softwareCompositing = shouldUseSoftwareCompositing(gpuPrefs);
+if (softwareCompositing) {
+  app.disableHardwareAcceleration();
+}
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -23,6 +36,8 @@ let mainWindow: BrowserWindow | null = null;
  * renderer, which owns the project list, once that window is ready.
  */
 let pendingOpenPath: string | null = null;
+/** Window backdrop, set from the persisted theme just before creation. */
+let windowBackground = '#1f1f1f';
 
 /**
  * Pull the path out of a command line. Packaged launches arrive as
@@ -77,7 +92,9 @@ function requestOpenPath(target: string): void {
 // fast-startup effort; harmless when disabled.
 const TIMING = !!process.env.RCODE_TIMING;
 function mark(label: string): void {
-  if (TIMING) console.log(`[startup] ${label} ${Math.round(process.uptime() * 1000)}ms`);
+  const ms = process.uptime() * 1000;
+  recordStartupMark(label, ms);
+  if (TIMING) console.log(`[startup] ${label} ${Math.round(ms)}ms`);
 }
 mark('main:module-loaded');
 
@@ -99,7 +116,7 @@ function createWindow(): void {
     minHeight: 500,
     title: 'RCode',
     icon: path.join(__dirname, '..', '..', '..', 'build', 'icon.png'),
-    backgroundColor: '#000000',
+    backgroundColor: windowBackground,
     // The app draws its own 35px title bar on every platform, so the native
     // frame is hidden everywhere. Windows keeps the system min/max/close
     // buttons via titleBarOverlay (tinted to the dark chrome); macOS keeps its
@@ -224,8 +241,57 @@ app.whenReady().then(async () => {
   const state = loadState();
   mark('main:state-loaded');
   createAppMenu(state.preferences?.debugMode ?? false);
+  // Match the window's native background to the persisted theme BEFORE anything
+  // paints: the window is shown immediately (that is what makes startup feel
+  // instant), so a mismatched backdrop reads as a black flash for as long as the
+  // renderer needs. Light theme gets its canvas colour from the same token set.
+  windowBackground = state.preferences?.theme === 'light' ? '#ffffff' : '#1f1f1f';
   createWindow();
   mark('main:window-created');
+
+  // The renderer reports its own first-paint timings; together with the marks
+  // above this is what makes a slow launch diagnosable after the fact.
+  ipcMain.on('app:startupReport', (_event, report) => {
+    const gpu = (() => {
+      try {
+        return app.getGPUFeatureStatus().gpu_compositing ?? 'unknown';
+      } catch {
+        return 'unknown';
+      }
+    })();
+    // First paint this far after the window appeared means the GPU process — not
+    // our code — was the bottleneck. Remember it so the next launch composites in
+    // software and paints immediately.
+    const BLACK_SCREEN_BUDGET_MS = 1500;
+    const rendered = report as { fcp?: number; timeOrigin?: number } | null;
+    const black = computeBlackScreenMs(
+      markValue('main:window-created'),
+      rendered?.fcp,
+      rendered?.timeOrigin,
+      Date.now() - process.uptime() * 1000,
+    );
+    if (!softwareCompositing && black !== undefined) {
+      if (black > BLACK_SCREEN_BUDGET_MS) {
+        writeGpuPrefs({
+          softwareCompositing: true,
+          observedFirstPaintMs: Math.round(black),
+          decidedAt: Date.now(),
+        });
+        console.warn(
+          `[startup] first paint took ${Math.round(black)}ms with GPU compositing — switching to software compositing on the next launch`,
+        );
+      }
+    }
+
+    writeStartupReport(report ?? {}, {
+      version: app.getVersion(),
+      platform: `${process.platform}-${process.arch}`,
+      gpu: String(gpu),
+      theme: state.preferences?.theme ?? 'dark',
+      webgl: String(state.preferences?.terminalWebgl ?? 'unprobed'),
+      compositing: softwareCompositing ? 'software' : 'gpu',
+    });
+  });
 
   // Post-first-paint work. This used to run right after createWindow(), where the
   // synchronous `python --version` probe and the provider hook installs blocked the

@@ -83,6 +83,7 @@ export interface RCodeApi {
     onChanged(callback: () => void): () => void;
   };
   app: {
+    startupReport(report: unknown): void;
     focus(): void;
     getVersion(): Promise<string>;
     setTitleBarOverlay(options: { color: string; symbolColor: string; height?: number }): Promise<void>;
@@ -235,6 +236,7 @@ const api: RCodeApi = {
     onChanged: (callback: () => void) => onChannel('git:changed', callback),
   },
   app: {
+    startupReport: (report) => ipcRenderer.send('app:startupReport', report),
     focus: () => { ipcRenderer.send('app:focus'); },
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     setTitleBarOverlay: (options) => ipcRenderer.invoke('app:setTitleBarOverlay', options),

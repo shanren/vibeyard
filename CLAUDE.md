@@ -52,7 +52,7 @@ Uses **Vitest** with v8 coverage. Tests are co-located with source files as `*.t
 
 Test files are excluded from production builds via `exclude` in `tsconfig.main.json` and `tsconfig.renderer.json`.
 
-Three renderer modules (`session-cost.ts`, `session-activity.ts`, `session-context.ts`) expose `_resetForTesting()` to clear module-level state between tests. Main process tests mock `fs`, `child_process`, `node-pty`, and `os` via `vi.mock()`.
+Renderer modules (`session-activity.ts`, `session-context.ts`) expose `_resetForTesting()` to clear module-level state between tests. Main process tests mock `fs`, `child_process`, `node-pty`, and `os` via `vi.mock()`.
 
 ## Architecture
 
@@ -85,7 +85,6 @@ CLI-specific behavior is encapsulated behind a `CliProvider` interface (`src/mai
 - `state.ts` — Reactive AppState singleton; debounced persistence (300ms) to `~/.rcode/state.json`
 - `split-layout.ts` — Manages tab mode (single terminal) vs split mode (side-by-side panes); `appState.toggleSplit()` switches between them
 - `session-activity.ts` — Tracks working/waiting/idle status with debounced transitions
-- `session-cost.ts` — Structured cost tracking via Claude CLI status line (`statusLine` setting), with regex fallback for older CLI versions. Provides per-session and aggregate cost data (USD, tokens, cache, duration)
 - `components/active-sessions-panel.ts` — Global, cross-project **Active Sessions** list rendered into `#sidebar-active-sessions` (a persistent sidebar block). `selectActiveSessions(projects, statusOf, activeStatuses)` is a DOM-free selector that collects open CLI sessions (`isCliSession`) across `appState.projects` whose live `getStatus()` is in the configured set, ordered by `STATUS_PRIORITY` (from `project-status.ts`, now exported) then project name. `initActiveSessions()` subscribes to `session-activity.onChange` + the relevant `appState` events and re-renders; rows route clicks through `setActiveProject` + `setActiveSession`. Visibility is gated by `preferences.sidebarViews.activeSessions` **and** requires more than one project (with a single project the rows just duplicate its own tab bar); the "active" status set comes from `preferences.activeSessionStatuses` (`{ working, waiting, input, completed }`, default working/input/completed via `resolveActiveStatuses`). Both preferences are edited in the Preferences → Appearance section. Styles live in `styles/sidebar.css`; status dots reuse the existing `.project-status.<status>` classes.
 - `components/git-panel.ts` — Git changes for the **active project**, rendered inside its sidebar card as a `git` panel-toggle tab (a third `ProjectPanel` alongside `history`/`files` in `sidebar.ts`), not a standalone bottom panel. The "Git" tab carries a `.project-action-badge` count of total changes (badge + click-to-open); `Cmd/Ctrl+Shift+G` (`toggleGitPanel`, exported from `sidebar.ts`) toggles it. `mountGitPanel(project, container)` reparents a single persistent node into `.project-panel-git` so file rows/scroll survive sidebar re-renders; `closeGitPanel()` detaches it. The shared `loadFiles`/worktree-selector logic is unchanged; `sidebarViews.gitPanel` now gates the tab button. There is no `#git-panel` node in `index.html`.
 - **UI shell** — one left column only: `#sidebar` (project management: list, active project card, per-project panels). `#app-body` = sidebar (+ resize handle) · `#main-area` (tab bar 35px + terminal) · `#explorer-panel` (right, toggled). `#title-bar` (35px, Windows only) sits above, and the branch chip lives in the tab bar (`#git-status`), not a status bar. `#sidebar.collapsed` collapses the column to a 58px icon rail, not to nothing.
@@ -124,6 +123,45 @@ expect(mockRm).toHaveBeenCalledWith('/repo/foo.ts', opts);
 This applies to any assertion on arguments to `fs.*`, `child_process` calls,
 or anything else that flows a joined path through. CI runs on all three
 platforms, so a forward-slash literal will eventually fail on Windows.
+
+### Startup performance
+
+Startup is a hard requirement, not a nice-to-have: the window appears at ~250ms
+(main process) and content must follow within a few hundred ms. Three costs were
+measured and removed; the pattern for all of them is *detect once, then never pay
+again*, because the slow paths are machine-specific.
+
+- **GPU compositing** (`src/main/gpu-prefs.ts`, `~/.rcode/gpu.json`) — on some
+  machines Chromium's GPU process needs seconds for its first composited frame
+  (measured 3.5–4.9s to first paint vs **0.2s** with software compositing), which
+  reads as a black screen after launch. It cannot be detected before the first
+  paint, so `app:startupReport` measures window-shown → first-content; above
+  `1500ms` the verdict is persisted and `app.disableHardwareAcceleration()` runs at
+  module scope on later launches (before `whenReady`). `shouldUseSoftwareCompositing`
+  re-tests after 30 days so one slow launch (AV scan, cold file cache) cannot
+  permanently disable hardware acceleration. Kept out of `state.json` on purpose —
+  the renderer saves that file wholesale and would clobber a main-only flag.
+- **Terminal WebGL renderer** (`scheduleWebglUpgrade` in `terminal-utils.ts`) —
+  creating the GPU context blocked the main thread for ~6s on software-rasterised
+  machines. Panes now paint with the DOM renderer immediately and upgrade later;
+  the first terminal on a machine triggers one delayed probe whose verdict is
+  persisted as `Preferences.terminalWebgl` (surfaced as Preferences → Appearance →
+  *Terminal renderer*: Auto / GPU / CPU).
+- **Deferred main-process work** (`runDeferredStartupWork`) — `validatePrerequisites()`
+  is a synchronous `where`/`which` spawn (~60ms each); it is memoised per provider
+  per pass and the hook-install loop yields with `setImmediate` between providers so
+  renderer IPC is never starved. `Notification.requestPermission()` (a modal OS
+  prompt, measured 1.8s) moved into `showNotification`, i.e. the first banner that
+  is actually about to be shown.
+- **Window backdrop** — `BrowserWindow` gets `backgroundColor` from the persisted
+  theme (`#1f1f1f` dark / `#ffffff` light) and is shown immediately, so any gap
+  before the first paint looks like the app rather than a black hole.
+
+`src/main/startup-log.ts` appends one block per launch to `~/.rcode/startup.log`
+(main milestones, renderer marks, first-paint, the derived **black screen** duration,
+compositing mode, GPU status; trimmed to the last 32KB). `RCODE_TIMING=1` additionally
+streams the marks to the console and auto-exits after 12s. When a launch "feels slow",
+read that file before guessing.
 
 ### File Watching
 
