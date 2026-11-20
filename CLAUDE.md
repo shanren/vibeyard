@@ -25,6 +25,9 @@ out/RCode 0.0.1.exe          # portable
 
 - Output goes to `out/`, not `dist/` — `dist/` is the compiled app and is listed in
   `build.files`, so writing installers there would package them into themselves.
+- Only `en-US` and `zh-CN` Electron locale paks are shipped (`build.electronLanguages`);
+  the other 53 cost 47MB on disk and nothing else. Renderer source maps are excluded
+  from the package (`!dist/**/*.map`) — they are 6MB of dev-only payload.
 - `build/installer.nsh` adds "Open with RCode" to `Directory`, `Directory\Background`
   and `*` under HKCU (no elevation) and removes the keys on uninstall.
 - If the Electron download fails (GitHub release assets time out), package against the
@@ -156,6 +159,16 @@ again*, because the slow paths are machine-specific.
 - **Window backdrop** — `BrowserWindow` gets `backgroundColor` from the persisted
   theme (`#1f1f1f` dark / `#ffffff` light) and is shown immediately, so any gap
   before the first paint looks like the app rather than a black hole.
+- **Memory** — a one-window Electron app costs ~410MB across four processes
+  (browser ~120, GPU ~121, renderer ~117, network utility ~51). Our own JS is not
+  the weight: the main process heap is 8MB and the renderer's is 9.5MB, so
+  lazy-loading renderer code buys nothing measurable. The one real lever is
+  process topology: when `softwareCompositing` is on, `in-process-gpu` +
+  `disable-gpu` + `disable-software-rasterizer` fold the (software-only) GPU
+  process into the browser process for **−47MB** (~361MB) with no change to first
+  paint. `--in-process-gpu` without `--disable-gpu` is a trap: it pulls SwiftShader
+  into the browser process and balloons it past 1GB. `enable-low-end-device-mode`
+  measured no effect at all.
 
 `src/main/startup-log.ts` appends one block per launch to `~/.rcode/startup.log`
 (main milestones, renderer marks, first-paint, the derived **black screen** duration,

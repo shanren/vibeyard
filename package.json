@@ -62,7 +62,12 @@
     "files": [
       "dist/main/**/*",
       "dist/preload/**/*",
-      "dist/renderer/**/*"
+      "dist/renderer/**/*",
+      "!dist/**/*.map"
+    ],
+    "electronLanguages": [
+      "en-US",
+      "zh-CN"
     ],
     "asarUnpack": [
       "**/node_modules/node-pty/prebuilds/**",

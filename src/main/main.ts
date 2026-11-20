@@ -26,6 +26,15 @@ const gpuPrefs = readGpuPrefs();
 const softwareCompositing = shouldUseSoftwareCompositing(gpuPrefs);
 if (softwareCompositing) {
   app.disableHardwareAcceleration();
+  // With compositing already known to be software-only, the GPU process is pure
+  // overhead: it exists just to run the software rasteriser (measured 121MB, one
+  // of four processes). Folding it into the browser process drops the total from
+  // ~408MB to ~361MB with no change to first paint (196ms measured either way).
+  // `--disable-gpu` is load-bearing here: `--in-process-gpu` alone pulls the
+  // SwiftShader GL stack into the browser process and balloons it past 1GB.
+  app.commandLine.appendSwitch('in-process-gpu');
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-software-rasterizer');
 }
 
 let mainWindow: BrowserWindow | null = null;
