@@ -26,6 +26,9 @@ class FakeTerminal {
   }
 
   loadAddon(): void {}
+  buffer = { active: { type: 'normal' as 'normal' | 'alternate' } };
+  modes = { mouseTrackingMode: 'none' as const };
+  attachCustomWheelEventHandler(_handler: (e: WheelEvent) => boolean): void {}
   attachCustomKeyEventHandler(handler: (e: KeyboardEvent) => boolean): void {
     this.keyHandler = handler;
   }

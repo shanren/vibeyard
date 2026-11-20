@@ -11,7 +11,7 @@ import { getProviderCapabilities } from '../provider-availability.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 import { appState } from '../state.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
-import { attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade, wrapBracketedPaste } from './terminal-utils.js';
+import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade, wrapBracketedPaste } from './terminal-utils.js';
 import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 import { showTerminalContextMenu } from './terminal-context-menu.js';
 
@@ -101,6 +101,9 @@ export function createTerminalPane(
   }));
 
   const writeToPty = (data: string) => window.rcode.pty.write(sessionId, data);
+
+  // Full-screen CLIs get wheel-to-arrow translation; normal scrollback is untouched.
+  attachAlternateScroll(terminal, writeToPty);
 
   // Send CSI u encoding for Shift+Enter so Claude CLI treats it as newline
   attachClipboardCopyHandler(terminal, (e) => {

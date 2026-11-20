@@ -38,7 +38,7 @@ vi.mock('@xterm/addon-webgl', () => ({
   },
 }));
 
-import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
+import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback } from './terminal-utils.js';
 
 const mockClipboardWrite = vi.fn().mockResolvedValue(undefined);
 const mockClipboardRead = vi.fn();
@@ -398,5 +398,67 @@ describe('loadWebglWithFallback', () => {
 
     expect(() => loadWebglWithFallback(terminal as any)).not.toThrow();
     expect(terminal.loadAddon).not.toHaveBeenCalled();
+  });
+});
+
+describe('attachAlternateScroll', () => {
+  function makeTerminal(type: 'normal' | 'alternate', mouseMode: string) {
+    let handler: ((e: WheelEvent) => boolean) | null = null;
+    const terminal = {
+      buffer: { active: { type } },
+      modes: { mouseTrackingMode: mouseMode },
+      attachCustomWheelEventHandler: (fn: (e: WheelEvent) => boolean) => {
+        handler = fn;
+      },
+    };
+    return {
+      terminal: terminal as unknown as Terminal,
+      wheel: (deltaY: number) => {
+        const event = { deltaY, preventDefault: vi.fn() } as unknown as WheelEvent;
+        const handled = handler!(event);
+        return { handled, prevented: (event.preventDefault as ReturnType<typeof vi.fn>).mock.calls.length > 0 };
+      },
+    };
+  }
+
+  it('leaves normal-screen scrolling to xterm', () => {
+    const { terminal, wheel } = makeTerminal('normal', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    expect(wheel(-120).handled).toBe(true);
+    expect(write).not.toHaveBeenCalled();
+  });
+
+  it('translates the wheel into cursor keys on the alternate screen', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    const up = wheel(-120);
+    expect(up.handled).toBe(false);
+    expect(up.prevented).toBe(true);
+    expect(write).toHaveBeenLastCalledWith('\x1b[A'.repeat(3));
+
+    wheel(80);
+    expect(write).toHaveBeenLastCalledWith('\x1b[B'.repeat(2));
+  });
+
+  it('caps a fast trackpad flick so the PTY is not flooded', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    wheel(-4000);
+    expect(write).toHaveBeenLastCalledWith('\x1b[A'.repeat(10));
+  });
+
+  it('does nothing when the app asked for mouse reporting', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'vt200');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    expect(wheel(-120).handled).toBe(true);
+    expect(write).not.toHaveBeenCalled();
   });
 });

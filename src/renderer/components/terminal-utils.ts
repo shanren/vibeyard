@@ -93,6 +93,35 @@ export function loadWebglWithFallback(terminal: Terminal): void {
 }
 
 /**
+ * Wheel scrolling inside a full-screen CLI.
+ *
+ * Programs like pi, opencode or vim switch to the alternate screen, where the
+ * terminal keeps no scrollback of its own: if the wheel event is not forwarded to
+ * the app, it does nothing at all — which reads as "the output cannot scroll".
+ * xterm no longer ships `alternateScroll`, so translate the wheel into cursor keys
+ * (what VS Code's terminal does). When the app asked for mouse reporting, xterm
+ * already forwards the wheel as a mouse event — leave that path alone.
+ */
+export function attachAlternateScroll(terminal: Terminal, write: (data: string) => void): void {
+  // Rows per wheel notch. Most mice report ~100px per notch; clamp so a fast
+  // trackpad flick cannot flood the PTY with hundreds of key sequences.
+  const ROW_PX = 40;
+  const MAX_ROWS = 10;
+
+  terminal.attachCustomWheelEventHandler((event: WheelEvent) => {
+    if (terminal.buffer.active.type !== 'alternate') return true;
+    if (terminal.modes.mouseTrackingMode !== 'none') return true;
+
+    const notches = Math.round(Math.abs(event.deltaY) / ROW_PX) || 1;
+    const count = Math.min(notches, MAX_ROWS);
+    const sequence = event.deltaY < 0 ? '[A' : '[B';
+    write(sequence.repeat(count));
+    event.preventDefault();
+    return false;
+  });
+}
+
+/**
  * Creating the WebGL context can block the main thread for *seconds* on machines
  * where the GPU driver falls back to software rasterisation (measured 5.9s). It
  * used to run inside the startup chain before the first paint, so the whole UI

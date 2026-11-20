@@ -6,7 +6,7 @@ import { appState } from '../state.js';
 import { fitAllVisible } from './terminal-pane.js';
 import { destroySearchBar, hideSearchBar } from './search-bar.js';
 import { shortcutManager, displayKeys } from '../shortcuts.js';
-import { attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade } from './terminal-utils.js';
+import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade } from './terminal-utils.js';
 import { esc } from '../dom-utils.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 
@@ -86,6 +86,7 @@ function createShell(projectId: string): ShellTerminalInstance {
   const sessionId = `shell-${projectId}-${shellId}`;
 
   attachClipboardCopyHandler(terminal, undefined, (data) => window.rcode.pty.write(sessionId, data));
+  attachAlternateScroll(terminal, (data) => window.rcode.pty.write(sessionId, data));
 
   const instance: ShellTerminalInstance = {
     id: shellId,
