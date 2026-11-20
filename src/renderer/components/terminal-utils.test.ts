@@ -424,65 +424,65 @@ describe('attachAlternateScroll', () => {
   it('leaves normal-screen scrolling to xterm', () => {
     const { terminal, wheel } = makeTerminal('normal', 'none');
     const write = vi.fn();
-    attachAlternateScroll(terminal, write);
+    attachAlternateScroll(terminal, write, 'line');
 
     expect(wheel(-120).handled).toBe(true);
     expect(write).not.toHaveBeenCalled();
   });
 
-  it('translates the wheel into PageUp/PageDown, not arrow keys', () => {
+  it('moves one row per row of finger travel in line mode', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'none');
     const write = vi.fn();
-    attachAlternateScroll(terminal, write);
+    attachAlternateScroll(terminal, write, 'line');
 
-    const up = wheel(-120);
-    expect(up.handled).toBe(false);
-    expect(up.prevented).toBe(true);
-    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
-
-    wheel(240);
-    expect(write).toHaveBeenLastCalledWith('\x1b[6~'.repeat(2));
-  });
-
-  it('accumulates tiny touchpad deltas instead of dropping them', () => {
-    const { terminal, wheel } = makeTerminal('alternate', 'none');
-    const write = vi.fn();
-    attachAlternateScroll(terminal, write);
-
-    // Two-finger scroll: ~6px per event. Nothing happens until one page accrues.
-    for (let i = 0; i < 19; i++) wheel(-6);
+    // Below a row's worth of travel nothing is sent, so a slow drag cannot stutter.
+    expect(wheel(-13).handled).toBe(false);
     expect(write).not.toHaveBeenCalled();
 
-    wheel(-6); // 120px total → one page
-    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
-  });
+    // Crossing one row emits exactly one shift+up, not a screen.
+    wheel(-30);
+    expect(write).toHaveBeenLastCalledWith('\x1b[a');
 
-  it('keeps the sub-page remainder after emitting a page', () => {
-    const { terminal, wheel } = makeTerminal('alternate', 'none');
-    const write = vi.fn();
-    attachAlternateScroll(terminal, write);
-
-    wheel(-130); // one page, 10px left over
+    // A mouse notch moves several rows but never a whole screen.
     write.mockClear();
-    for (let i = 0; i < 18; i++) wheel(-6); // 10 + 108 = 118 < 120
-    expect(write).not.toHaveBeenCalled();
-    wheel(-6); // 124 → one page
-    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
+    wheel(-120);
+    const ups = write.mock.calls.at(-1)![0] as string;
+    expect(ups).toMatch(/^(\x1b\[a)+$/);
+    expect(ups.length).toBeGreaterThan(3);
+    expect(ups.length).toBeLessThanOrEqual(18);
+
+    // Down-scrolling uses shift+down, from a clean accumulator.
+    const down = makeTerminal('alternate', 'none');
+    const writeDown = vi.fn();
+    attachAlternateScroll(down.terminal, writeDown, 'line');
+    down.wheel(120);
+    expect(writeDown).toHaveBeenLastCalledWith('\x1b[b'.repeat(3));
   });
 
-  it('caps a fast flick so the PTY is not flooded', () => {
+  it('caps how many rows one event can emit', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'none');
     const write = vi.fn();
-    attachAlternateScroll(terminal, write);
+    attachAlternateScroll(terminal, write, 'line');
 
     wheel(-4000);
-    expect(write).toHaveBeenLastCalledWith('\x1b[5~'.repeat(3));
+    expect(write).toHaveBeenLastCalledWith('\x1b[a'.repeat(6));
+  });
+
+  it('falls back to whole pages when the app only binds page keys', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write, 'page');
+
+    wheel(-120);
+    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
+    wheel(240); // capped at one page per event so a flick cannot jump screens
+    expect(write).toHaveBeenLastCalledWith('\x1b[6~');
   });
 
   it('does nothing when the app asked for mouse reporting', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'vt200');
     const write = vi.fn();
-    attachAlternateScroll(terminal, write);
+    attachAlternateScroll(terminal, write, 'line');
 
     expect(wheel(-120).handled).toBe(true);
     expect(write).not.toHaveBeenCalled();

@@ -24,6 +24,7 @@ import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '
 import { getFullPath } from '../pty-manager';
 import { resolveBinary, validateBinaryExists } from './resolve-binary';
 import { MAX_INDEX_CHARS_PER_SESSION, TRANSCRIPT_TEXT_SEPARATOR } from './transcript-utils';
+import { ensurePiLineScrollBindings } from './pi-keybindings';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -46,6 +47,9 @@ export class PiProvider implements CliProvider {
       shiftEnterNewline: false,
       // The prompt is a positional argument, so it can be passed at spawn.
       pendingPromptTrigger: 'startup-arg',
+      // Bound by RCode in `installHooks` (pi ships the actions unbound), which lets
+      // the wheel move one row at a time instead of a whole screen.
+      altScreenScroll: 'line',
     },
     defaultContextWindowSize: 0,
   };
@@ -86,7 +90,12 @@ export class PiProvider implements CliProvider {
     return args;
   }
 
-  async installHooks(): Promise<void> {}
+  async installHooks(): Promise<void> {
+    // Adds lineUp/lineDown bindings to ~/.pi/agent/keybindings.json (merged, never
+    // replacing the user's own bindings) so scrolling can be smooth rather than
+    // page-at-a-time.
+    ensurePiLineScrollBindings();
+  }
   installStatusScripts(): void {}
   cleanup(): void {}
 

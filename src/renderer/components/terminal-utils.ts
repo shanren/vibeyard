@@ -106,16 +106,27 @@ export function loadWebglWithFallback(terminal: Terminal): void {
  * pixels per event) advances pages at the same rate as a mouse notch.
  */
 const ROW_PX = 40;
-/** Accumulated scroll (device px) that advances one page. */
+/** Device pixels of accumulated scroll that advance one page (page mode). */
 const PAGE_PX = ROW_PX * 3;
-const MAX_PAGES_PER_EVENT = 3;
-const PAGE_UP = '\x1b[5~';
-const PAGE_DOWN = '\x1b[6~';
+const PAGES_PER_EVENT = 1;
+/** Rows emitted per event in line mode — the cap that keeps a flick from flooding. */
+const MAX_LINES_PER_EVENT = 6;
+const PAGE_UP = '[5~';
+const PAGE_DOWN = '[6~';
+/** shift+up / shift+down, the keys RCode binds to pi's line-scroll actions. */
+const LINE_UP = '[a';
+const LINE_DOWN = '[b';
 
 /** Per-terminal scroll accumulator (touchpads emit many tiny deltas). */
 const wheelAccumulator = new WeakMap<Terminal, number>();
 
-export function attachAlternateScroll(terminal: Terminal, write: (data: string) => void): void {
+export type AltScreenScrollMode = 'line' | 'page';
+
+export function attachAlternateScroll(
+  terminal: Terminal,
+  write: (data: string) => void,
+  mode: AltScreenScrollMode = 'page',
+): void {
   terminal.attachCustomWheelEventHandler((event: WheelEvent) => {
     if (terminal.buffer.active.type !== 'alternate') return true;
     // The app asked for mouse events, so xterm already forwards the wheel as one
@@ -123,28 +134,36 @@ export function attachAlternateScroll(terminal: Terminal, write: (data: string) 
     if (terminal.modes.mouseTrackingMode !== 'none') return true;
 
     const total = (wheelAccumulator.get(terminal) ?? 0) + event.deltaY;
-    const pages = Math.min(Math.trunc(Math.abs(total) / PAGE_PX), MAX_PAGES_PER_EVENT);
+    const magnitude = Math.abs(total);
 
+    if (mode === 'line') {
+      // One row per terminal row of finger travel, capped per event; the remainder
+      // carries over so a slow two-finger drag still reaches the threshold.
+      const rows = Math.min(Math.trunc(magnitude / ROW_PX), MAX_LINES_PER_EVENT);
+      if (rows === 0) {
+        wheelAccumulator.set(terminal, total);
+        event.preventDefault();
+        return false;
+      }
+      write((total < 0 ? LINE_UP : LINE_DOWN).repeat(rows));
+      wheelAccumulator.set(terminal, total - Math.sign(total) * rows * ROW_PX);
+      event.preventDefault();
+      return false;
+    }
+
+    const pages = Math.min(Math.trunc(magnitude / PAGE_PX), PAGES_PER_EVENT);
     if (pages === 0) {
       wheelAccumulator.set(terminal, total);
       event.preventDefault();
       return false;
     }
-
     write((total < 0 ? PAGE_UP : PAGE_DOWN).repeat(pages));
-    // Keep the remainder so the next small delta continues from here.
     wheelAccumulator.set(terminal, total - Math.sign(total) * pages * PAGE_PX);
     event.preventDefault();
     return false;
   });
 }
 
-/**
- * Creating the WebGL context can block the main thread for *seconds* on machines
- * where the GPU driver falls back to software rasterisation (measured 5.9s). It
- * used to run inside the startup chain before the first paint, so the whole UI
- * waited on it. Paint with the DOM renderer immediately and upgrade afterwards.
- */
 const WEBGL_PROBE_BUDGET_MS = 500;
 /** Delay before the one-time probe, so it never lands on the startup path. */
 const WEBGL_PROBE_DELAY_MS = 4000;
@@ -169,11 +188,6 @@ function apply(terminal: Terminal): void {
   }
 }
 
-/**
- * Upgrade a pane to the GPU renderer — but only when the machine has been shown
- * to handle it. The first ever terminal on a machine triggers a single delayed
- * probe whose result is persisted, so the expensive path is paid at most once.
- */
 export function scheduleWebglUpgrade(terminal: Terminal): void {
   const verdict = readVerdict();
   if (verdict === false) return;

@@ -39,6 +39,12 @@ export interface CliProviderCapabilities {
   hookStatus: boolean;
   configReading: boolean;
   shiftEnterNewline: boolean;
+  /**
+   * How the wheel scrolls this CLI's full-screen UI. `line` (pi, after RCode binds
+   * its line-scroll actions) moves one row per wheel row and feels continuous;
+   * `page` (default) can only move a whole screen at a time.
+   */
+  altScreenScroll?: 'line' | 'page';
   pendingPromptTrigger: PendingPromptTrigger;
   planModeArg?: string;
 }
