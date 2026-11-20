@@ -70,6 +70,31 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       fontRow.appendChild(fontSelect.element);
       container.appendChild(fontRow);
 
+      // The GPU renderer is auto-detected once (a slow software-rasterised path
+      // blocks the main thread for seconds), but the verdict can be wrong on a
+      // machine that was busy during the probe — so it stays overridable.
+      const rendererRow = document.createElement('div');
+      rendererRow.className = 'modal-toggle-field';
+      const rendererLabel = document.createElement('label');
+      rendererLabel.textContent = t('appearance.terminalRenderer');
+      const rendererOptions = [
+        { value: 'auto', label: t('appearance.terminalRendererAuto') },
+        { value: 'gpu', label: t('appearance.terminalRendererGpu') },
+        { value: 'cpu', label: t('appearance.terminalRendererCpu') },
+      ];
+      const currentRenderer = appState.preferences.terminalWebgl;
+      const rendererSelect = createCustomSelect(
+        'pref-terminal-renderer',
+        rendererOptions,
+        currentRenderer === true ? 'gpu' : currentRenderer === false ? 'cpu' : 'auto',
+        (value) => {
+          appState.setPreference('terminalWebgl', value === 'auto' ? undefined : value === 'gpu');
+        },
+      );
+      rendererRow.appendChild(rendererLabel);
+      rendererRow.appendChild(rendererSelect.element);
+      container.appendChild(rendererRow);
+
       unsubZoom();
       zoomPrefUnsub = appState.on('preferences-changed', () => {
         zoomSelect?.setValue(String(getZoomFactor()));

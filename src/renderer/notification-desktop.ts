@@ -19,7 +19,22 @@ function dismiss(sessionId: string): void {
   activeNotifications.delete(sessionId);
 }
 
+let permissionRequested = false;
+
+/**
+ * Ask for notification permission the first time a banner is actually needed.
+ * Requesting it during startup surfaces a modal OS prompt and blocks the
+ * renderer for ~1.8s, which used to sit right in the middle of the launch path.
+ */
+function ensurePermission(): void {
+  if (permissionRequested || typeof Notification === 'undefined') return;
+  if (Notification.permission !== 'default') return;
+  permissionRequested = true;
+  Notification.requestPermission();
+}
+
 function showNotification(sessionId: string, status: SessionStatus): void {
+  ensurePermission();
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
 
   const found = appState.findSessionWithProject(sessionId);
@@ -60,10 +75,6 @@ function showNotification(sessionId: string, status: SessionStatus): void {
 }
 
 export function initNotificationDesktop(): void {
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-
   onChange((sessionId: string, status: SessionStatus) => {
     const prev = previousStatus.get(sessionId);
     previousStatus.set(sessionId, status);

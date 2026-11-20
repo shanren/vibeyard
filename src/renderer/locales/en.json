@@ -31,7 +31,11 @@
     "sessionHistory": "Session History",
     "activeSessions": "Active Sessions",
     "activeSessionStatuses": "Active Session Statuses",
-    "terminalFontSize": "Terminal font size"
+    "terminalFontSize": "Terminal font size",
+    "terminalRenderer": "Terminal renderer",
+    "terminalRendererAuto": "Auto",
+    "terminalRendererGpu": "GPU",
+    "terminalRendererCpu": "CPU"
   },
   "sidebar": {
     "default": "Default",

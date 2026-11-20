@@ -31,7 +31,11 @@
     "sessionHistory": "会话历史",
     "activeSessions": "活动会话",
     "activeSessionStatuses": "活动会话状态",
-    "terminalFontSize": "终端字号"
+    "terminalFontSize": "终端字号",
+    "terminalRenderer": "终端渲染器",
+    "terminalRendererAuto": "自动",
+    "terminalRendererGpu": "GPU 加速",
+    "terminalRendererCpu": "CPU 兼容"
   },
   "sidebar": {
     "default": "默认",

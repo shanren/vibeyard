@@ -91,3 +91,60 @@ export function loadWebglWithFallback(terminal: Terminal): void {
     addon.onContextLoss(() => addon.dispose());
   } catch {}
 }
+
+/**
+ * Creating the WebGL context can block the main thread for *seconds* on machines
+ * where the GPU driver falls back to software rasterisation (measured 5.9s). It
+ * used to run inside the startup chain before the first paint, so the whole UI
+ * waited on it. Paint with the DOM renderer immediately and upgrade afterwards.
+ */
+const WEBGL_PROBE_BUDGET_MS = 500;
+/** Delay before the one-time probe, so it never lands on the startup path. */
+const WEBGL_PROBE_DELAY_MS = 4000;
+/** Verdict for this launch; `undefined` while the probe is still pending. */
+let webglVerdict: boolean | undefined;
+
+function readVerdict(): boolean | undefined {
+  if (webglVerdict === undefined) webglVerdict = appState.preferences.terminalWebgl;
+  return webglVerdict;
+}
+
+function apply(terminal: Terminal): void {
+  const started = performance.now();
+  loadWebglWithFallback(terminal);
+  const cost = performance.now() - started;
+  const usable = cost <= WEBGL_PROBE_BUDGET_MS;
+  // Record the verdict either way: a fast probe must not be re-run on every
+  // launch, and a slow one (software rasterisation) must never be paid again.
+  webglVerdict = usable;
+  if (appState.preferences.terminalWebgl !== usable) {
+    appState.setPreference('terminalWebgl', usable);
+  }
+}
+
+/**
+ * Upgrade a pane to the GPU renderer — but only when the machine has been shown
+ * to handle it. The first ever terminal on a machine triggers a single delayed
+ * probe whose result is persisted, so the expensive path is paid at most once.
+ */
+export function scheduleWebglUpgrade(terminal: Terminal): void {
+  const verdict = readVerdict();
+  if (verdict === false) return;
+  if (verdict === true) {
+    setTimeout(() => apply(terminal), 0);
+    return;
+  }
+  // Undecided: one probe, off the startup path, that lands on this terminal.
+  setTimeout(() => {
+    if (webglVerdict !== undefined) {
+      if (webglVerdict) apply(terminal);
+      return;
+    }
+    apply(terminal);
+  }, WEBGL_PROBE_DELAY_MS);
+}
+
+/** Test seam: drop the cached verdict so a probe runs again. */
+export function _resetWebglUpgradeStateForTesting(): void {
+  webglVerdict = undefined;
+}

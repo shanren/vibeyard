@@ -262,7 +262,11 @@ export function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('store:load', () => {
-    return loadState();
+    const timing = !!process.env.RCODE_TIMING;
+    const started = Date.now();
+    const state = loadState();
+    if (timing) console.log(`[startup] main:store-load-handled ${Date.now() - started}ms`);
+    return state;
   });
 
   ipcMain.handle('store:save', (_event, state: PersistedState) => {

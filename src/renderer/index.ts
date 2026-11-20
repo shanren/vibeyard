@@ -182,29 +182,22 @@ async function main(): Promise<void> {
   await loadProviderMetas();
   mark('renderer:provider-metas');
 
-  // Initialize components
-  initSessionUnread();
-  initSidebar();
-  initTitleBar();
-  initTabBar();
-  initExplorerPanel();
-  initSplitLayout();
-  initKeybindings();
-  initNotificationSound();
-  initNotificationDesktop();
-  initProjectTerminal();
-  initGitPanel();
-  initActiveSessions();
-  initSessionHistory();
-  initInsightAlert();
-  initToolDetector();
-  initToolAlert();
-  initLargeFileDetector();
-  initLargeFileAlert();
-  initSettingsGuard();
-  initSessionInspector();
-  initFilePrompt();
-  startGitPolling();
+  // Initialize components (per-step timing under RCODE_TIMING)
+  const inits: [string, () => void][] = [
+    ['session-unread', initSessionUnread], ['sidebar', initSidebar], ['title-bar', initTitleBar],
+    ['tab-bar', initTabBar], ['explorer', initExplorerPanel], ['split-layout', initSplitLayout],
+    ['keybindings', initKeybindings], ['notif-sound', initNotificationSound], ['notif-desktop', initNotificationDesktop],
+    ['project-terminal', initProjectTerminal], ['git-panel', initGitPanel], ['active-sessions', initActiveSessions],
+    ['session-history', initSessionHistory], ['insight-alert', initInsightAlert], ['tool-detector', initToolDetector],
+    ['tool-alert', initToolAlert], ['large-file-detector', initLargeFileDetector], ['large-file-alert', initLargeFileAlert],
+    ['settings-guard', initSettingsGuard], ['session-inspector', initSessionInspector], ['file-prompt', initFilePrompt],
+    ['git-polling', startGitPolling],
+  ];
+  for (const [label, fn] of inits) {
+    const started = TIMING ? performance.now() : 0;
+    fn();
+    if (TIMING) console.log(`[startup] init.${label} ${Math.round(performance.now() - started)}ms`);
+  }
   mark('renderer:components-init');
 
   // Log AppState events to debug panel

@@ -229,6 +229,12 @@ export interface Preferences {
   zoomFactor?: number;
   /** Terminal font size in px. Absent ⇒ 13 (TERMINAL_FONT_SIZE_DEFAULT). */
   terminalFontSize?: number;
+  /**
+   * Whether the terminal may upgrade to the WebGL renderer. Absent ⇒ not probed
+   * yet; the probe runs once after startup and stores the verdict, because a
+   * software-rasterised GPU path blocks the main thread for seconds.
+   */
+  terminalWebgl?: boolean;
   defaultProvider?: ProviderId;
   /** UI language tag. See `Locale` for the supported set. */
   locale?: Locale;

@@ -11,7 +11,7 @@ import { getProviderCapabilities } from '../provider-availability.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 import { appState } from '../state.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
-import { attachClipboardCopyHandler, attachCopyOnSelect, loadWebglWithFallback, wrapBracketedPaste } from './terminal-utils.js';
+import { attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade, wrapBracketedPaste } from './terminal-utils.js';
 import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 import { showTerminalContextMenu } from './terminal-context-menu.js';
 
@@ -296,7 +296,8 @@ export function attachToContainer(sessionId: string, container: HTMLElement): vo
     instance.terminal.open(xtermWrap as HTMLElement);
 
     attachCopyOnSelect(instance.terminal);
-    loadWebglWithFallback(instance.terminal);
+    // Not awaited on purpose: see scheduleWebglUpgrade.
+    scheduleWebglUpgrade(instance.terminal);
   } else {
     // Always re-append to ensure correct DOM order (appendChild moves existing children)
     container.appendChild(instance.element);

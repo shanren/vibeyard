@@ -236,7 +236,18 @@ app.whenReady().then(async () => {
     // paid for seven `where`/`which` spawns before anything was on screen. Its
     // only job is the "no CLI installed" error box, so it belongs here.
     const providers = getAllProviders();
-    const missing = providers.filter((p) => !p.validatePrerequisites());
+    // Memoised: each check is a synchronous `where`/`which` spawn, and the same
+    // answers are needed again below. Re-running them cost ~415ms of blocked
+    // main thread per pass.
+    const availability = new Map<string, boolean>();
+    const isAvailable = (p: (typeof providers)[number]): boolean => {
+      const cached = availability.get(p.meta.id);
+      if (cached !== undefined) return cached;
+      const ok = p.validatePrerequisites();
+      availability.set(p.meta.id, ok);
+      return ok;
+    };
+    const missing = providers.filter((p) => !isAvailable(p));
     for (const p of missing) console.warn('Provider not available: ' + p.meta.displayName);
     if (providers.length > 0 && missing.length === providers.length) {
       const bullets = providers.map((p) => '  - ' + p.meta.displayName).join('\n');
@@ -262,9 +273,12 @@ app.whenReady().then(async () => {
       }
     }
 
-    // Install hooks and status scripts for available providers
-    for (const provider of getAllProviders()) {
-      if (!provider.validatePrerequisites()) continue;
+    // Install hooks and status scripts for available providers. Yield to the
+    // event loop between providers so renderer IPC (state load, PTY spawn) is
+    // not held behind this loop.
+    for (const provider of providers) {
+      if (!isAvailable(provider)) continue;
+      await new Promise((resolve) => setImmediate(resolve));
       try {
         await provider.installHooks(mainWindow);
         provider.installStatusScripts();
