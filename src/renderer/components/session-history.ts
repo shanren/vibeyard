@@ -31,6 +31,8 @@ const DEFAULT_INSTANCE_KEY = 'sidebar';
 const transcriptsByProject = new Map<string, ProjectTranscript[]>();
 /** Monotonic load token per project so a newer refresh supersedes an in-flight fetch. */
 const loadTokens = new Map<string, number>();
+/** Projects with a fetch in flight, so re-renders don't stack requests. */
+const inFlight = new Set<string>();
 
 function getFilterState(projectId: string): ProjectFilterState {
   let state = filterStateByProject.get(projectId);
@@ -55,6 +57,7 @@ export function initSessionHistory(): void {
   appState.on('project-changed', rerenderAll);
   appState.on('session-added', rerenderAll);
   appState.on('session-removed', rerenderAll);
+  appState.on('session-changed', rerenderAll);
 }
 
 function rerenderAll(): void {
@@ -79,17 +82,38 @@ export function renderSessionHistory(
   }
   panels.set(instanceKey, container);
 
+  paintPanel(project, container, instanceKey);
+
+  // Fetch only when there is nothing cached and nothing already in flight.
+  // `paintPanel` must never trigger a fetch: doing that from the fetch callback
+  // recursed into an endless IPC + innerHTML loop that starved the whole renderer
+  // (no scrolling, no clicks, no typing anywhere).
+  if (!transcriptsByProject.has(project.id) && !inFlight.has(project.id)) {
+    void loadTranscripts(project, container, instanceKey);
+  }
+}
+
+/** Redraw from the cached list. Pure DOM: never starts a request. */
+function paintPanel(project: ProjectRecord, container: HTMLElement, instanceKey: string): void {
+  // Re-rendering replaces the search input, so carry the typed text and focus
+  // across a repaint — otherwise typing stops after the first refresh lands.
+  const previous = container.querySelector('.history-search') as HTMLInputElement | null;
+  const hadFocus = previous !== null && document.activeElement === previous;
+  const caret = previous?.selectionStart ?? null;
+
   const filter = getFilterState(project.id);
   container.innerHTML = '';
   container.classList.add('history-panel');
 
   const list = transcriptsByProject.get(project.id) ?? [];
-
-  // Which tools actually have history here — drives whether filters are worth it.
   const presentProviders = [...new Set(list.map((t) => t.providerId))].sort();
 
   if (presentProviders.length > 1) {
     container.appendChild(renderProviderFilters(project, container, instanceKey, presentProviders));
+  } else if (filter.provider !== 'all') {
+    // The last provider disappeared (or this project only has one); a stale
+    // filter would hide everything with no chip to clear it.
+    filter.provider = 'all';
   }
 
   const searchInput = document.createElement('input');
@@ -109,9 +133,10 @@ export function renderSessionHistory(
 
   renderList(project, container, instanceKey);
 
-  // Fetch (or reuse) the on-disk list, then re-render; the initial paint above
-  // keeps the panel responsive instead of showing an empty box while it loads.
-  void loadTranscripts(project, container, instanceKey);
+  if (hadFocus) {
+    searchInput.focus();
+    if (caret !== null) searchInput.setSelectionRange(caret, caret);
+  }
 }
 
 function renderProviderFilters(
@@ -218,12 +243,15 @@ async function loadTranscripts(
 ): Promise<void> {
   const token = (loadTokens.get(project.id) ?? 0) + 1;
   loadTokens.set(project.id, token);
+  inFlight.add(project.id);
 
   let list: ProjectTranscript[] = [];
   try {
     list = await window.rcode.session.projectTranscripts(project.path);
   } catch {
     list = [];
+  } finally {
+    inFlight.delete(project.id);
   }
 
   // A newer load for this project supersedes this one.
@@ -232,7 +260,7 @@ async function loadTranscripts(
 
   // The panel may have re-rendered (or been closed) while we awaited.
   if (activePanels.get(project.id)?.get(instanceKey) !== container) return;
-  renderSessionHistory(project, container, instanceKey);
+  paintPanel(project, container, instanceKey);
 }
 
 export function closeSessionHistory(projectId: string, instanceKey: string = DEFAULT_INSTANCE_KEY): void {
@@ -251,6 +279,7 @@ export function clearProjectState(projectId: string): void {
 function dropCache(projectId: string): void {
   transcriptsByProject.delete(projectId);
   loadTokens.delete(projectId);
+  inFlight.delete(projectId);
 }
 
 const PROVIDER_LABELS: Record<string, string> = {
