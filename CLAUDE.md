@@ -84,7 +84,7 @@ CLI-specific behavior is encapsulated behind a `CliProvider` interface (`src/mai
 
 ### Key Components
 
-- `terminal-pane.ts` — xterm.js wrapper per session, handles PTY data streaming and WebGL rendering with software fallback
+- `terminal-pane.ts` — xterm.js wrapper per session, handles PTY data streaming and WebGL rendering with software fallback. Wheel scrolling inside full-screen CLIs goes through `attachAlternateScroll` (`terminal-utils.ts`): on the alternate screen xterm keeps no scrollback, and xterm 6 dropped its `alternateScroll` option, so the wheel is translated into **PageUp/PageDown** (not arrow keys — those move the cursor/prompt in TUIs like pi, which reads as "cannot scroll"). Deltas accumulate first so a two-finger touchpad scroll (≈6px per event) advances at the same rate as a mouse notch, and the app's mouse-reporting mode wins over translation when it is enabled.
 - `state.ts` — Reactive AppState singleton; debounced persistence (300ms) to `~/.rcode/state.json`
 - `split-layout.ts` — Manages tab mode (single terminal) vs split mode (side-by-side panes); `appState.toggleSplit()` switches between them
 - `session-activity.ts` — Tracks working/waiting/idle status with debounced transitions
