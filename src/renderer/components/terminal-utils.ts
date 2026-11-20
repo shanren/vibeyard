@@ -95,27 +95,45 @@ export function loadWebglWithFallback(terminal: Terminal): void {
 /**
  * Wheel scrolling inside a full-screen CLI.
  *
- * Programs like pi, opencode or vim switch to the alternate screen, where the
- * terminal keeps no scrollback of its own: if the wheel event is not forwarded to
- * the app, it does nothing at all — which reads as "the output cannot scroll".
- * xterm no longer ships `alternateScroll`, so translate the wheel into cursor keys
- * (what VS Code's terminal does). When the app asked for mouse reporting, xterm
- * already forwards the wheel as a mouse event — leave that path alone.
+ * Programs like pi, opencode, vim or less switch to the alternate screen, where the
+ * terminal keeps no scrollback: a wheel event that is not forwarded to the app does
+ * nothing at all, which reads as "the output cannot scroll".
+ *
+ * The wheel is translated into **PageUp / PageDown** rather than arrow keys —
+ * arrows are cursor movement in these UIs (in pi they move the prompt, so the screen
+ * looks frozen), while PageUp/PageDown is what every full-screen pager binds to
+ * scrolling. Deltas accumulate first, so a slow two-finger touchpad scroll (a few
+ * pixels per event) advances pages at the same rate as a mouse notch.
  */
-export function attachAlternateScroll(terminal: Terminal, write: (data: string) => void): void {
-  // Rows per wheel notch. Most mice report ~100px per notch; clamp so a fast
-  // trackpad flick cannot flood the PTY with hundreds of key sequences.
-  const ROW_PX = 40;
-  const MAX_ROWS = 10;
+const ROW_PX = 40;
+/** Accumulated scroll (device px) that advances one page. */
+const PAGE_PX = ROW_PX * 3;
+const MAX_PAGES_PER_EVENT = 3;
+const PAGE_UP = '\x1b[5~';
+const PAGE_DOWN = '\x1b[6~';
 
+/** Per-terminal scroll accumulator (touchpads emit many tiny deltas). */
+const wheelAccumulator = new WeakMap<Terminal, number>();
+
+export function attachAlternateScroll(terminal: Terminal, write: (data: string) => void): void {
   terminal.attachCustomWheelEventHandler((event: WheelEvent) => {
     if (terminal.buffer.active.type !== 'alternate') return true;
+    // The app asked for mouse events, so xterm already forwards the wheel as one
+    // (button 64/65) and these TUIs scroll themselves — don't double-handle it.
     if (terminal.modes.mouseTrackingMode !== 'none') return true;
 
-    const notches = Math.round(Math.abs(event.deltaY) / ROW_PX) || 1;
-    const count = Math.min(notches, MAX_ROWS);
-    const sequence = event.deltaY < 0 ? '[A' : '[B';
-    write(sequence.repeat(count));
+    const total = (wheelAccumulator.get(terminal) ?? 0) + event.deltaY;
+    const pages = Math.min(Math.trunc(Math.abs(total) / PAGE_PX), MAX_PAGES_PER_EVENT);
+
+    if (pages === 0) {
+      wheelAccumulator.set(terminal, total);
+      event.preventDefault();
+      return false;
+    }
+
+    write((total < 0 ? PAGE_UP : PAGE_DOWN).repeat(pages));
+    // Keep the remainder so the next small delta continues from here.
+    wheelAccumulator.set(terminal, total - Math.sign(total) * pages * PAGE_PX);
     event.preventDefault();
     return false;
   });

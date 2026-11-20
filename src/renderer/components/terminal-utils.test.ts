@@ -430,7 +430,7 @@ describe('attachAlternateScroll', () => {
     expect(write).not.toHaveBeenCalled();
   });
 
-  it('translates the wheel into cursor keys on the alternate screen', () => {
+  it('translates the wheel into PageUp/PageDown, not arrow keys', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'none');
     const write = vi.fn();
     attachAlternateScroll(terminal, write);
@@ -438,19 +438,45 @@ describe('attachAlternateScroll', () => {
     const up = wheel(-120);
     expect(up.handled).toBe(false);
     expect(up.prevented).toBe(true);
-    expect(write).toHaveBeenLastCalledWith('\x1b[A'.repeat(3));
+    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
 
-    wheel(80);
-    expect(write).toHaveBeenLastCalledWith('\x1b[B'.repeat(2));
+    wheel(240);
+    expect(write).toHaveBeenLastCalledWith('\x1b[6~'.repeat(2));
   });
 
-  it('caps a fast trackpad flick so the PTY is not flooded', () => {
+  it('accumulates tiny touchpad deltas instead of dropping them', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    // Two-finger scroll: ~6px per event. Nothing happens until one page accrues.
+    for (let i = 0; i < 19; i++) wheel(-6);
+    expect(write).not.toHaveBeenCalled();
+
+    wheel(-6); // 120px total → one page
+    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
+  });
+
+  it('keeps the sub-page remainder after emitting a page', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write);
+
+    wheel(-130); // one page, 10px left over
+    write.mockClear();
+    for (let i = 0; i < 18; i++) wheel(-6); // 10 + 108 = 118 < 120
+    expect(write).not.toHaveBeenCalled();
+    wheel(-6); // 124 → one page
+    expect(write).toHaveBeenLastCalledWith('\x1b[5~');
+  });
+
+  it('caps a fast flick so the PTY is not flooded', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'none');
     const write = vi.fn();
     attachAlternateScroll(terminal, write);
 
     wheel(-4000);
-    expect(write).toHaveBeenLastCalledWith('\x1b[A'.repeat(10));
+    expect(write).toHaveBeenLastCalledWith('\x1b[5~'.repeat(3));
   });
 
   it('does nothing when the app asked for mouse reporting', () => {
