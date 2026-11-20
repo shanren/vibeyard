@@ -14,7 +14,6 @@
     "loading": "加载中…",
     "playSoundWhenSessionFinishes": "会话完成工作时播放声音",
     "desktopNotifications": "会话需要关注时显示桌面通知",
-    "recordSessionHistory": "会话关闭时记录会话历史",
     "showInsightAlerts": "显示洞察提醒",
     "autoNameSessions": "根据对话标题自动命名会话",
     "confirmClosingActiveSession": "关闭活动会话前进行确认",
@@ -28,14 +27,14 @@
     "sidebarViews": "侧边栏视图",
     "fileTree": "项目文件树",
     "gitPanel": "Git 面板",
-    "sessionHistory": "会话历史",
     "activeSessions": "活动会话",
     "activeSessionStatuses": "活动会话状态",
     "terminalFontSize": "终端字号",
     "terminalRenderer": "终端渲染器",
     "terminalRendererAuto": "自动",
     "terminalRendererGpu": "GPU 加速",
-    "terminalRendererCpu": "CPU 兼容"
+    "terminalRendererCpu": "CPU 兼容",
+    "sessions": "会话"
   },
   "sidebar": {
     "default": "默认",
@@ -62,13 +61,9 @@
       "defaultProfileLabel": "默认配置文件"
     },
     "removeConfirm": {
-      "withDataMessage": "确定移除项目「{name}」？这将从 RCode 中删除 {parts}。不会影响磁盘上的文件。",
       "emptyMessage": "确定移除项目「{name}」？不会影响磁盘上的文件。",
       "title": "移除项目",
-      "confirmLabel": "移除",
-      "sessionsHistory": "所有会话和历史记录（{count} {noun}）",
-      "sessionsHistoryNounSingular": "条",
-      "sessionsHistoryNounPlural": "条"
+      "confirmLabel": "移除"
     },
     "activeSessions": {
       "title": "活动会话"

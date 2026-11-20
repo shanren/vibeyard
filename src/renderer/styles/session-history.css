@@ -247,3 +247,83 @@
 .session-history-dialog .history-bookmark-btn {
   opacity: 1;
 }
+
+/* Provider filter chips — only rendered when a project has sessions from more
+   than one CLI, so single-tool projects keep the plain list. */
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px 6px;
+}
+
+.history-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--app-row-height);
+  padding: 0 8px;
+  font-family: var(--app-font-ui);
+  font-size: 11px;
+  color: var(--app-text-subtle);
+  background: var(--app-surface-raised);
+  border: 1px solid var(--app-line);
+  border-radius: var(--app-radius-2);
+  cursor: pointer;
+}
+
+.history-filter:hover {
+  color: var(--app-text);
+  border-color: var(--app-line-strong);
+}
+
+.history-filter.active {
+  color: var(--app-text);
+  background: var(--vscode-list-inactiveSelectionBackground);
+  border-color: var(--app-accent);
+}
+
+.history-filter-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--app-accent);
+}
+
+.history-filter-icon img,
+.history-filter-icon span {
+  width: 12px;
+  height: 12px;
+  font-size: 11px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tool glyph on each row, so a merged timeline stays attributable at a glance. */
+.history-provider-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  color: var(--app-text-subtle);
+  flex: 0 0 auto;
+}
+
+.history-provider-mark img,
+.history-provider-mark span {
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+}

@@ -1,96 +1,41 @@
-import { appState, ArchivedSession, ProjectRecord } from '../state.js';
-import { loadProviderAvailability } from '../provider-availability.js';
-import { buildResumeWithProviderItems } from './resume-with-provider-menu.js';
-import { showConfirmDialog } from './modal.js';
+import { appState, ProjectRecord } from '../state.js';
+import { providerMark } from '../icons.js';
 import type { ProjectTranscript, ProviderId } from '../../shared/types.js';
 
+/**
+ * Per-project Sessions panel.
+ *
+ * Every row here is a real session on disk, owned by the CLI tool itself — Claude
+ * Code's JSONL transcripts, Pi's session files, OpenCode's database rows, and so
+ * on. RCode keeps no copy of its own: the CLIs are the source of truth, so a
+ * session started in a plain terminal shows up here too.
+ *
+ * Because one project is usually worked on with more than one tool, all providers
+ * are merged into a single newest-first timeline with the tool's glyph on each row.
+ * Filters appear only when a project actually has sessions from several tools.
+ */
+
 const MAX_VISIBLE = 50;
-const PROVIDER_LABELS: Record<string, string> = {
-  claude: 'Claude Code',
-  codex: 'Codex CLI',
-  copilot: 'GitHub Copilot',
-  gemini: 'Gemini CLI',
-};
 
 interface ProjectFilterState {
   searchText: string;
-  bookmarkOnly: boolean;
+  /** Provider filter; 'all' shows the merged timeline. */
+  provider: 'all' | ProviderId;
 }
 
 const filterStateByProject = new Map<string, ProjectFilterState>();
 const activePanels = new Map<string, Map<string, HTMLElement>>();
 const DEFAULT_INSTANCE_KEY = 'sidebar';
 
-/** On-disk CLI transcripts per project (the provider's own session history), cached across re-renders. */
-const cliTranscriptsByProject = new Map<string, ProjectTranscript[]>();
+/** On-disk CLI transcripts per project, cached across re-renders. */
+const transcriptsByProject = new Map<string, ProjectTranscript[]>();
 /** Monotonic load token per project so a newer refresh supersedes an in-flight fetch. */
-const cliLoadTokens = new Map<string, number>();
-
-let historyContextMenu: HTMLElement | null = null;
-
-function hideHistoryContextMenu(): void {
-  if (historyContextMenu) {
-    historyContextMenu.remove();
-    historyContextMenu = null;
-  }
-}
-
-function showHistoryContextMenu(x: number, y: number, project: ProjectRecord, archived: ArchivedSession): void {
-  hideHistoryContextMenu();
-
-  const menu = document.createElement('div');
-  menu.className = 'tab-context-menu';
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
-
-  if (archived.cliSessionId) {
-    const resumeItem = document.createElement('div');
-    resumeItem.className = 'tab-context-menu-item';
-    resumeItem.textContent = 'Resume';
-    resumeItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hideHistoryContextMenu();
-      void appState.resumeFromHistorySafe(project.id, archived.id);
-    });
-    menu.appendChild(resumeItem);
-  }
-
-  const resumeWithItems = buildResumeWithProviderItems(
-    (archived.providerId || 'claude') as ProviderId,
-    (targetId) => {
-      hideHistoryContextMenu();
-      appState.resumeWithProvider(project.id, { archivedSessionId: archived.id }, targetId);
-    },
-  );
-  for (const el of resumeWithItems) menu.appendChild(el);
-
-  if (menu.firstChild) {
-    const separator = document.createElement('div');
-    separator.className = 'tab-context-menu-separator';
-    menu.appendChild(separator);
-  }
-
-  const removeItem = document.createElement('div');
-  removeItem.className = 'tab-context-menu-item danger';
-  removeItem.textContent = 'Remove from history';
-  removeItem.addEventListener('click', (e) => {
-    e.stopPropagation();
-    hideHistoryContextMenu();
-    appState.removeHistoryEntry(project.id, archived.id);
-  });
-  menu.appendChild(removeItem);
-
-  document.body.appendChild(menu);
-  historyContextMenu = menu;
-  const rect = menu.getBoundingClientRect();
-  if (rect.right > window.innerWidth) menu.style.left = `${window.innerWidth - rect.width - 4}px`;
-  if (rect.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - rect.height - 4}px`;
-}
+const loadTokens = new Map<string, number>();
 
 function getFilterState(projectId: string): ProjectFilterState {
   let state = filterStateByProject.get(projectId);
   if (!state) {
-    state = { searchText: '', bookmarkOnly: false };
+    state = { searchText: '', provider: 'all' };
     filterStateByProject.set(projectId, state);
   }
   return state;
@@ -102,16 +47,19 @@ export function initSessionHistory(): void {
   if (listenersAttached) return;
   listenersAttached = true;
 
-  appState.on('history-changed', rerenderAll);
-  if (typeof document.addEventListener === 'function') {
-    document.addEventListener('click', hideHistoryContextMenu);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideHistoryContextMenu(); });
-  }
+  appState.on('state-loaded', () => {
+    // Projects changed on disk; force a refetch on the next render.
+    transcriptsByProject.clear();
+    rerenderAll();
+  });
+  appState.on('project-changed', rerenderAll);
+  appState.on('session-added', rerenderAll);
+  appState.on('session-removed', rerenderAll);
 }
 
 function rerenderAll(): void {
   for (const [projectId, panels] of activePanels) {
-    const project = appState.projects.find(p => p.id === projectId);
+    const project = appState.projects.find((p) => p.id === projectId);
     if (!project) continue;
     for (const [instanceKey, container] of panels) {
       renderSessionHistory(project, container, instanceKey);
@@ -131,318 +79,202 @@ export function renderSessionHistory(
   }
   panels.set(instanceKey, container);
 
-  const history = appState.getSessionHistory(project.id);
   const filter = getFilterState(project.id);
-
   container.innerHTML = '';
+  container.classList.add('history-panel');
 
-  if (history.length > 0) {
-    const searchInput = document.createElement('input');
-    searchInput.className = 'history-search';
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Filter history...';
-    searchInput.value = filter.searchText;
-    searchInput.addEventListener('input', () => {
-      filter.searchText = searchInput.value;
-      renderList(project, container, history, filter);
-    });
-    container.appendChild(searchInput);
+  const list = transcriptsByProject.get(project.id) ?? [];
 
-    const bookmarkFilter = document.createElement('button');
-    const applyFilterState = () => {
-      bookmarkFilter.className = `history-bookmark-filter${filter.bookmarkOnly ? ' active' : ''}`;
-      bookmarkFilter.textContent = filter.bookmarkOnly ? '★ Bookmarked' : '☆ Bookmarked';
-    };
-    applyFilterState();
-    bookmarkFilter.addEventListener('click', () => {
-      filter.bookmarkOnly = !filter.bookmarkOnly;
-      applyFilterState();
-      renderList(project, container, history, filter);
-    });
+  // Which tools actually have history here — drives whether filters are worth it.
+  const presentProviders = [...new Set(list.map((t) => t.providerId))].sort();
 
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'history-clear-btn';
-    clearBtn.textContent = 'Clear History';
-    clearBtn.addEventListener('click', () => {
-      showConfirmDialog(
-        'Clear session history',
-        `Clear all non-bookmarked sessions for "${project.name}"? Bookmarked sessions will be kept. This cannot be undone.`,
-        {
-          confirmLabel: 'Clear',
-          onConfirm: () => appState.clearSessionHistory(project.id),
-        },
-      );
-    });
-
-    const actions = document.createElement('div');
-    actions.className = 'history-actions';
-    actions.appendChild(bookmarkFilter);
-    actions.appendChild(clearBtn);
-    container.appendChild(actions);
-
-    const listEl = document.createElement('div');
-    listEl.className = 'history-list';
-    container.appendChild(listEl);
-
-    renderList(project, container, history, filter);
-  } else {
-    const empty = document.createElement('div');
-    empty.className = 'history-empty';
-    empty.textContent = 'No session history yet';
-    container.appendChild(empty);
+  if (presentProviders.length > 1) {
+    container.appendChild(renderProviderFilters(project, container, instanceKey, presentProviders));
   }
 
-  // The provider's own on-disk session history (e.g. Claude Code transcripts) for
-  // this project — shown in its own section below the RCode archive. Loaded once
-  // per panel open, then cached so re-renders (history-changed, search) don't refetch.
-  const cached = cliTranscriptsByProject.get(project.id);
-  if (cached) {
-    renderCliSection(project, container, instanceKey, cached, history);
-  } else {
-    void loadCliTranscripts(project, container, instanceKey);
-  }
+  const searchInput = document.createElement('input');
+  searchInput.className = 'history-search';
+  searchInput.type = 'text';
+  searchInput.placeholder = 'Filter sessions...';
+  searchInput.value = filter.searchText;
+  searchInput.addEventListener('input', () => {
+    filter.searchText = searchInput.value;
+    renderList(project, container, instanceKey);
+  });
+  container.appendChild(searchInput);
+
+  const listEl = document.createElement('div');
+  listEl.className = 'history-list';
+  container.appendChild(listEl);
+
+  renderList(project, container, instanceKey);
+
+  // Fetch (or reuse) the on-disk list, then re-render; the initial paint above
+  // keeps the panel responsive instead of showing an empty box while it loads.
+  void loadTranscripts(project, container, instanceKey);
 }
 
-function updateEmptyState(container: HTMLElement, history: ArchivedSession[], cliList: ProjectTranscript[]): void {
-  container.querySelector('.history-empty')?.remove();
-  if (history.length === 0 && cliList.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'history-empty';
-    empty.textContent = 'No session history yet';
-    container.appendChild(empty);
-  }
-}
-
-async function loadCliTranscripts(project: ProjectRecord, container: HTMLElement, instanceKey: string): Promise<void> {
-  const token = (cliLoadTokens.get(project.id) ?? 0) + 1;
-  cliLoadTokens.set(project.id, token);
-  let list: ProjectTranscript[] = [];
-  try {
-    list = await window.rcode.session.projectTranscripts(project.path);
-  } catch {
-    list = [];
-  }
-  // A newer load for this project supersedes this one.
-  if (cliLoadTokens.get(project.id) !== token) return;
-  cliTranscriptsByProject.set(project.id, list);
-  // The panel may have re-rendered (or closed) while we awaited.
-  if (activePanels.get(project.id)?.get(instanceKey) !== container) return;
-  renderCliSection(project, container, instanceKey, list, appState.getSessionHistory(project.id));
-}
-
-function renderCliSection(
+function renderProviderFilters(
   project: ProjectRecord,
   container: HTMLElement,
   instanceKey: string,
-  list: ProjectTranscript[],
-  history: ArchivedSession[],
-): void {
-  container.querySelector('.history-cli')?.remove();
+  providers: ProviderId[],
+): HTMLElement {
+  const filter = getFilterState(project.id);
+  const row = document.createElement('div');
+  row.className = 'history-filters';
 
-  // Skip sessions already archived in RCode so the same session isn't listed twice.
-  const archivedKeys = new Set<string>();
-  for (const a of history) {
-    if (!a.cliSessionId) continue;
-    archivedKeys.add(`${a.providerId || 'claude'}:${a.cliSessionId}`);
-  }
-  const items = list.filter((t) => !archivedKeys.has(`${t.providerId}:${t.cliSessionId}`));
-
-  if (items.length > 0) {
-    const cli = document.createElement('div');
-    cli.className = 'history-cli';
-
-    const header = document.createElement('div');
-    header.className = 'history-cli-header';
-    const title = document.createElement('span');
-    title.className = 'history-cli-title';
-    title.textContent = 'Session history from CLI';
-    const refresh = document.createElement('button');
-    refresh.className = 'history-cli-refresh';
-    refresh.title = 'Refresh';
-    refresh.textContent = '↻';
-    refresh.addEventListener('click', (e) => {
-      e.stopPropagation();
-      void loadCliTranscripts(project, container, instanceKey);
+  const makeChip = (value: 'all' | ProviderId, label: string, glyph?: string): HTMLElement => {
+    const chip = document.createElement('button');
+    chip.className = 'history-filter' + (filter.provider === value ? ' active' : '');
+    if (glyph) {
+      const icon = document.createElement('span');
+      icon.className = 'history-filter-icon';
+      icon.innerHTML = glyph;
+      chip.appendChild(icon);
+    }
+    const text = document.createElement('span');
+    text.textContent = label;
+    chip.appendChild(text);
+    chip.addEventListener('click', () => {
+      filter.provider = value;
+      renderSessionHistory(project, container, instanceKey);
     });
-    header.appendChild(title);
-    header.appendChild(refresh);
+    return chip;
+  };
 
-    const listEl = document.createElement('div');
-    listEl.className = 'history-cli-list';
-    for (const t of items.slice(0, MAX_VISIBLE)) {
-      const item = document.createElement('div');
-      item.className = 'history-item';
-      item.style.cursor = 'pointer';
-      item.addEventListener('click', () => {
-        appState.setActiveProject(project.id);
-        appState.openCliSession(project.id, t.cliSessionId, t.name, t.providerId, t.profileId);
-      });
-
-      const info = document.createElement('div');
-      info.className = 'history-item-info';
-
-      const name = document.createElement('div');
-      name.className = 'history-item-name';
-      name.textContent = t.name;
-      name.title = `${t.name}\nSession ID: ${t.cliSessionId}`;
-      info.appendChild(name);
-
-      const details = document.createElement('div');
-      details.className = 'history-item-details';
-      const mtimeMs = Number.isFinite(t.mtimeMs) ? t.mtimeMs : Date.now();
-      details.textContent = `${formatDate(new Date(mtimeMs).toISOString())} · ${getProviderLabel(t.providerId)}`;
-      info.appendChild(details);
-
-      item.appendChild(info);
-      listEl.appendChild(item);
-    }
-
-    if (items.length > MAX_VISIBLE) {
-      const more = document.createElement('div');
-      more.className = 'history-item-details';
-      more.style.padding = '4px 12px';
-      more.textContent = `${items.length - MAX_VISIBLE} more items...`;
-      listEl.appendChild(more);
-    }
-
-    cli.appendChild(header);
-    cli.appendChild(listEl);
-
-    container.appendChild(cli);
+  row.appendChild(makeChip('all', 'All'));
+  for (const providerId of providers) {
+    row.appendChild(makeChip(providerId, providerLabel(providerId), providerMark(providerId, 'tab')));
   }
-
-  updateEmptyState(container, history, list);
+  return row;
 }
 
-function dropCliCache(projectId: string): void {
-  cliTranscriptsByProject.delete(projectId);
-  cliLoadTokens.delete(projectId);
-}
-
-export function closeSessionHistory(projectId: string, instanceKey?: string): void {
-  const panels = activePanels.get(projectId);
-  if (!panels) return;
-  if (instanceKey === undefined) {
-    for (const container of panels.values()) container.innerHTML = '';
-    activePanels.delete(projectId);
-    dropCliCache(projectId);
-    return;
-  }
-  const container = panels.get(instanceKey);
-  if (container) container.innerHTML = '';
-  panels.delete(instanceKey);
-  if (panels.size === 0) {
-    activePanels.delete(projectId);
-    dropCliCache(projectId);
-  }
-}
-
-export function clearProjectState(projectId: string): void {
-  filterStateByProject.delete(projectId);
-  activePanels.delete(projectId);
-  dropCliCache(projectId);
-}
-
-function renderList(
-  project: ProjectRecord,
-  container: HTMLElement,
-  history: ArchivedSession[],
-  filter: ProjectFilterState,
-): void {
+function renderList(project: ProjectRecord, container: HTMLElement, instanceKey: string): void {
   const listEl = container.querySelector('.history-list') as HTMLElement | null;
   if (!listEl) return;
 
-  const needle = filter.searchText.toLowerCase();
-  const filtered = history
-    .filter((a) => a.name.toLowerCase().includes(needle))
-    .filter((a) => !filter.bookmarkOnly || a.bookmarked)
-    .slice()
-    .reverse();
+  const filter = getFilterState(project.id);
+  const list = transcriptsByProject.get(project.id) ?? [];
+  const needle = filter.searchText.trim().toLowerCase();
+
+  const items = list
+    .filter((t) => filter.provider === 'all' || t.providerId === filter.provider)
+    .filter((t) => !needle || t.name.toLowerCase().includes(needle))
+    .slice(0, MAX_VISIBLE);
 
   listEl.innerHTML = '';
 
-  const visible = filtered.slice(0, MAX_VISIBLE);
-  for (const archived of visible) {
-    const item = document.createElement('div');
-    item.className = 'history-item';
+  if (items.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'history-empty';
+    empty.textContent = needle
+      ? 'No session matches that filter.'
+      : 'No sessions from your CLI tools in this project yet.';
+    listEl.appendChild(empty);
+    // A stale panel (project switched while loading) must not resurrect a list.
+    if (activePanels.get(project.id)?.get(instanceKey) !== container) return;
+    return;
+  }
 
-    if (archived.cliSessionId) {
-      item.style.cursor = 'pointer';
-      item.addEventListener('click', () => {
-        void appState.resumeFromHistorySafe(project.id, archived.id);
-      });
-    }
-    item.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      loadProviderAvailability().catch(() => {});
-      showHistoryContextMenu(e.clientX, e.clientY, project, archived);
+  for (const item of items) {
+    const row = document.createElement('div');
+    row.className = 'history-item';
+    row.style.cursor = 'pointer';
+    row.title = `${item.name}\n${providerLabel(item.providerId)} · ${item.cliSessionId}`;
+    row.addEventListener('click', () => {
+      appState.setActiveProject(project.id);
+      appState.openCliSession(project.id, item.cliSessionId, item.name, item.providerId, item.profileId);
     });
+
+    const icon = document.createElement('span');
+    icon.className = 'history-provider-mark';
+    icon.innerHTML = providerMark(item.providerId, 'tab');
+    row.appendChild(icon);
 
     const info = document.createElement('div');
     info.className = 'history-item-info';
 
     const name = document.createElement('div');
     name.className = 'history-item-name';
-    name.textContent = archived.name;
-    name.title = archived.cliSessionId
-      ? `${archived.name}\nSession ID: ${archived.cliSessionId}`
-      : archived.name;
+    name.textContent = item.name;
     info.appendChild(name);
 
     const details = document.createElement('div');
     details.className = 'history-item-details';
-    const parts: string[] = [];
-    parts.push(formatDate(archived.closedAt));
-    parts.push(getProviderLabel(archived.providerId));
-    details.textContent = parts.join(' · ');
+    const when = Number.isFinite(item.mtimeMs) && item.mtimeMs > 0 ? relativeTime(item.mtimeMs) : '';
+    details.textContent = when ? `${providerLabel(item.providerId)} · ${when}` : providerLabel(item.providerId);
     info.appendChild(details);
 
-    item.appendChild(info);
-
-    const actions = document.createElement('div');
-    actions.className = 'history-item-actions';
-
-    const bookmarkBtn = document.createElement('button');
-    bookmarkBtn.className = `history-bookmark-btn${archived.bookmarked ? ' bookmarked' : ''}`;
-    bookmarkBtn.innerHTML = archived.bookmarked ? '&#9733;' : '&#9734;';
-    bookmarkBtn.title = archived.bookmarked ? 'Remove bookmark' : 'Bookmark session';
-    bookmarkBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      appState.toggleBookmark(project.id, archived.id);
-    });
-    actions.appendChild(bookmarkBtn);
-
-    item.appendChild(actions);
-
-    listEl.appendChild(item);
-  }
-
-  if (filtered.length > MAX_VISIBLE) {
-    const more = document.createElement('div');
-    more.className = 'history-item-details';
-    more.style.padding = '4px 12px';
-    more.textContent = `${filtered.length - MAX_VISIBLE} more items...`;
-    listEl.appendChild(more);
+    row.appendChild(info);
+    listEl.appendChild(row);
   }
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
+async function loadTranscripts(
+  project: ProjectRecord,
+  container: HTMLElement,
+  instanceKey: string,
+): Promise<void> {
+  const token = (loadTokens.get(project.id) ?? 0) + 1;
+  loadTokens.set(project.id, token);
 
-  if (diffDays === 0) {
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return `${diffDays}d ago`;
+  let list: ProjectTranscript[] = [];
+  try {
+    list = await window.rcode.session.projectTranscripts(project.path);
+  } catch {
+    list = [];
   }
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+  // A newer load for this project supersedes this one.
+  if (loadTokens.get(project.id) !== token) return;
+  transcriptsByProject.set(project.id, list);
+
+  // The panel may have re-rendered (or been closed) while we awaited.
+  if (activePanels.get(project.id)?.get(instanceKey) !== container) return;
+  renderSessionHistory(project, container, instanceKey);
 }
 
-function getProviderLabel(providerId: string): string {
+export function closeSessionHistory(projectId: string, instanceKey: string = DEFAULT_INSTANCE_KEY): void {
+  const panels = activePanels.get(projectId);
+  panels?.delete(instanceKey);
+  if (panels && panels.size === 0) activePanels.delete(projectId);
+  dropCache(projectId);
+}
+
+export function clearProjectState(projectId: string): void {
+  filterStateByProject.delete(projectId);
+  activePanels.delete(projectId);
+  dropCache(projectId);
+}
+
+function dropCache(projectId: string): void {
+  transcriptsByProject.delete(projectId);
+  loadTokens.delete(projectId);
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+  claude: 'Claude Code',
+  codex: 'Codex CLI',
+  copilot: 'GitHub Copilot',
+  gemini: 'Gemini CLI',
+  pi: 'Pi',
+  opencode: 'OpenCode',
+  custom: 'Custom CLI',
+};
+
+function providerLabel(providerId: string): string {
   return PROVIDER_LABELS[providerId] ?? providerId;
+}
+
+/** Compact relative timestamp: "just now", "3h ago", "2d ago", then a date. */
+function relativeTime(mtimeMs: number): string {
+  const diff = Date.now() - mtimeMs;
+  if (!Number.isFinite(diff) || diff < 0) return '';
+  const minute = 60_000;
+  if (diff < minute) return 'just now';
+  if (diff < 60 * minute) return `${Math.floor(diff / minute)}m ago`;
+  if (diff < 24 * 60 * minute) return `${Math.floor(diff / (60 * minute))}h ago`;
+  if (diff < 7 * 24 * 60 * minute) return `${Math.floor(diff / (24 * 60 * minute))}d ago`;
+  return new Date(mtimeMs).toLocaleDateString();
 }

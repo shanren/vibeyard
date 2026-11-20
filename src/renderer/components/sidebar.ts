@@ -103,9 +103,7 @@ function render(): void {
   projectListEl.innerHTML = '';
 
   const opts: RenderOpts = {
-    historyEnabled:
-      (appState.preferences.sidebarViews?.sessionHistory ?? true) &&
-      appState.preferences.sessionHistoryEnabled,
+    historyEnabled: appState.preferences.sidebarViews?.sessions ?? true,
     gitEnabled: appState.preferences.sidebarViews?.gitPanel ?? true,
   };
 
@@ -539,19 +537,9 @@ function initResizeHandle(): void {
 }
 
 function confirmRemoveProject(project: ProjectRecord): void {
-  const historyCount = project.sessionHistory?.length ?? 0;
-
-  const parts: string[] = [];
-  if (historyCount > 0) {
-    const noun = historyCount === 1
-      ? t('sidebar.removeConfirm.sessionsHistoryNounSingular')
-      : t('sidebar.removeConfirm.sessionsHistoryNounPlural');
-    parts.push(t('sidebar.removeConfirm.sessionsHistory', { count: historyCount, noun }));
-  }
-
-  const message = parts.length > 0
-    ? t('sidebar.removeConfirm.withDataMessage', { name: project.name, parts: parts.join(' and ') })
-    : t('sidebar.removeConfirm.emptyMessage', { name: project.name });
+  // RCode no longer keeps session data of its own, so removing a project only
+  // detaches it — the CLI tools' own histories are untouched.
+  const message = t('sidebar.removeConfirm.emptyMessage', { name: project.name });
   showConfirmDialog(t('sidebar.removeConfirm.title'), message, {
     confirmLabel: t('sidebar.removeConfirm.confirmLabel'),
     onConfirm: () => appState.removeProject(project.id),

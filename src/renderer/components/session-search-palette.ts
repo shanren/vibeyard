@@ -7,14 +7,13 @@ import type { DeepSearchResult } from '../../shared/types.js';
 interface ResolvedResult extends DeepSearchResult {
   sessionName: string | null;
   projectId: string | null;
-  archivedId: string | null;
+  /** Open tab for this session, if it is already one. */
   activeSessionId: string | null;
 }
 
 interface SessionMapEntry {
   projectId: string;
   name: string;
-  archivedId: string | null;
   activeSessionId: string | null;
 }
 
@@ -54,19 +53,7 @@ function buildSessionMap(): Map<string, SessionMapEntry> {
       map.set(session.cliSessionId, {
         projectId: project.id,
         name: session.name,
-        archivedId: null,
         activeSessionId: session.id,
-      });
-    }
-  }
-  for (const project of appState.projects) {
-    for (const archived of appState.getSessionHistory(project.id)) {
-      if (!archived.cliSessionId || map.has(archived.cliSessionId)) continue;
-      map.set(archived.cliSessionId, {
-        projectId: project.id,
-        name: archived.name,
-        archivedId: archived.id,
-        activeSessionId: null,
       });
     }
   }
@@ -160,7 +147,6 @@ async function searchSessions(): Promise<void> {
       ...r,
       sessionName: match?.name ?? null,
       projectId: match?.projectId ?? null,
-      archivedId: match?.archivedId ?? null,
       activeSessionId: match?.activeSessionId ?? null,
     };
   });
@@ -242,9 +228,6 @@ function openResult(r: ResolvedResult): void {
   if (r.projectId && r.activeSessionId) {
     appState.setActiveProject(r.projectId);
     appState.setActiveSession(r.projectId, r.activeSessionId);
-  } else if (r.projectId && r.archivedId) {
-    appState.setActiveProject(r.projectId);
-    void appState.resumeFromHistorySafe(r.projectId, r.archivedId);
   } else {
     // Not in RCode — find or create project by cwd, then open session directly
     let project = appState.projects.find(p => p.path === r.projectCwd);

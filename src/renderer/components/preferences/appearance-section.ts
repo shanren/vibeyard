@@ -8,7 +8,7 @@ import { toggleRow } from './shared.js';
 import type { Preferences } from '../../../shared/types.js';
 import { DEFAULT_ACTIVE_SESSION_STATUSES } from '../active-sessions-panel.js';
 
-type SidebarViews = { gitPanel: boolean; sessionHistory: boolean; fileTree: boolean; activeSessions: boolean };
+type SidebarViews = { gitPanel: boolean; sessions: boolean; fileTree: boolean; activeSessions: boolean };
 type ActiveStatuses = NonNullable<Preferences['activeSessionStatuses']>;
 
 export function createAppearanceSection(ctx: PreferencesContext): SectionController {
@@ -106,11 +106,11 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       sidebarHeading.textContent = t('appearance.sidebarViews');
       container.appendChild(sidebarHeading);
 
-      const views = appState.preferences.sidebarViews ?? { gitPanel: true, sessionHistory: true, fileTree: true, activeSessions: true };
+      const views = appState.preferences.sidebarViews ?? { gitPanel: true, sessions: true, fileTree: true, activeSessions: true };
       const toggles: { key: keyof SidebarViews; label: string }[] = [
         { key: 'fileTree', label: t('appearance.fileTree') },
         { key: 'gitPanel', label: t('appearance.gitPanel') },
-        { key: 'sessionHistory', label: t('appearance.sessionHistory') },
+        { key: 'sessions', label: t('appearance.sessions') },
         { key: 'activeSessions', label: t('appearance.activeSessions') },
       ];
 
@@ -149,7 +149,7 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       if (sidebarCheckboxes) {
         appState.setPreference('sidebarViews', {
           gitPanel: sidebarCheckboxes.gitPanel.checked,
-          sessionHistory: sidebarCheckboxes.sessionHistory.checked,
+          sessions: sidebarCheckboxes.sessions.checked,
           fileTree: sidebarCheckboxes.fileTree.checked,
           activeSessions: sidebarCheckboxes.activeSessions.checked,
         });

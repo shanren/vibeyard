@@ -54,13 +54,9 @@ export function hydrateLoadedState(state: PersistedState, defaultPreferences: Pr
     for (const session of project.sessions) {
       if (session.contextWindow) restoreContext(session.id, session.contextWindow);
     }
-    if (project.sessionHistory) {
-      const seenIds = new Set<string>();
-      for (const entry of project.sessionHistory) {
-        if (seenIds.has(entry.id)) entry.id = crypto.randomUUID();
-        seenIds.add(entry.id);
-      }
-    }
+    // RCode used to keep its own session history; the CLIs are the source of truth
+    // now, so any leftover archive is dropped rather than migrated.
+    if ('sessionHistory' in project) delete (project as { sessionHistory?: unknown }).sessionHistory;
   }
 }
 

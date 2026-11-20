@@ -1,18 +1,12 @@
 import type { RCodeApi } from './types.js';
-import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession, ProviderId, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
+import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ProviderId, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
 import { basename, isAbsolutePath } from '../shared/platform.js';
 import { isCliSession } from './session-utils.js';
-import { archiveSession as archiveSessionPure } from './state/session-archive.js';
 import {
-  buildResumedSession,
   buildResumedSessionFromCliId,
-  clearSessionHistory as clearSessionHistoryPure,
   findCliSessionTab,
-  getSessionHistory as getSessionHistoryPure,
-  removeHistoryEntry as removeHistoryEntryPure,
   resolveResumeSource,
-  toggleBookmark as toggleBookmarkPure,
 } from './state/session-history.js';
 import {
   attachSessionToProject,
@@ -45,7 +39,7 @@ import {
   toggleSplitMode,
 } from './state/layout-state.js';
 
-export type { SessionRecord, ProjectRecord, Preferences, PersistedState, ArchivedSession } from '../shared/types.js';
+export type { SessionRecord, ProjectRecord, Preferences, PersistedState } from '../shared/types.js';
 
 export const MAX_SESSION_NAME_LENGTH = 60;
 export const MAX_PROJECT_NAME_LENGTH = 80;
@@ -80,13 +74,12 @@ const defaultPreferences: Preferences = {
   soundOnSessionWaiting: true,
   notificationsDesktop: true,
   debugMode: false,
-  sessionHistoryEnabled: true,
   insightsEnabled: true,
   autoTitleEnabled: true,
   confirmCloseWorkingSession: true,
   copyOnSelect: false,
   zoomFactor: 1.0,
-  sidebarViews: { gitPanel: true, sessionHistory: true, fileTree: true, activeSessions: true },
+  sidebarViews: { gitPanel: true, sessions: true, fileTree: true, activeSessions: true },
   locale: 'en',
 };
 
@@ -440,9 +433,6 @@ class AppState {
       for (const session of project.sessions) {
         if (session.profileId === id) session.profileId = undefined;
       }
-      for (const archived of project.sessionHistory ?? []) {
-        if (archived.profileId === id) archived.profileId = undefined;
-      }
     }
     if (this.state.preferences.defaultProfileId === id) {
       this.state.preferences.defaultProfileId = undefined;
@@ -493,14 +483,6 @@ class AppState {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return;
 
-    // Archive CLI sessions before removing (cost data must be captured before session-removed triggers destroyTerminal)
-    const session = project.sessions.find((s) => s.id === sessionId);
-    if (session && isCliSession(session) && this.state.preferences.sessionHistoryEnabled) {
-      if (this.isArchivable(session, project)) {
-        this.archiveSession(project, session);
-      }
-    }
-
     const closingIndex = project.sessions.findIndex((s) => s.id === sessionId);
     project.sessions = project.sessions.filter((s) => s.id !== sessionId);
     this.pruneNav(sessionId);
@@ -522,98 +504,6 @@ class AppState {
     return this.profiles.find((p) => p.id === profileId && p.providerId === providerId)?.configDir;
   }
 
-  /**
-   * Whether a CLI session is worth keeping in history: only if its conversation
-   * transcript actually exists on disk. A cliSessionId alone is NOT enough — it is
-   * assigned at PTY spawn (SessionStart hook) before any user interaction, so a session
-   * that was never prompted has an id but no transcript and would fail to resume.
-   */
-  private isArchivable(session: SessionRecord, project: ProjectRecord): boolean {
-    if (!session.cliSessionId) return false;
-    const providerId = session.providerId ?? 'claude';
-    return window.rcode.session.transcriptExistsSync(
-      providerId,
-      session.cliSessionId,
-      project.path,
-      this.profileConfigDir(providerId, session.profileId),
-    );
-  }
-
-  private archiveSession(project: ProjectRecord, session: SessionRecord): void {
-    archiveSessionPure(project, session);
-    this.emit('history-changed', project.id);
-  }
-
-  getSessionHistory(projectId: string): ArchivedSession[] {
-    return getSessionHistoryPure(this.state.projects.find((p) => p.id === projectId));
-  }
-
-  removeHistoryEntry(projectId: string, archivedSessionId: string): void {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    if (!removeHistoryEntryPure(project, archivedSessionId)) return;
-    this.persist();
-    this.emit('history-changed', projectId);
-  }
-
-  toggleBookmark(projectId: string, archivedSessionId: string): void {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    if (!toggleBookmarkPure(project, archivedSessionId)) return;
-    this.persist();
-    this.emit('history-changed', projectId);
-  }
-
-  clearSessionHistory(projectId: string): void {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return;
-    clearSessionHistoryPure(project);
-    this.persist();
-    this.emit('history-changed', projectId);
-  }
-
-  resumeFromHistory(projectId: string, archivedSessionId: string): SessionRecord | undefined {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    const archived = project.sessionHistory?.find((a) => a.id === archivedSessionId);
-    if (!archived || !archived.cliSessionId) return undefined;
-
-    const existing = findCliSessionTab(project, archived.cliSessionId);
-    if (existing) return this.activateExistingSession(project, existing);
-
-    const session = buildResumedSession(archived);
-    attachSessionToProject(project, session);
-    this.commitNewSession(projectId, session);
-    return session;
-  }
-
-  /**
-   * Resume from history, but first verify the transcript still exists on disk.
-   * If it's gone (a stale entry, or the user deleted the transcript), silently
-   * drop the history entry instead of spawning a session that would immediately
-   * exit and auto-close. Preferred entry point for all UI resume actions.
-   */
-  async resumeFromHistorySafe(projectId: string, archivedSessionId: string): Promise<SessionRecord | undefined> {
-    const project = this.state.projects.find((p) => p.id === projectId);
-    if (!project) return undefined;
-
-    const archived = project.sessionHistory?.find((a) => a.id === archivedSessionId);
-    if (!archived || !archived.cliSessionId) return undefined;
-
-    const exists = await window.rcode.session.transcriptExists(
-      archived.providerId,
-      archived.cliSessionId,
-      project.path,
-      this.profileConfigDir(archived.providerId, archived.profileId),
-    );
-    if (!exists) {
-      this.removeHistoryEntry(projectId, archivedSessionId);
-      return undefined;
-    }
-
-    return this.resumeFromHistory(projectId, archivedSessionId);
-  }
 
   /** Open a CLI session by cliSessionId, bypassing RCode history. Used for cross-project deep search results. */
   openCliSession(projectId: string, cliSessionId: string, name: string, providerId: ProviderId = 'claude', profileId?: string): SessionRecord | undefined {
@@ -697,14 +587,11 @@ class AppState {
     const session = project.sessions.find((s) => s.id === sessionId);
     if (!session) return;
 
-    // If session already had a different cliSessionId (e.g., /clear was used),
-    // archive the previous session (only if its transcript exists) and reset the tab name.
-    // isArchivable is checked while session.cliSessionId still holds the OLD id.
+    // A new cliSessionId means the CLI cleared its context (/clear). The previous
+    // conversation stays in the CLI's own history — RCode keeps no copy — so the
+    // tab just goes back to a default name.
     if (session.cliSessionId && session.cliSessionId !== cliSessionId) {
-      if (this.isArchivable(session, project)) {
-        this.archiveSession(project, session);
-      }
-      session.name = `Session ${project.sessions.length + (project.sessionHistory?.length || 0)}`;
+      session.name = `Session ${project.sessions.length}`;
       session.userRenamed = false;
       this.emit('cli-session-cleared', { sessionId });
     }
@@ -741,14 +628,6 @@ class AppState {
     if (!session) return;
     session.name = name.slice(0, MAX_SESSION_NAME_LENGTH);
     if (userRenamed) session.userRenamed = true;
-    // Keep history entry in sync if this session was resumed from history
-    if (session.cliSessionId && project.sessionHistory) {
-      const historyEntry = project.sessionHistory.find((a) => a.cliSessionId === session.cliSessionId);
-      if (historyEntry) {
-        historyEntry.name = session.name;
-        this.emit('history-changed', project.id);
-      }
-    }
     this.persist();
     this.emit('session-changed');
   }

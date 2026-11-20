@@ -123,7 +123,7 @@ describe('load()', () => {
     expect(mockRestoreContext).toHaveBeenCalledWith('s1', contextData);
   });
 
-  it('deduplicates history entry IDs on load', async () => {
+  it('drops the retired session history archive on load', async () => {
     const persisted = {
       version: 1,
       projects: [{
@@ -133,26 +133,14 @@ describe('load()', () => {
         sessions: [],
         activeSessionId: null,
         layout: { mode: 'tabs' as const, splitPanes: [], splitDirection: 'horizontal' as const },
-        sessionHistory: [
-          { id: 'dup-id', name: 'Entry1', providerId: 'claude', cliSessionId: 'cli-a', createdAt: '2026-01-01', closedAt: '2026-01-01', cost: null },
-          { id: 'dup-id', name: 'Entry2', providerId: 'claude', cliSessionId: 'cli-b', createdAt: '2026-01-02', closedAt: '2026-01-02', cost: null },
-          { id: 'unique-id', name: 'Entry3', providerId: 'claude', cliSessionId: 'cli-c', createdAt: '2026-01-03', closedAt: '2026-01-03', cost: null },
-        ],
+        sessionHistory: [{ id: 'old', name: 'Entry', providerId: 'claude', cliSessionId: 'cli-a' }],
       }],
       activeProjectId: 'p1',
       preferences: { soundOnSessionWaiting: false, debugMode: false },
     };
-    mockLoad.mockResolvedValue(persisted);
+    mockLoad.mockResolvedValue(persisted as never);
     await appState.load();
-    const history = appState.getSessionHistory('p1');
-    expect(history).toHaveLength(3);
-    // First entry keeps its ID, second gets a new one
-    expect(history[0].id).toBe('dup-id');
-    expect(history[1].id).not.toBe('dup-id');
-    expect(history[2].id).toBe('unique-id');
-    // All IDs are now unique
-    const ids = new Set(history.map(h => h.id));
-    expect(ids.size).toBe(3);
+    expect('sessionHistory' in (appState.projects[0] as object)).toBe(false);
   });
 
 

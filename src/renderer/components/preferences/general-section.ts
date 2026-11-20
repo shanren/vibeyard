@@ -11,7 +11,6 @@ export function createGeneralSection(ctx: PreferencesContext): SectionController
   let languageSelect: CustomSelectInstance | null = null;
   let soundCheckbox: HTMLInputElement | null = null;
   let notificationsCheckbox: HTMLInputElement | null = null;
-  let historyCheckbox: HTMLInputElement | null = null;
   let insightsCheckbox: HTMLInputElement | null = null;
   let autoTitleCheckbox: HTMLInputElement | null = null;
   let confirmCloseCheckbox: HTMLInputElement | null = null;
@@ -89,10 +88,6 @@ export function createGeneralSection(ctx: PreferencesContext): SectionController
       notificationsCheckbox = notif.checkbox;
       container.appendChild(notif.row);
 
-      const history = toggleRow('pref-session-history', t('general.recordSessionHistory'), appState.preferences.sessionHistoryEnabled);
-      historyCheckbox = history.checkbox;
-      container.appendChild(history.row);
-
       const insights = toggleRow('pref-insights-enabled', t('general.showInsightAlerts'), appState.preferences.insightsEnabled);
       insightsCheckbox = insights.checkbox;
       container.appendChild(insights.row);
@@ -113,7 +108,6 @@ export function createGeneralSection(ctx: PreferencesContext): SectionController
     save() {
       if (soundCheckbox) appState.setPreference('soundOnSessionWaiting', soundCheckbox.checked);
       if (notificationsCheckbox) appState.setPreference('notificationsDesktop', notificationsCheckbox.checked);
-      if (historyCheckbox) appState.setPreference('sessionHistoryEnabled', historyCheckbox.checked);
       if (insightsCheckbox) appState.setPreference('insightsEnabled', insightsCheckbox.checked);
       if (autoTitleCheckbox) appState.setPreference('autoTitleEnabled', autoTitleCheckbox.checked);
       if (confirmCloseCheckbox) appState.setPreference('confirmCloseWorkingSession', confirmCloseCheckbox.checked);

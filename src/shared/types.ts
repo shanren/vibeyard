@@ -140,18 +140,6 @@ export interface Profile {
   createdAt: number;
 }
 
-export interface ArchivedSession {
-  id: string;
-  name: string;
-  providerId: ProviderId;
-  cliSessionId: string | null;
-  createdAt: string;
-  closedAt: string;
-  bookmarked?: boolean;
-  /** Preserved so a resumed session reuses the same profile config dir (CLAUDE_CONFIG_DIR). */
-  profileId?: string;
-}
-
 export interface InitialContextSnapshot {
   sessionId: string;
   timestamp: string;
@@ -205,7 +193,6 @@ export interface ProjectRecord {
     splitPanes: string[];
     splitDirection: 'horizontal' | 'vertical';
   };
-  sessionHistory?: ArchivedSession[];
   insights?: ProjectInsightsData;
   defaultArgs?: string;
   /** Last custom CLI command used in this project, prefilled in New Session. */
@@ -222,7 +209,6 @@ export interface Preferences {
   soundOnSessionWaiting: boolean;
   notificationsDesktop: boolean;
   debugMode: boolean;
-  sessionHistoryEnabled: boolean;
   insightsEnabled: boolean;
   autoTitleEnabled: boolean;
   confirmCloseWorkingSession: boolean;
@@ -250,7 +236,7 @@ export interface Preferences {
   theme?: 'dark' | 'light';
   sidebarViews?: {
     gitPanel: boolean;
-    sessionHistory: boolean;
+    sessions: boolean;
     fileTree: boolean;
     /** Show the global cross-project "Active Sessions" section in the sidebar. */
     activeSessions: boolean;

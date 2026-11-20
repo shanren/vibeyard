@@ -255,7 +255,12 @@ const api = {
     transcriptExists: () => resolved(true),
     transcriptExistsSync: () => true,
     deepSearch: () => resolved([]),
-    projectTranscripts: () => resolved([]),
+    // Two tools in one project so the merged timeline + provider chips render.
+    projectTranscripts: () => resolved([
+      { providerId: 'claude', cliSessionId: 'cli-1', transcriptPath: '/t/1.jsonl', name: 'Fix the area filter', mtimeMs: Date.now() - 90_000 },
+      { providerId: 'pi', cliSessionId: 'cli-2', transcriptPath: '/t/2.jsonl', name: 'Refactor bank import', mtimeMs: Date.now() - 3 * 3600_000 },
+      { providerId: 'opencode', cliSessionId: 'ses_3', transcriptPath: 'opencode:ses_3', name: 'Investigate flaky test', mtimeMs: Date.now() - 2 * 86400_000 },
+    ]),
     onHookStatus: unsubscribe,
     onCliSessionId: unsubscribe,
     onClaudeSessionId: unsubscribe,

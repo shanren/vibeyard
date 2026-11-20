@@ -43,7 +43,7 @@ function defaultState(): PersistedState {
     version: 1,
     projects: [],
     activeProjectId: null,
-    preferences: { soundOnSessionWaiting: true, notificationsDesktop: true, debugMode: false, sessionHistoryEnabled: true, insightsEnabled: true, autoTitleEnabled: true, confirmCloseWorkingSession: true, locale: 'en' },
+    preferences: { soundOnSessionWaiting: true, notificationsDesktop: true, debugMode: false, insightsEnabled: true, autoTitleEnabled: true, confirmCloseWorkingSession: true, locale: 'en' },
   };
 }
 

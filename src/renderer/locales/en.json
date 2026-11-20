@@ -14,7 +14,6 @@
     "loading": "Loading…",
     "playSoundWhenSessionFinishes": "Play sound when session finishes work",
     "desktopNotifications": "Desktop notifications when sessions need attention",
-    "recordSessionHistory": "Record session history when sessions close",
     "showInsightAlerts": "Show insight alerts",
     "autoNameSessions": "Auto-name sessions from conversation title",
     "confirmClosingActiveSession": "Confirm closing an active session",
@@ -28,14 +27,14 @@
     "sidebarViews": "Sidebar Views",
     "fileTree": "Project File Tree",
     "gitPanel": "Git Panel",
-    "sessionHistory": "Session History",
     "activeSessions": "Active Sessions",
     "activeSessionStatuses": "Active Session Statuses",
     "terminalFontSize": "Terminal font size",
     "terminalRenderer": "Terminal renderer",
     "terminalRendererAuto": "Auto",
     "terminalRendererGpu": "GPU",
-    "terminalRendererCpu": "CPU"
+    "terminalRendererCpu": "CPU",
+    "sessions": "Sessions"
   },
   "sidebar": {
     "default": "Default",
@@ -62,13 +61,9 @@
       "defaultProfileLabel": "Default profile"
     },
     "removeConfirm": {
-      "withDataMessage": "Remove project \"{name}\"? This will delete {parts} from RCode. No files on disk will be affected.",
       "emptyMessage": "Remove project \"{name}\"? No files on disk will be affected.",
       "title": "Remove project",
-      "confirmLabel": "Remove",
-      "sessionsHistory": "all sessions and history ({count} {noun})",
-      "sessionsHistoryNounSingular": "entry",
-      "sessionsHistoryNounPlural": "entries"
+      "confirmLabel": "Remove"
     },
     "activeSessions": {
       "title": "Active Sessions"

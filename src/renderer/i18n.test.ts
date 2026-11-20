@@ -18,26 +18,21 @@ describe('i18n', () => {
 
     it('substitutes {name} with the value from vars', () => {
       setLocale('en');
-      // Force-look at a key with a {name}-style placeholder.
-      // The "withDataMessage" template uses {name} and {parts}.
-      const out = t('sidebar.removeConfirm.withDataMessage', {
-        name: 'demo',
-        parts: 'x and y',
-      });
-      expect(out).toBe('Remove project "demo"? This will delete x and y from RCode. No files on disk will be affected.');
+      const out = t('sidebar.removeConfirm.emptyMessage', { name: 'demo' });
+      expect(out).toContain('demo');
+      expect(out).not.toContain('{name}');
     });
 
     it('leaves placeholders intact when the variable is missing', () => {
       setLocale('en');
-      const out = t('sidebar.removeConfirm.withDataMessage', { name: 'demo' });
-      expect(out).toContain('{parts}');
-      expect(out).toContain('demo');
+      const out = t('sidebar.removeConfirm.emptyMessage', {});
+      expect(out).toContain('{name}');
     });
 
     it('coerces numeric vars to strings', () => {
       setLocale('en');
-      const out = t('sidebar.removeConfirm.sessionsHistory', { count: 3, noun: 'entries' });
-      expect(out).toBe('all sessions and history (3 entries)');
+      const out = t('tab.newSession.defaultName', { num: 3 });
+      expect(out).toContain('3');
     });
   });
 

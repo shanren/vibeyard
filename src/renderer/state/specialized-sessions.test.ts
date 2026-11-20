@@ -208,13 +208,12 @@ describe('addSession profile pinning', () => {
 });
 
 describe('removeProfile reference cleanup', () => {
-  it('clears the profile from sessions, projects, prefs, and history', async () => {
+  it('clears the profile from sessions, projects, and prefs', async () => {
     const project = addProject();
     const profile = await appState.addProfile({ name: 'Work', providerId: 'claude' });
     appState.setProjectDefaultProfile(project.id, profile.id);
     appState.setPreference('defaultProfileId', profile.id);
     const session = appState.addSession(project.id, 'S', undefined, 'claude', profile.id)!;
-    project.sessionHistory = [{ id: 'a', name: 'old', providerId: 'claude', cliSessionId: 'c', createdAt: '0', closedAt: '0', profileId: profile.id, cost: null }];
 
     appState.removeProfile(profile.id);
 
@@ -222,7 +221,6 @@ describe('removeProfile reference cleanup', () => {
     expect(session.profileId).toBeUndefined();
     expect(project.defaultProfileId).toBeUndefined();
     expect(appState.preferences.defaultProfileId).toBeUndefined();
-    expect(project.sessionHistory![0].profileId).toBeUndefined();
   });
 });
 
