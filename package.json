@@ -50,7 +50,7 @@
     "test:coverage": "vitest run --coverage",
     "dev:web": "npm run build && node dev/server.js",
     "dev:web:watch": "node dev/server.js --watch",
-    "dist:win": "npm run build && electron-builder --win nsis --publish never && electron-builder --win portable --publish never"
+    "dist:win": "npm run build && electron-builder --win nsis --publish never -c.electronDist=node_modules/electron/dist && electron-builder --win portable --publish never -c.electronDist=node_modules/electron/dist"
   },
   "build": {
     "appId": "com.rcode.app",
