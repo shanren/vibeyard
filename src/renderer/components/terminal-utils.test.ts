@@ -479,6 +479,19 @@ describe('attachAlternateScroll', () => {
     expect(write).toHaveBeenLastCalledWith('\x1b[6~');
   });
 
+
+  it('uses the provider line-scroll keys when given (opencode: ESC + ctrl chars)', () => {
+    const { terminal, wheel } = makeTerminal('alternate', 'none');
+    const write = vi.fn();
+    attachAlternateScroll(terminal, write, 'line', { up: '\x1b\x19', down: '\x1b\x05' });
+
+    wheel(-160);
+    expect(write).toHaveBeenLastCalledWith('\x1b\x19'.repeat(4));
+
+    wheel(200);
+    expect(write.mock.calls.at(-1)![0]).toMatch(/^(\x1b\x05)+$/);
+  });
+
   it('does nothing when the app asked for mouse reporting', () => {
     const { terminal, wheel } = makeTerminal('alternate', 'vt200');
     const write = vi.fn();

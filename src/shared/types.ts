@@ -45,6 +45,12 @@ export interface CliProviderCapabilities {
    * `page` (default) can only move a whole screen at a time.
    */
   altScreenScroll?: 'line' | 'page';
+  /**
+   * Byte sequences that scroll this CLI one row in its full-screen UI. Defaults to
+   * pi's shift+arrows; opencode binds its own ctrl+alt combos, which reach the
+   * terminal as `ESC` + control character.
+   */
+  lineScrollKeys?: { up: string; down: string };
   pendingPromptTrigger: PendingPromptTrigger;
   planModeArg?: string;
 }

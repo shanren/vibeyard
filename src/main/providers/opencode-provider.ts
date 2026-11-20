@@ -37,6 +37,11 @@ export class OpencodeProvider implements CliProvider {
       preassignedSessionId: true,
       // OpenCode validates the id shape: `Error: Expected a string starting with "ses"`.
       sessionIdPrefix: 'ses_',
+      // Its full-screen UI binds line scrolling to ctrl+alt+y / ctrl+alt+e by
+      // default, which a terminal receives as ESC followed by the control char.
+      // Verified against the real TUI: ESC+0x19 and ESC+0x05 both scroll one row.
+      altScreenScroll: 'line',
+      lineScrollKeys: { up: '', down: '' },
       contextWindow: false,
       hookStatus: false,
       configReading: false,

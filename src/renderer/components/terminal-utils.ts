@@ -122,10 +122,15 @@ const wheelAccumulator = new WeakMap<Terminal, number>();
 
 export type AltScreenScrollMode = 'line' | 'page';
 
+/** Scroll keys a CLI binds for one-row movement; pi's are the default. */
+export type LineScrollKeys = { up: string; down: string };
+const DEFAULT_LINE_KEYS: LineScrollKeys = { up: LINE_UP, down: LINE_DOWN };
+
 export function attachAlternateScroll(
   terminal: Terminal,
   write: (data: string) => void,
   mode: AltScreenScrollMode = 'page',
+  lineKeys: LineScrollKeys = DEFAULT_LINE_KEYS,
 ): void {
   terminal.attachCustomWheelEventHandler((event: WheelEvent) => {
     if (terminal.buffer.active.type !== 'alternate') return true;
@@ -145,7 +150,7 @@ export function attachAlternateScroll(
         event.preventDefault();
         return false;
       }
-      write((total < 0 ? LINE_UP : LINE_DOWN).repeat(rows));
+      write((total < 0 ? lineKeys.up : lineKeys.down).repeat(rows));
       wheelAccumulator.set(terminal, total - Math.sign(total) * rows * ROW_PX);
       event.preventDefault();
       return false;

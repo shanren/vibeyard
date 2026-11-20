@@ -105,7 +105,13 @@ export function createTerminalPane(
   // Full-screen CLIs get the wheel translated for them; normal scrollback is untouched.
   // Providers that bind line-scroll actions (pi) scroll a row at a time, which is what
   // makes two-finger scrolling feel continuous instead of a screen per notch.
-  attachAlternateScroll(terminal, writeToPty, getProviderCapabilities(providerId)?.altScreenScroll ?? 'page');
+  const caps = getProviderCapabilities(providerId);
+  attachAlternateScroll(
+    terminal,
+    writeToPty,
+    caps?.altScreenScroll ?? 'page',
+    caps?.lineScrollKeys,
+  );
 
   // Send CSI u encoding for Shift+Enter so Claude CLI treats it as newline
   attachClipboardCopyHandler(terminal, (e) => {
