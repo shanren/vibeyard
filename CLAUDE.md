@@ -23,6 +23,11 @@ out/RCode Setup 0.0.1.exe    # installer (writes the Explorer context menu)
 out/RCode 0.0.1.exe          # portable
 ```
 
+- **Build the two Windows targets in separate invocations** (`npm run dist:win`). One
+  `electron-builder --win nsis portable` run produced a `RCode Setup 0.0.1.exe` that
+  segfaulted on launch (`APPCRASH`, faulting module NSIS's `System.dll`, 0xc0000005) and
+  uninstalled the previous version before dying. `--win nsis` alone and `--win portable`
+  alone both install and launch correctly; only the combined run is broken.
 - Output goes to `out/`, not `dist/` — `dist/` is the compiled app and is listed in
   `build.files`, so writing installers there would package them into themselves.
 - Only `en-US` and `zh-CN` Electron locale paks are shipped (`build.electronLanguages`);

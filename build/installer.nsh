@@ -32,11 +32,8 @@
 
 !macro customInstall
   !insertmacro rcodeWriteMenuEntry
-  ; Let the shell pick the new entries up without a sign-out.
-  System::Call 'shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 !macroend
 
 !macro customUnInstall
   !insertmacro rcodeRemoveMenuEntry
-  System::Call 'shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
 !macroend

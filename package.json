@@ -49,7 +49,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "dev:web": "npm run build && node dev/server.js",
-    "dev:web:watch": "node dev/server.js --watch"
+    "dev:web:watch": "node dev/server.js --watch",
+    "dist:win": "npm run build && electron-builder --win nsis --publish never && electron-builder --win portable --publish never"
   },
   "build": {
     "appId": "com.rcode.app",
