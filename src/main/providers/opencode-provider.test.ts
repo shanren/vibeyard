@@ -6,7 +6,15 @@ vi.mock('./resolve-binary', () => ({
   validateBinaryExists: vi.fn(() => true),
 }));
 
+vi.mock('./opencode-store', () => ({
+  OPENCODE_PATH_PREFIX: 'opencode:',
+  listSessions: vi.fn(() => []),
+  readSessionText: vi.fn(() => ''),
+  sessionExists: vi.fn(() => false),
+}));
+
 import { OpencodeProvider } from './opencode-provider';
+import { listSessions, readSessionText, sessionExists } from './opencode-store';
 
 describe('OpencodeProvider', () => {
   const provider = new OpencodeProvider();
@@ -43,5 +51,35 @@ describe('OpencodeProvider', () => {
     expect(provider.buildEnv('s1', { PATH: '/usr/bin' }).PATH).toBe('/mock/bin:/usr/bin');
     expect(provider.validateSettings()).toEqual({ statusLine: 'missing', hooks: 'missing', hookDetails: {} });
     await expect(provider.getConfig()).resolves.toEqual({ mcpServers: [], agents: [], skills: [], commands: [] });
+  });
+});
+
+describe('OpencodeProvider on-disk history', () => {
+  it('maps database rows onto transcript descriptors', async () => {
+    vi.mocked(listSessions).mockReturnValue([
+      { id: 'ses_a', directory: 'E:/work/app', title: 't', updatedMs: 1700 },
+    ]);
+    const found = await new OpencodeProvider().discoverTranscripts();
+    expect(found).toEqual([
+      { cliSessionId: 'ses_a', transcriptPath: 'opencode:ses_a', projectCwd: 'E:/work/app', mtimeMs: 1700 },
+    ]);
+  });
+
+  it('reports a pseudo path only for sessions the database knows', () => {
+    const provider = new OpencodeProvider();
+    vi.mocked(sessionExists).mockReturnValue(true);
+    expect(provider.getTranscriptPath('ses_a')).toBe('opencode:ses_a');
+    vi.mocked(sessionExists).mockReturnValue(false);
+    expect(provider.getTranscriptPath('ses_gone')).toBeNull();
+  });
+
+  it('reads transcript text through the store', async () => {
+    vi.mocked(listSessions).mockReturnValue([{ id: 'ses_a', directory: 'E:/work/app', title: 't', updatedMs: 1 }]);
+    vi.mocked(readSessionText).mockReturnValue('prior conversation');
+    expect(await new OpencodeProvider().indexTranscript('opencode:ses_a')).toEqual({
+      text: 'prior conversation',
+      cwd: 'E:/work/app',
+    });
+    expect(await new OpencodeProvider().indexTranscript('not-a-pseudo-path')).toEqual({ text: '', cwd: '' });
   });
 });

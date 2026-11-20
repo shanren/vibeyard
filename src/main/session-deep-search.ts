@@ -21,10 +21,15 @@ export function _resetForTesting(): void {
   textCache.clear();
 }
 
-async function getCachedIndex(provider: CliProvider, transcriptPath: string): Promise<CacheEntry> {
+async function getCachedIndex(
+  provider: CliProvider,
+  transcriptPath: string,
+  mtimeHint?: number,
+): Promise<CacheEntry> {
   try {
-    const stat = await fs.promises.stat(transcriptPath);
-    const mtime = stat.mtimeMs;
+    // Database-backed providers pass a pseudo path (e.g. `opencode:ses_x`) that has
+    // no file to stat, so they supply the timestamp instead.
+    const mtime = mtimeHint ?? (await fs.promises.stat(transcriptPath)).mtimeMs;
     const cached = textCache.get(transcriptPath);
     if (cached && cached.mtime === mtime) {
       // Move-to-end for true LRU semantics on cache hits.
@@ -170,17 +175,21 @@ export async function projectTranscripts(projectPath: string): Promise<ProjectTr
     // read+parsed — a transcript-heavy project shouldn't trigger a full re-index
     // of every file just to populate a bounded list.
     const withMtime = await Promise.all(matched.map(async (desc) => {
-      let mtime = 0;
-      try {
-        mtime = (await fs.promises.stat(desc.transcriptPath)).mtimeMs;
-      } catch {
-        // transcript vanished mid-scan; keep mtime 0
+      // Database-backed transcripts report their own timestamp; file-backed ones
+      // are stat'ed so the newest MAX_PROJECT_TRANSCRIPTS win.
+      let mtime = desc.mtimeMs ?? 0;
+      if (desc.mtimeMs === undefined) {
+        try {
+          mtime = (await fs.promises.stat(desc.transcriptPath)).mtimeMs;
+        } catch {
+          // transcript vanished mid-scan; keep mtime 0
+        }
       }
       return { desc, mtime };
     }));
     withMtime.sort((a, b) => b.mtime - a.mtime);
     const items = await Promise.all(withMtime.slice(0, MAX_PROJECT_TRANSCRIPTS).map(async ({ desc, mtime }) => {
-      const entry = await getCachedIndex(provider, desc.transcriptPath);
+      const entry = await getCachedIndex(provider, desc.transcriptPath, mtime);
       return {
         providerId: provider.meta.id,
         cliSessionId: desc.cliSessionId,

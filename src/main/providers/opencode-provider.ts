@@ -20,6 +20,8 @@ import type { CliProvider } from './provider';
 import type { CliProviderMeta, ProviderConfig, SettingsValidationResult } from '../../shared/types';
 import { getFullPath } from '../pty-manager';
 import { resolveBinary, validateBinaryExists } from './resolve-binary';
+import type { TranscriptDescriptor } from './provider';
+import { OPENCODE_PATH_PREFIX, listSessions, readSessionText, sessionExists } from './opencode-store';
 
 const EMPTY_CONFIG: ProviderConfig = { mcpServers: [], agents: [], skills: [], commands: [] };
 const binaryCache = { path: null as string | null };
@@ -86,6 +88,35 @@ export class OpencodeProvider implements CliProvider {
 
   getShiftEnterSequence(): string | null {
     return null;
+  }
+
+  // ---- On-disk session history -------------------------------------------
+  // OpenCode stores sessions in a SQLite database (`opencode.db`), not in files.
+  // Transcript paths are therefore pseudo paths carrying the session id; see
+  // `opencode-store.ts` for the read-only access layer.
+
+  async discoverTranscripts(): Promise<TranscriptDescriptor[]> {
+    return listSessions().map((row) => ({
+      cliSessionId: row.id,
+      transcriptPath: OPENCODE_PATH_PREFIX + row.id,
+      // `directory` is the absolute cwd OpenCode recorded, so the per-project
+      // panel can attribute the session without any slug decoding.
+      projectCwd: row.directory || undefined,
+      mtimeMs: row.updatedMs,
+    }));
+  }
+
+  getTranscriptPath(cliSessionId: string): string | null {
+    // No file to hand out (a cross-provider handoff prompt would be misleading),
+    // but the pseudo path doubles as an existence check for callers that need one.
+    return sessionExists(cliSessionId) ? OPENCODE_PATH_PREFIX + cliSessionId : null;
+  }
+
+  async indexTranscript(transcriptPath: string): Promise<{ text: string; cwd: string }> {
+    if (!transcriptPath.startsWith(OPENCODE_PATH_PREFIX)) return { text: '', cwd: '' };
+    const id = transcriptPath.slice(OPENCODE_PATH_PREFIX.length);
+    const row = listSessions().find((s) => s.id === id);
+    return { text: readSessionText(id), cwd: row?.directory ?? '' };
   }
 
   validateSettings(): SettingsValidationResult {

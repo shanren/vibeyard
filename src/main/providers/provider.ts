@@ -12,6 +12,12 @@ export interface TranscriptDescriptor {
   projectSlug?: string;
   /** Profile whose config dir this transcript was found under, so resume can reuse it. */
   profileId?: string;
+  /**
+   * Modification time in ms, for transcripts that are not plain files (a SQLite
+   * row, for instance) where `fs.stat` cannot supply it. When absent the consumer
+   * stats `transcriptPath`.
+   */
+  mtimeMs?: number;
 }
 
 export interface CliProvider {

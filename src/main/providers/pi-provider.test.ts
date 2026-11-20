@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
+
 vi.mock('../pty-manager', () => ({ getFullPath: () => '/mock/bin:/usr/bin' }));
 vi.mock('./resolve-binary', () => ({
   resolveBinary: vi.fn(() => '/mock/bin/pi'),
