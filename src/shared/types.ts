@@ -447,3 +447,18 @@ export interface SearchFilesResult {
   /** True when the total match count exceeded the limit (renderer shows a truncation footnote). */
   truncated: boolean;
 }
+
+/** One full-text search hit. Paths are project-relative with `/` separators on every platform. */
+export interface SearchTextMatch {
+  path: string;
+  line: number;
+  text: string;
+}
+
+/** Result of the Explorer full-text search (`fs:searchText`). */
+export interface SearchTextResult {
+  matches: SearchTextMatch[];
+  truncated: boolean;
+  engine: 'git' | 'walk';
+  tookMs: number;
+}
