@@ -58,6 +58,10 @@
         <button id="btn-close-explorer" class="icon-btn" title="Close Explorer" aria-label="Close Explorer">&times;</button>
       </div>
       <div id="explorer-search">
+        <div id="explorer-search-tabs" role="tablist">
+          <button id="explorer-tab-path" class="explorer-search-tab" type="button" role="tab" aria-selected="true" tabindex="0"></button>
+          <button id="explorer-tab-content" class="explorer-search-tab" type="button" role="tab" aria-selected="false" tabindex="-1"></button>
+        </div>
         <input id="explorer-search-input" type="text" spellcheck="false" />
       </div>
       <div id="explorer-search-results" class="hidden"></div>

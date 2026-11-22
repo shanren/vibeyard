@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SearchFilesResult } from '../../shared/types.js';
+import type { SearchFilesResult, SearchTextResult } from '../../shared/types.js';
 
 class FakeClassList {
   private values = new Set<string>();
@@ -16,17 +16,49 @@ class FakeClassList {
 class FakeElement {
   children: FakeElement[] = [];
   parentElement: FakeElement | null = null;
-  className = '';
+  private _className = '';
   classList = new FakeClassList();
   textContent = '';
+
+  /** DOM semantics: assigning `className` replaces the element's class list. */
+  get className(): string { return this._className; }
+  set className(v: string) {
+    this._className = v;
+    this.classList = new FakeClassList();
+    for (const token of v.split(/\s+/).filter(Boolean)) this.classList.add(token);
+  }
   value = '';
   placeholder = '';
   listeners = new Map<string, Array<(event?: any) => void>>();
+  attributes = new Map<string, string>();
   private _innerHTML = '';
   get innerHTML(): string { return this._innerHTML; }
   set innerHTML(v: string) { this._innerHTML = v; if (v === '') this.children = []; }
 
   constructor(public tagName: string) {}
+
+  setAttribute(name: string, value: string): void { this.attributes.set(name, value); }
+  getAttribute(name: string): string | null { return this.attributes.get(name) ?? null; }
+
+  focus(): void {}
+
+  /** Minimal `.class` selector support over the FakeElement tree. */
+  querySelectorAll(selector: string): FakeElement[] {
+    const wanted = selector.replace(/^\./, '');
+    const out: FakeElement[] = [];
+    const collect = (el: FakeElement): void => {
+      for (const child of el.children) {
+        if (child.classList.contains(wanted)) out.push(child);
+        collect(child);
+      }
+    };
+    collect(this);
+    return out;
+  }
+
+  querySelector(selector: string): FakeElement | null {
+    return this.querySelectorAll(selector)[0] ?? null;
+  }
 
   appendChild(child: FakeElement): FakeElement {
     child.parentElement = this;
@@ -58,6 +90,7 @@ function getById(id: string): FakeElement {
 }
 
 const searchFilesMock = vi.fn();
+const searchTextMock = vi.fn();
 
 function stubDom(): void {
   const doc = {
@@ -68,7 +101,7 @@ function stubDom(): void {
   vi.stubGlobal('window', {
     rcode: {
       store: { load: vi.fn(), save: vi.fn() },
-      fs: { searchFiles: searchFilesMock },
+      fs: { searchFiles: searchFilesMock, searchText: searchTextMock },
     },
   });
   // Mirror index.html: #explorer-search-results starts with the `hidden` class.
@@ -296,5 +329,141 @@ describe('explorer-search', () => {
 
     expect(getById('explorer-search-results').classList.contains('hidden')).toBe(true);
     expect(getById('explorer-content').classList.contains('hidden')).toBe(false);
+  });
+
+  it('calls searchText instead of searchFiles in content mode', async () => {
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    project(appState);
+    initExplorerSearch();
+    searchTextMock.mockResolvedValue({ matches: [], truncated: false, engine: 'git', tookMs: 0 });
+
+    setExplorerSearchMode('content');
+    const input = getById('explorer-search-input');
+    expect(input.placeholder).toBe('Search file contents');
+    input.value = 'needle';
+    input.dispatch('input');
+
+    // content mode debounces longer (300ms) than path mode (150ms)
+    await vi.advanceTimersByTimeAsync(299);
+    expect(searchTextMock).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(searchTextMock).toHaveBeenCalledWith('/proj', 'needle');
+    expect(searchFilesMock).not.toHaveBeenCalled();
+  });
+
+  it('re-runs the current query when the tab changes', async () => {
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    project(appState);
+    initExplorerSearch();
+    searchFilesMock.mockResolvedValue({ files: ['a.ts'], truncated: false });
+
+    const input = getById('explorer-search-input');
+    input.value = 'needle';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(150);
+    expect(searchFilesMock).toHaveBeenCalledTimes(1);
+
+    searchFilesMock.mockClear();
+    searchTextMock.mockResolvedValue({ matches: [], truncated: false, engine: 'git', tookMs: 0 });
+    setExplorerSearchMode('content');
+
+    expect(input.value).toBe('needle'); // query text survives the switch
+    expect(searchTextMock).toHaveBeenCalledWith('/proj', 'needle'); // re-ran immediately
+    expect(searchFilesMock).not.toHaveBeenCalled();
+  });
+
+  it('renders matches grouped by file with line numbers and opens at the line', async () => {
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    const proj = project(appState);
+    initExplorerSearch();
+    setExplorerSearchMode('content');
+    const addReaderSpy = vi.spyOn(appState, 'addFileReaderSession').mockReturnValue(undefined);
+    searchTextMock.mockResolvedValue({
+      matches: [
+        { path: 'src/a.ts', line: 12, text: 'needle here' },
+        { path: 'src/a.ts', line: 30, text: 'another needle' },
+        { path: 'src/b.ts', line: 3, text: 'needle again' },
+      ],
+      truncated: false,
+      engine: 'git',
+      tookMs: 1,
+    });
+
+    const input = getById('explorer-search-input');
+    input.value = 'needle';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(300);
+
+    const results = getById('explorer-search-results');
+    expect(results.classList.contains('hidden')).toBe(false);
+    expect(getById('explorer-content').classList.contains('hidden')).toBe(true);
+
+    const headers = results.querySelectorAll('.explorer-search-file-header');
+    expect(headers).toHaveLength(2);
+    expect(headers[0].querySelector('.explorer-search-filename')!.textContent).toBe('a.ts');
+    expect(headers[0].querySelector('.explorer-search-dir')!.textContent).toBe('src');
+    expect(headers[0].querySelector('.explorer-search-count')!.textContent).toBe('(2)');
+    expect(headers[1].querySelector('.explorer-search-count')!.textContent).toBe('(1)');
+
+    const lines = results.querySelectorAll('.explorer-search-line');
+    expect(lines).toHaveLength(3);
+    expect(lines[0].querySelector('.explorer-search-line-no')!.textContent).toBe('12');
+    expect(lines[0].querySelector('.explorer-search-line-text')!.textContent).toBe('needle here');
+
+    lines[0].dispatch('click');
+    expect(addReaderSpy).toHaveBeenCalledWith(proj.id, 'src/a.ts', 12);
+  });
+
+  it('persists the chosen mode', () => {
+    return (async () => {
+      const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+      project(appState);
+      initExplorerSearch();
+      expect(appState.preferences.explorerSearchMode).toBe('path'); // built-in default
+
+      setExplorerSearchMode('content');
+      expect(appState.preferences.explorerSearchMode).toBe('content');
+
+      setExplorerSearchMode('path');
+      expect(appState.preferences.explorerSearchMode).toBe('path');
+      expect(getById('explorer-tab-path').getAttribute('aria-selected')).toBe('true');
+      expect(getById('explorer-tab-content').getAttribute('aria-selected')).toBe('false');
+    })();
+  });
+
+  it('drops stale results when the mode changes mid-flight', async () => {
+    const resolvers: Array<(r: SearchTextResult) => void> = [];
+    searchTextMock.mockImplementation(() => new Promise<SearchTextResult>((resolve) => resolvers.push(resolve)));
+    searchFilesMock.mockResolvedValue({ files: ['fresh.ts'], truncated: false });
+
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    project(appState);
+    initExplorerSearch();
+    setExplorerSearchMode('content');
+
+    const input = getById('explorer-search-input');
+    input.value = 'needle';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(300);
+    expect(searchTextMock).toHaveBeenCalledTimes(1);
+    // While the request is in flight the results pane shows the searching state.
+    expect(getById('explorer-search-results').children[0].textContent).toBe('Searching…');
+
+    setExplorerSearchMode('path'); // invalidates the in-flight content search + re-runs as path
+    await vi.advanceTimersByTimeAsync(10);
+    const results = getById('explorer-search-results');
+    expect(results.children[0].children[0].textContent).toBe('fresh.ts');
+
+    resolvers[0]({
+      matches: [{ path: 'stale.ts', line: 1, text: 'stale needle' }],
+      truncated: false,
+      engine: 'git',
+      tookMs: 1,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(results.children[0].children[0].textContent).toBe('fresh.ts');
+    expect(results.querySelectorAll('.explorer-search-line')).toHaveLength(0);
   });
 });
