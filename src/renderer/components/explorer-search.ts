@@ -258,13 +258,17 @@ function createResultRow(filePath: string): HTMLElement {
 
 function applyModeUi(): void {
   const isContent = mode === 'content';
+  // Roving tabindex: only the selected tab is reachable with Tab, so the strip
+  // is one tab stop (arrow keys and clicks move between the two).
   if (pathTabEl) {
     pathTabEl.classList.toggle('active', !isContent);
     pathTabEl.setAttribute('aria-selected', String(!isContent));
+    pathTabEl.setAttribute('tabindex', isContent ? '-1' : '0');
   }
   if (contentTabEl) {
     contentTabEl.classList.toggle('active', isContent);
     contentTabEl.setAttribute('aria-selected', String(isContent));
+    contentTabEl.setAttribute('tabindex', isContent ? '0' : '-1');
   }
   if (inputEl) {
     inputEl.placeholder = t(isContent ? 'explorer.searchTextPlaceholder' : 'explorer.searchPlaceholder');

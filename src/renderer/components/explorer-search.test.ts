@@ -414,21 +414,23 @@ describe('explorer-search', () => {
     expect(addReaderSpy).toHaveBeenCalledWith(proj.id, 'src/a.ts', 12);
   });
 
-  it('persists the chosen mode', () => {
-    return (async () => {
-      const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
-      project(appState);
-      initExplorerSearch();
-      expect(appState.preferences.explorerSearchMode).toBe('path'); // built-in default
+  it('persists the chosen mode and moves the roving tabindex with it', async () => {
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    project(appState);
+    initExplorerSearch();
+    expect(appState.preferences.explorerSearchMode).toBe('path'); // built-in default
 
-      setExplorerSearchMode('content');
-      expect(appState.preferences.explorerSearchMode).toBe('content');
+    setExplorerSearchMode('content');
+    expect(appState.preferences.explorerSearchMode).toBe('content');
+    expect(getById('explorer-tab-content').getAttribute('tabindex')).toBe('0');
+    expect(getById('explorer-tab-path').getAttribute('tabindex')).toBe('-1');
 
-      setExplorerSearchMode('path');
-      expect(appState.preferences.explorerSearchMode).toBe('path');
-      expect(getById('explorer-tab-path').getAttribute('aria-selected')).toBe('true');
-      expect(getById('explorer-tab-content').getAttribute('aria-selected')).toBe('false');
-    })();
+    setExplorerSearchMode('path');
+    expect(appState.preferences.explorerSearchMode).toBe('path');
+    expect(getById('explorer-tab-path').getAttribute('aria-selected')).toBe('true');
+    expect(getById('explorer-tab-content').getAttribute('aria-selected')).toBe('false');
+    expect(getById('explorer-tab-path').getAttribute('tabindex')).toBe('0');
+    expect(getById('explorer-tab-content').getAttribute('tabindex')).toBe('-1');
   });
 
   it('drops stale results when the mode changes mid-flight', async () => {
