@@ -188,6 +188,16 @@ describe('enumerateProjectFiles', () => {
     }
   });
 
+  it('never walks into a real .git directory when git fails', async () => {
+    fs.mkdirSync(path.join(root, '.git', 'objects', 'ab'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main');
+    writeFile('kept.md');
+    gitReplies.set(path.resolve(root), new Error('git: old version'));
+
+    expect(await enumerateProjectFiles(root)).toEqual(['kept.md']);
+    expect(await findRepoRoots(root)).toEqual([path.resolve(root)]);
+  });
+
   it('caps the number of returned paths', async () => {
     markRepo();
     const many = Array.from({ length: ENUMERATE_MAX_FILES + 50 }, (_, i) => `f${i}.ts`);

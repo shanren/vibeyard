@@ -18,6 +18,7 @@ export const ENUMERATION_CACHE_TTL_MS = 2000;
  * applies that repo's own ignore rules).
  */
 export const SKIP_DIRS: ReadonlySet<string> = new Set([
+  '.git',
   '.hg',
   '.svn',
   '.next',
