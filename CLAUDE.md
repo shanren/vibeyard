@@ -184,6 +184,55 @@ compositing mode, GPU status; trimmed to the last 32KB). `RCODE_TIMING=1` additi
 streams the marks to the console and auto-exits after 12s. When a launch "feels slow",
 read that file before guessing.
 
+### File Search Enumeration
+
+The Explorer's file search (`fs:searchFiles`), quick-open (`fs:listFiles`), and
+`fs:topFilesByTokens` all share `enumerateProjectFiles` in
+`src/main/file-enumeration.ts` — one async, cached (2s TTL) enumeration per project
+root. It walks the tree but delegates **every repo root it finds** to
+`git ls-files -z --cached --others --exclude-standard` (that repo's own ignore
+rules win; the walk prunes build-output dirs like `node_modules`/`target`/`bin`/
+`obj`/`dist`). Two details are load-bearing: the walk must keep descending *inside*
+a git root, because a project's real source frequently lives in sub-projects that
+are separate repos **and are gitignored by the outer one** — the old single
+outer-repo `git ls-files` returned 136 of ~7.7k files for exactly that layout — and
+git must run with `-z`, since newline output applies `core.quotepath` escaping that
+mangles every non-ASCII path into an unmatchable, unopenable `"\345\244\226..."`
+blob. Results are deduped (a tracked sub-project can be listed by both repos) and
+capped (`ENUMERATE_MAX_FILES`). Keeping it async matters: it runs on the main
+process that also pumps PTY data.
+
+### Full-text Search (Explorer "Content" tab)
+
+The Explorer search box has two modes, persisted in `Preferences.explorerSearchMode`
+(`'path' | 'content'`, absent ⇒ `'path'`): **path** (the `fs:searchFiles` enumeration
+above) and **content** (`fs:searchText` → `src/main/text-search.ts`, results rendered
+grouped per file with line numbers, click opens the file at that line via
+`addFileReaderSession(projectId, path, line)`). `CmdOrCtrl+Shift+E`
+(`explorer-search-text`) opens the panel in content mode and focuses the input;
+`CmdOrCtrl+Shift+F` stays `session-search`.
+
+The engine shells out to `git grep -z -n -I -i -F --untracked --no-color
+--max-count=<perFile> -- -e <query>` **once per repo root** (from `findRepoRoots`,
+which shares the enumeration walk) and falls back to a bounded Node scan
+(`enumerateProjectFiles` + `buildRcodeIgnoreMatcher`, 32-way concurrency, `stat`
+size gate, NUL sniff, `.rcodeignore`) only where git cannot answer: a non-repo
+project, or a root whose `git grep` fails to spawn. `-z` matters for the same
+`core.quotepath` reason as above, and the parser reads the *next* path from the tail
+of the previous text chunk (`<path>\0<line>\0<text>\n<nextPath>`), so no path with
+spaces, CJK or a leading `-` can be corrupted. `git grep` exit 1 means "no matches"
+and must never trigger the walk fallback — otherwise every zero-result search would
+cost a full scan (measured 2.8s on this workspace vs ~0.4s for the git path).
+
+Caps live in `text-search.ts` (`TEXT_SEARCH_MAX_MATCHES` 500, `_PER_FILE` 20,
+`_FILES` 200, `_TIMEOUT_MS` 5000, `_MAX_FILE_BYTES` 1MB, `_MAX_LINE_CHARS` 400) and
+mirror VS Code's result-list psychology: bounded, sorted, with a truncation footnote.
+Nothing is pre-warmed — no spawn, no walk, no cache fill until a query arrives — and
+the whole path is async so the main process keeps pumping PTY data. Measured startup
+is unchanged by the feature (first-content 200–252ms and black-screen 190–244ms
+across 9 launches, against 228–260ms / 203–247ms before; the ±25ms run-to-run drift
+exceeds any difference).
+
 ### File Watching
 
 Live filesystem updates for the file tree, file reader, and diff viewer are backed by a single **chokidar** watcher in `src/main/file-watcher.ts` (chokidar is ESM-only but `require`-able under Electron's Node ≥22.12). It watches **directories non-recursively** (`depth: 0`), ref-counted per dir via `watchDir(dir)` / `unwatchDir(dir)` (IPC `fs:watchDir` / `fs:unwatchDir`). Watching the parent dir — not the file inode — is deliberate: it survives atomic save/replace (write-temp + rename), which silently kills an inode watch. Changes are coalesced and debounced (150ms) into a single batched `fs:changed` IPC carrying `FsChange[]` (`{ path, dir, type }`, type ∈ add/addDir/change/unlink/unlinkDir; see `src/shared/types.ts`). The renderer subscribes via `window.rcode.fs.onFsChange`. `stopAllFileWatchers()` is wired into `main.ts` teardown (window `closed` + `before-quit`).
