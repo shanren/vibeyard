@@ -113,7 +113,12 @@ async function visit(
   let listsFiles = walkListsFiles;
   if (await isRepoRoot(absDir)) {
     const gitFiles = await gitListFiles(absDir);
-    if (gitFiles) {
+    // A repo whose own `git ls-files` fails must fall back to walking *this*
+    // subtree. Inheriting the parent's `listsFiles` would silently drop it:
+    // when the outer repo lists fine, this repo's files are not in that listing
+    // (git never descends into a nested repo), so nothing would report them.
+    if (!gitFiles) listsFiles = true;
+    else {
       for (const file of gitFiles) {
         if (out.length >= ENUMERATE_MAX_FILES) return;
         out.push(relDir ? `${relDir}/${file}` : file);

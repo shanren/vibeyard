@@ -267,12 +267,16 @@ function applyModeUi(): void {
   const isContent = mode === 'content';
   // Roving tabindex: only the selected tab is reachable with Tab, so the strip
   // is one tab stop (arrow keys and clicks move between the two).
+  // Labels live here, not in init: applyModeUi also runs on `preferences-changed`,
+  // so a language switch re-translates the strip instead of only the placeholder.
   if (pathTabEl) {
+    pathTabEl.textContent = t('explorer.searchMode.path');
     pathTabEl.classList.toggle('active', !isContent);
     pathTabEl.setAttribute('aria-selected', String(!isContent));
     pathTabEl.setAttribute('tabindex', isContent ? '-1' : '0');
   }
   if (contentTabEl) {
+    contentTabEl.textContent = t('explorer.searchMode.content');
     contentTabEl.classList.toggle('active', isContent);
     contentTabEl.setAttribute('aria-selected', String(isContent));
     contentTabEl.setAttribute('tabindex', isContent ? '0' : '-1');
@@ -290,14 +294,8 @@ export function initExplorerSearch(): void {
 
   pathTabEl = document.getElementById('explorer-tab-path');
   contentTabEl = document.getElementById('explorer-tab-content');
-  if (pathTabEl) {
-    pathTabEl.textContent = t('explorer.searchMode.path');
-    pathTabEl.addEventListener('click', () => setExplorerSearchMode('path'));
-  }
-  if (contentTabEl) {
-    contentTabEl.textContent = t('explorer.searchMode.content');
-    contentTabEl.addEventListener('click', () => setExplorerSearchMode('content'));
-  }
+  if (pathTabEl) pathTabEl.addEventListener('click', () => setExplorerSearchMode('path'));
+  if (contentTabEl) contentTabEl.addEventListener('click', () => setExplorerSearchMode('content'));
 
   mode = appState.preferences.explorerSearchMode ?? 'path';
   applyModeUi();

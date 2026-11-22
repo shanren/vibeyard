@@ -188,6 +188,19 @@ describe('enumerateProjectFiles', () => {
     }
   });
 
+  it('walks a nested repo whose own git fails, instead of dropping it', async () => {
+    markRepo();
+    replyFor('', ['AGENTS.md']);
+    writeFile('AGENTS.md');
+    markRepo('sub-a');
+    writeFile('sub-a/only-here.ts');
+    gitReplies.set(path.resolve(root, 'sub-a'), new Error('fatal: index file corrupt'));
+
+    expect(new Set(await enumerateProjectFiles(root))).toEqual(
+      new Set(['AGENTS.md', 'sub-a/only-here.ts']),
+    );
+  });
+
   it('never walks into a real .git directory when git fails', async () => {
     fs.mkdirSync(path.join(root, '.git', 'objects', 'ab'), { recursive: true });
     fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main');

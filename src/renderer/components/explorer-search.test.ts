@@ -415,6 +415,20 @@ describe('explorer-search', () => {
     expect(addReaderSpy).toHaveBeenCalledWith(proj.id, 'src/a.ts', 12);
   });
 
+  it('re-translates the tab labels when the locale changes', async () => {
+    const { appState, initExplorerSearch } = await load();
+    const { setLocale } = await import('../i18n.js');
+    project(appState);
+    initExplorerSearch();
+    expect(getById('explorer-tab-content').textContent).toBe('Content');
+
+    setLocale('zh-CN');
+    appState.setPreference('locale', 'zh-CN');
+
+    expect(getById('explorer-tab-path').textContent).toBe('路径');
+    expect(getById('explorer-tab-content').textContent).toBe('内容');
+  });
+
   it('persists the chosen mode and moves the roving tabindex with it', async () => {
     const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
     project(appState);
