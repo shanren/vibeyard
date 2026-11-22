@@ -15,6 +15,7 @@ import { getFileViewerInstance } from './components/file-viewer.js';
 import { DomSearchBackend } from './components/dom-search-backend.js';
 import { CodeMirrorSearchBackend } from './components/code-editor-search.js';
 import { toggleInspector } from './components/session-inspector.js';
+import { focusExplorerContentSearch } from './components/explorer-search.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 
 export function initKeybindings(): void {
@@ -53,6 +54,7 @@ export function initKeybindings(): void {
   shortcutManager.registerHandler('project-terminal-alt', toggleProjectTerminal);
   shortcutManager.registerHandler('git-panel', toggleGitPanel);
   shortcutManager.registerHandler('quick-open', showQuickOpen);
+  shortcutManager.registerHandler('explorer-search-text', focusExplorerContentSearch);
   shortcutManager.registerHandler('session-search', showSessionSearchPalette);
   shortcutManager.registerHandler('find-in-terminal', () => {
     const shellPanel = document.getElementById('project-terminal-panel');

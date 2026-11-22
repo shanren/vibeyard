@@ -40,7 +40,8 @@ class FakeElement {
   setAttribute(name: string, value: string): void { this.attributes.set(name, value); }
   getAttribute(name: string): string | null { return this.attributes.get(name) ?? null; }
 
-  focus(): void {}
+  focused = false;
+  focus(): void { this.focused = true; }
 
   /** Minimal `.class` selector support over the FakeElement tree. */
   querySelectorAll(selector: string): FakeElement[] {
@@ -467,5 +468,42 @@ describe('explorer-search', () => {
 
     expect(results.children[0].children[0].textContent).toBe('fresh.ts');
     expect(results.querySelectorAll('.explorer-search-line')).toHaveLength(0);
+  });
+
+  it('focusExplorerContentSearch opens the panel, switches to content mode and focuses the input', async () => {
+    const { appState, initExplorerSearch, focusExplorerContentSearch } = await load();
+    project(appState);
+    initExplorerSearch();
+    expect(appState.explorerPanelOpen).toBe(false);
+
+    focusExplorerContentSearch();
+
+    expect(appState.explorerPanelOpen).toBe(true);
+    expect(getById('explorer-tab-content').getAttribute('aria-selected')).toBe('true');
+    const input = getById('explorer-search-input');
+    expect(input.focused).toBe(true);
+    expect(input.placeholder).toBe('Search file contents');
+  });
+
+  it('focusExplorerContentSearch does not throw before init (no DOM elements yet)', async () => {
+    const { appState, focusExplorerContentSearch } = await load();
+    project(appState);
+    expect(() => focusExplorerContentSearch()).not.toThrow();
+    expect(appState.explorerPanelOpen).toBe(true);
+  });
+
+  it('registers the explorer-search-text shortcut on CmdOrCtrl+Shift+E', async () => {
+    await load();
+    const { SHORTCUT_DEFAULTS } = await import('../shortcuts.js');
+    const entry = SHORTCUT_DEFAULTS.find((d) => d.id === 'explorer-search-text');
+    expect(entry).toMatchObject({
+      label: 'Search in Project',
+      category: 'Search & Help',
+      defaultKeys: 'CmdOrCtrl+Shift+E',
+    });
+    // The combination must be free: session-search owns CmdOrCtrl+Shift+F, not E.
+    expect(SHORTCUT_DEFAULTS.filter((d) => d.defaultKeys === 'CmdOrCtrl+Shift+E')).toHaveLength(1);
+    // Table ordering convention: directly after quick-open inside Search & Help.
+    expect(SHORTCUT_DEFAULTS[SHORTCUT_DEFAULTS.indexOf(entry!) - 1].id).toBe('quick-open');
   });
 });

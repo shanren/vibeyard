@@ -51,6 +51,13 @@ export function setExplorerSearchMode(next: ExplorerSearchMode): void {
   if (inputEl && normalizeQuery(inputEl.value) !== '') void runSearch();
 }
 
+/** Open the Explorer, switch to content search and focus the input. */
+export function focusExplorerContentSearch(): void {
+  appState.setExplorerPanelOpen(true);
+  setExplorerSearchMode('content');
+  inputEl?.focus();
+}
+
 function onInput(): void {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => { void runSearch(); }, mode === 'content' ? CONTENT_DEBOUNCE_MS : PATH_DEBOUNCE_MS);
