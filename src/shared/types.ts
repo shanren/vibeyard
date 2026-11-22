@@ -246,6 +246,8 @@ export interface Preferences {
   copyOnSelect?: boolean;
   keybindings?: Record<string, string>;
   theme?: 'dark' | 'light';
+  /** Explorer search panel mode. Absent ⇒ 'path'. */
+  explorerSearchMode?: 'path' | 'content';
   sidebarViews?: {
     gitPanel: boolean;
     sessions: boolean;

@@ -69,6 +69,23 @@ describe('i18n', () => {
     });
   });
 
+  describe('explorer search-mode', () => {
+    it('has both locales for the explorer search-mode keys', () => {
+      const keys = [
+        'explorer.searchMode.path',
+        'explorer.searchMode.content',
+        'explorer.searchTextPlaceholder',
+        'explorer.searchTextNoResults',
+        'explorer.searchTextTruncated',
+        'explorer.searching',
+      ];
+      for (const locale of ['en', 'zh-CN'] as const) {
+        setLocale(locale);
+        for (const key of keys) expect(t(key)).not.toBe(key);
+      }
+    });
+  });
+
   describe('setLocale()', () => {
     it('is a no-op for the current locale (no listener fires)', () => {
       setLocale('en');

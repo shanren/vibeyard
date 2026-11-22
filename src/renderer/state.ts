@@ -81,6 +81,7 @@ const defaultPreferences: Preferences = {
   zoomFactor: 1.0,
   sidebarViews: { gitPanel: true, sessions: true, fileTree: true, activeSessions: true },
   locale: 'en',
+  explorerSearchMode: 'path',
 };
 
 class AppState {

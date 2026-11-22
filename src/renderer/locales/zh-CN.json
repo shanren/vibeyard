@@ -263,7 +263,15 @@
   "explorer": {
     "searchPlaceholder": "搜索文件",
     "searchNoResults": "未找到文件",
-    "searchTooMany": "匹配超过 500 条，请细化搜索词"
+    "searchTooMany": "匹配超过 500 条，请细化搜索词",
+    "searchMode": {
+      "path": "路径",
+      "content": "内容"
+    },
+    "searchTextPlaceholder": "搜索文件内容",
+    "searchTextNoResults": "没有匹配项",
+    "searchTextTruncated": "500+ 个匹配 — 请缩小范围",
+    "searching": "搜索中…"
   },
   "titleBar": {
     "brand": "RCode",

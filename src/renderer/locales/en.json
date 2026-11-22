@@ -263,7 +263,15 @@
   "explorer": {
     "searchPlaceholder": "Search files",
     "searchNoResults": "No files found",
-    "searchTooMany": "500+ matches — refine your query"
+    "searchTooMany": "500+ matches — refine your query",
+    "searchMode": {
+      "path": "Path",
+      "content": "Content"
+    },
+    "searchTextPlaceholder": "Search file contents",
+    "searchTextNoResults": "No matches found",
+    "searchTextTruncated": "500+ matches — refine your query",
+    "searching": "Searching…"
   },
   "titleBar": {
     "brand": "RCode",
