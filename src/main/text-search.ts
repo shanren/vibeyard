@@ -63,9 +63,12 @@ function gitGrepOne(dir: string, query: string): Promise<string | null> {
         '--untracked',
         '--no-color',
         `--max-count=${TEXT_SEARCH_MAX_PER_FILE}`,
-        '--',
+        // The query goes after `-e` and `--` comes last (before the empty
+        // pathspec list). Reversed, `--` ends option parsing and git reads
+        // `-e` + the query as pathspecs: silently zero matches for every query.
         '-e',
         query,
+        '--',
       ],
       {
         cwd: dir,

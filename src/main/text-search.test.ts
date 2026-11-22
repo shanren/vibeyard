@@ -148,11 +148,13 @@ describe('searchText', () => {
     ]);
   });
 
-  it('passes the query as a literal -e argument after --', async () => {
+  it('passes the query as a literal -e argument, with -- last so it is not a pathspec', async () => {
     markRepo();
     replyFor('', []);
     await searchText(root, '-n a.*b');
-    expect(gitCalls[0].args.slice(-3)).toEqual(['--', '-e', '-n a.*b']);
+    // `git grep ... -e <query> --`: `-e` consumes the pattern even when it looks
+    // like an option, and `--` ends the options so nothing is read as a pathspec.
+    expect(gitCalls[0].args.slice(-3)).toEqual(['-e', '-n a.*b', '--']);
   });
 
   it('falls back to walking when git fails for a root', async () => {
