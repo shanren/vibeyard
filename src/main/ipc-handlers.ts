@@ -2,7 +2,6 @@ import { ipcMain, BrowserWindow, app, dialog, shell, clipboard } from 'electron'
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { execSync } from 'child_process';
 import { spawnPty, spawnShellPty, writePty, resizePty, killPty, isSilencedExit, getPtyCwd } from './pty-manager';
 import { loadState, saveState, PersistedState } from './store';
 import { startWatching, cleanupSessionStatus } from './hook-status';
@@ -14,7 +13,7 @@ import { createAppMenu } from './menu';
 import { getProvider, getProviderMeta, getAllProviderMetas, getAllProviders } from './providers/registry';
 import { buildHandoffPrompt } from './providers/resume-handoff';
 import { projectTranscripts, searchSessions } from './session-deep-search';
-import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, SearchFilesResult, EditAction } from '../shared/types';
+import type { ProviderId, GitFileEntry, SettingsValidationResult, ReadFileResult, FileStatResult, TopFilesResult, TopFile, SearchFilesResult, SearchTextResult, EditAction } from '../shared/types';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../shared/token-estimate';
 import { isPathUnder, normalizeShellPath } from '../shared/platform';
 import { expandUserPath, isBinaryBuffer, isLikelyBinaryFile, BINARY_SNIFF_BYTES } from './fs-utils';
@@ -22,6 +21,8 @@ import { isMac, isWin } from './platform';
 import { shouldWarnStatusLine } from './settings-guard';
 import { buildRcodeIgnoreMatcher } from './rcodeignore';
 import { searchProjectFiles } from './file-search';
+import { searchText } from './text-search';
+import { enumerateProjectFiles } from './file-enumeration';
 import { setCloseConfirmed } from './close-state';
 import { provisionProfileDir } from './profiles';
 import { getKeychainIsolationStatus } from './claude-keychain';
@@ -69,44 +70,6 @@ function isAllowedReadPath(resolvedPath: string): boolean {
   }
 
   return allowedPaths.some(allowed => resolvedPath === allowed || resolvedPath.startsWith(allowed));
-}
-
-/**
- * Enumerate files in a project root. Prefers `git ls-files` (respects .gitignore);
- * falls back to a depth- and count-limited recursive walk when not a git repo.
- * Returns repo-relative paths.
- */
-function enumerateProjectFiles(resolvedCwd: string): string[] {
-  try {
-    const output = execSync('git ls-files --cached --others --exclude-standard', {
-      cwd: resolvedCwd,
-      encoding: 'utf-8',
-      timeout: 5000,
-    });
-    return output.split('\n').filter(Boolean);
-  } catch {
-    const files: string[] = [];
-    const IGNORE = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', '.next', '__pycache__']);
-    const MAX_DEPTH = 5;
-    const MAX_FILES = 5000;
-    function walk(dir: string, depth: number): void {
-      if (depth > MAX_DEPTH || files.length >= MAX_FILES) return;
-      let entries: fs.Dirent[];
-      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-      for (const entry of entries) {
-        if (files.length >= MAX_FILES) return;
-        if (IGNORE.has(entry.name) || entry.name.startsWith('.')) continue;
-        const rel = path.relative(resolvedCwd, path.join(dir, entry.name));
-        if (entry.isDirectory()) {
-          walk(path.join(dir, entry.name), depth + 1);
-        } else {
-          files.push(rel);
-        }
-      }
-    }
-    walk(resolvedCwd, 0);
-    return files;
-  }
 }
 
 let hookWatcherStarted = false;
@@ -494,13 +457,13 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('pty:getCwd', (_event, sessionId: string) => getPtyCwd(sessionId));
 
-  ipcMain.handle('fs:listFiles', (_event, cwd: string, query: string) => {
+  ipcMain.handle('fs:listFiles', async (_event, cwd: string, query: string) => {
     try {
       const resolvedCwd = path.resolve(cwd);
       if (!isWithinKnownProject(resolvedCwd)) {
         return [];
       }
-      let files = enumerateProjectFiles(resolvedCwd);
+      let files = await enumerateProjectFiles(resolvedCwd);
 
       if (query) {
         const lower = query.toLowerCase();
@@ -524,7 +487,7 @@ export function registerIpcHandlers(): void {
     }
   });
 
-  ipcMain.handle('fs:searchFiles', (_event, cwd: string, query: string): SearchFilesResult => {
+  ipcMain.handle('fs:searchFiles', async (_event, cwd: string, query: string): Promise<SearchFilesResult> => {
     try {
       // Defensive short-circuit: an empty/blank query never triggers a walk.
       if (typeof query !== 'string' || query.trim() === '') {
@@ -534,11 +497,28 @@ export function registerIpcHandlers(): void {
       if (!isWithinKnownProject(resolvedCwd)) {
         return { files: [], truncated: false };
       }
-      const files = enumerateProjectFiles(resolvedCwd);
+      const files = await enumerateProjectFiles(resolvedCwd);
       return searchProjectFiles(files, query);
     } catch (err) {
       console.warn('fs:searchFiles failed:', err);
       return { files: [], truncated: false };
+    }
+  });
+
+  ipcMain.handle('fs:searchText', async (_event, cwd: string, query: string): Promise<SearchTextResult> => {
+    try {
+      // Defensive short-circuit: a blank query never triggers the engine.
+      if (typeof query !== 'string' || query.trim() === '') {
+        return { matches: [], truncated: false, engine: 'git', tookMs: 0 };
+      }
+      const resolvedCwd = path.resolve(cwd);
+      if (!isWithinKnownProject(resolvedCwd)) {
+        return { matches: [], truncated: false, engine: 'git', tookMs: 0 };
+      }
+      return await searchText(resolvedCwd, query);
+    } catch (err) {
+      console.warn('fs:searchText failed:', err);
+      return { matches: [], truncated: false, engine: 'walk', tookMs: 0 };
     }
   });
 
@@ -550,7 +530,7 @@ export function registerIpcHandlers(): void {
       }
       const clampedLimit = Math.max(1, Math.min(100, Math.floor(limit) || 10));
       const isIgnored = buildRcodeIgnoreMatcher(resolvedCwd);
-      const relFiles = enumerateProjectFiles(resolvedCwd).filter((rel) => !isIgnored(rel));
+      const relFiles = (await enumerateProjectFiles(resolvedCwd)).filter((rel) => !isIgnored(rel));
 
       const results: TopFile[] = [];
       let scanned = 0;

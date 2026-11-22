@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron';
-import type { CostData, ProviderId, CliProviderMeta, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction } from '../shared/types';
+import type { CostData, ProviderId, CliProviderMeta, ToolFailureData, SettingsWarningData, SettingsValidationResult, StatusLineConflictData, InspectorEvent, ProviderConfig, ReadFileResult, FileStatResult, TopFilesResult, SearchFilesResult, SearchTextResult, FsChange, DeepSearchResult, ProjectTranscript, EditAction } from '../shared/types';
 import { ZOOM_MIN, ZOOM_MAX } from '../shared/types';
 
 export type { CostData } from '../shared/types';
@@ -37,6 +37,7 @@ export interface RCodeApi {
     browseDirectory(): Promise<string | null>;
     listFiles(cwd: string, query: string): Promise<string[]>;
     searchFiles(cwd: string, query: string): Promise<SearchFilesResult>;
+    searchText(cwd: string, query: string): Promise<SearchTextResult>;
     topFilesByTokens(cwd: string, limit: number): Promise<TopFilesResult>;
     exists(filePath: string): Promise<boolean>;
     readFile(filePath: string): Promise<ReadFileResult>;
@@ -190,6 +191,7 @@ const api: RCodeApi = {
     browseDirectory: () => ipcRenderer.invoke('fs:browseDirectory'),
     listFiles: (cwd: string, query: string) => ipcRenderer.invoke('fs:listFiles', cwd, query),
     searchFiles: (cwd, query) => ipcRenderer.invoke('fs:searchFiles', cwd, query),
+    searchText: (cwd, query) => ipcRenderer.invoke('fs:searchText', cwd, query),
     topFilesByTokens: (cwd: string, limit: number) => ipcRenderer.invoke('fs:topFilesByTokens', cwd, limit),
     exists: (filePath: string) => ipcRenderer.invoke('fs:exists', filePath),
     readFile: (filePath: string) => ipcRenderer.invoke('fs:readFile', filePath),
