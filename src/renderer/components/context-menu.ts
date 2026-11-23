@@ -8,7 +8,18 @@ export interface MenuOption {
   disabled?: boolean;
 }
 
-export function showContextMenu(x: number, y: number, options: MenuOption[]): void {
+/** A horizontal rule inside a menu, used to group related items (VS Code style). */
+export interface MenuSeparator {
+  separator: true;
+}
+
+export type MenuEntry = MenuOption | MenuSeparator;
+
+export function isSeparator(entry: MenuEntry): entry is MenuSeparator {
+  return (entry as MenuSeparator).separator === true;
+}
+
+export function showContextMenu(x: number, y: number, options: MenuEntry[]): void {
   if (pendingCloseHandler) {
     document.removeEventListener('click', pendingCloseHandler);
     document.removeEventListener('keydown', pendingCloseHandler);
@@ -21,6 +32,12 @@ export function showContextMenu(x: number, y: number, options: MenuOption[]): vo
   menu.className = 'board-context-menu';
 
   for (const opt of options) {
+    if (isSeparator(opt)) {
+      const rule = document.createElement('div');
+      rule.className = 'board-context-menu-separator';
+      menu.appendChild(rule);
+      continue;
+    }
     const item = document.createElement('div');
     item.className = 'board-context-menu-item';
     if (opt.danger) item.classList.add('danger');

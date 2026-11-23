@@ -21,6 +21,7 @@ import { isMac, isWin } from './platform';
 import { shouldWarnStatusLine } from './settings-guard';
 import { buildRcodeIgnoreMatcher } from './rcodeignore';
 import { searchProjectFiles } from './file-search';
+import { resolveRenameTarget } from './fs-ops';
 import { searchText } from './text-search';
 import { enumerateProjectFiles } from './file-enumeration';
 import { setCloseConfirmed } from './close-state';
@@ -705,6 +706,61 @@ export function registerIpcHandlers(): void {
       return { ok: true };
     } catch (err) {
       console.warn('fs:openPath failed:', err);
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle('fs:revealItem', async (_event, targetPath: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resolved = path.resolve(targetPath);
+      if (!isWithinKnownProject(resolved)) {
+        console.warn(`fs:revealItem blocked: ${resolved} is not within a known project`);
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      // Unlike fs:openPath (which launches the target), this selects the entry
+      // inside its parent folder in Explorer/Finder. A file deleted since the
+      // tree rendered makes showItemInFolder a silent no-op, so say so.
+      if (!fs.existsSync(resolved)) return { ok: false, error: 'Path no longer exists' };
+      shell.showItemInFolder(resolved);
+      return { ok: true };
+    } catch (err) {
+      console.warn('fs:revealItem failed:', err);
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle('fs:createDirectory', async (_event, dirPath: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resolved = path.resolve(dirPath);
+      if (!isWithinKnownProject(resolved)) {
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      if (fs.existsSync(resolved)) return { ok: false, error: 'Already exists' };
+      await fs.promises.mkdir(resolved);
+      return { ok: true };
+    } catch (err) {
+      console.warn('fs:createDirectory failed:', err);
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcMain.handle('fs:renamePath', async (_event, targetPath: string, nextName: string): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const resolved = path.resolve(targetPath);
+      if (!isWithinKnownProject(resolved)) {
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      const target = resolveRenameTarget(resolved, nextName);
+      if (!target.ok) return { ok: false, error: target.reason };
+      if (!isWithinKnownProject(path.resolve(target.target))) {
+        return { ok: false, error: 'Path is not within a known project' };
+      }
+      // Never overwrite: a rename onto an existing name is a data-loss footgun.
+      if (fs.existsSync(target.target)) return { ok: false, error: 'That name is already taken' };
+      await fs.promises.rename(resolved, target.target);
+      return { ok: true };
+    } catch (err) {
+      console.warn('fs:renamePath failed:', err);
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
   });

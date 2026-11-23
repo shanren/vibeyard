@@ -38,3 +38,11 @@
   cursor: default;
   pointer-events: none;
 }
+
+/* Group rule between related menu items (VS Code style: view / copy / mutate /
+   destroy). Kept to 1px + a token so both themes inherit it. */
+.board-context-menu-separator {
+  height: 1px;
+  margin: var(--app-space-1) 0;
+  background: var(--vscode-menu-separatorBackground, var(--border));
+}

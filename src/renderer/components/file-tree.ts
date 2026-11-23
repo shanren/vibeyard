@@ -1,7 +1,8 @@
 import { appState, ProjectRecord } from '../state.js';
 import { pathToFileURL } from '../file-url.js';
-import { showContextMenu, MenuOption } from './context-menu.js';
-import { showConfirmModal, showPropertiesDialog } from './modal.js';
+import { showContextMenu, MenuEntry } from './context-menu.js';
+import { showConfirmDialog, showConfirmModal, showModal, showPropertiesDialog } from './modal.js';
+import { FileTreeMenuActionId, menuEntriesFor, toProjectRelative } from './file-tree-menu.js';
 import { FILE_PATH_DRAG_TYPE } from '../drag-types.js';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../../shared/token-estimate.js';
 import { isPathUnder } from '../../shared/platform.js';
@@ -256,7 +257,7 @@ function createEntry(projectId: string, depth: number, entry: DirEntry): HTMLEle
     row.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showContextMenu(e.clientX, e.clientY, [deleteMenuOption(entry)]);
+      showContextMenu(e.clientX, e.clientY, entryMenu(projectId, entry));
     });
     return [row, subContainer];
   }
@@ -275,13 +276,7 @@ function createEntry(projectId: string, depth: number, entry: DirEntry): HTMLEle
   row.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY, [
-      {
-        label: 'Properties',
-        action: () => { showFileProperties(entry); },
-      },
-      deleteMenuOption(entry),
-    ]);
+    showContextMenu(e.clientX, e.clientY, entryMenu(projectId, entry));
   });
   return [row];
 }
@@ -437,27 +432,93 @@ function fileTypeLabel(name: string): string {
   return name.slice(dot + 1).toLowerCase();
 }
 
-function deleteMenuOption(entry: DirEntry): MenuOption {
-  return {
-    label: 'Delete',
-    danger: true,
-    action: () => confirmAndTrash(entry),
+/** Absolute path of the row's project, for the "Copy Relative Path" action. */
+function projectPathOf(projectId: string): string {
+  return appState.projects.find((p) => p.id === projectId)?.path ?? '';
+}
+
+/** Surface a filesystem failure instead of failing silently. */
+function reportActionFailure(title: string, error?: string): void {
+  showConfirmDialog(title, error ?? 'The operation could not be completed.', {
+    confirmLabel: 'OK',
+    cancelLabel: 'Close',
+    onConfirm: () => {},
+  });
+}
+
+function promptNewEntry(dir: DirEntry, kind: 'file' | 'folder'): void {
+  const isFolder = kind === 'folder';
+  showModal(
+    isFolder ? 'New Folder' : 'New File',
+    [{ label: 'Name', id: 'name', type: 'text', placeholder: isFolder ? 'folder-name' : 'file-name.ts' }],
+    async (values) => {
+      const name = (values.name ?? '').trim();
+      if (!name) return;
+      // The name is a bare segment (the main process rejects separators); `/`
+      // joins cleanly on both platforms and the walker normalizes it.
+      const target = `${dir.path}/${name}`;
+      const result = isFolder
+        ? await window.rcode.fs.createDirectory(target)
+        : await window.rcode.fs.writeFile(target, '');
+      if (!result.ok) reportActionFailure(isFolder ? 'New Folder' : 'New File', result.error);
+    },
+    { confirmLabel: 'Create' },
+  );
+}
+
+function promptRename(entry: DirEntry): void {
+  showModal(
+    `Rename ${entry.isDirectory ? 'Folder' : 'File'}`,
+    [{ label: 'Name', id: 'name', type: 'text', defaultValue: entry.name }],
+    async (values) => {
+      const name = (values.name ?? '').trim();
+      if (!name || name === entry.name) return;
+      const result = await window.rcode.fs.renamePath(entry.path, name);
+      if (!result.ok) reportActionFailure('Rename', result.error);
+    },
+    { confirmLabel: 'Rename' },
+  );
+}
+
+function copyToClipboard(text: string): void {
+  void window.rcode.clipboard.write(text).catch(() => {});
+}
+
+/** Right-click menu for one row: view/copy, mutate, then the destructive action. */
+function entryMenu(projectId: string, entry: DirEntry): MenuEntry[] {
+  const handlers: Record<FileTreeMenuActionId, () => void> = {
+    open: () => { void window.rcode.fs.openInFolder(entry.path); },
+    reveal: () => { void window.rcode.fs.revealItem(entry.path); },
+    copyPath: () => copyToClipboard(entry.path),
+    copyRelativePath: () => copyToClipboard(toProjectRelative(projectPathOf(projectId), entry.path)),
+    newFile: () => promptNewEntry(entry, 'file'),
+    newFolder: () => promptNewEntry(entry, 'folder'),
+    rename: () => promptRename(entry),
+    delete: () => confirmAndTrash(entry),
+    properties: () => { void showFileProperties(entry); },
   };
+  return menuEntriesFor(entry, handlers);
 }
 
 function confirmAndTrash(entry: DirEntry): void {
   const kind = entry.isDirectory ? 'folder' : 'file';
-  const message = entry.isDirectory
+  const base = entry.isDirectory
     ? `Move "${entry.name}" and its contents to the Trash?`
     : `Move "${entry.name}" to the Trash?`;
+  // Deleting a VCS directory destroys history and is not obvious from the row
+  // label alone, so say what is actually at stake before the user confirms.
+  const isVcsDir = entry.isDirectory && ['.git', '.hg', '.svn'].includes(entry.name);
+  const message = isVcsDir
+    ? `${base}
+
+This is a version-control directory: deleting it removes the repository's history from this folder.`
+    : base;
   showConfirmModal(
     `Delete ${kind}`,
     message,
     async () => {
       const result = await window.rcode.fs.trashItem(entry.path);
-      if (!result.ok) {
-        console.warn(`Failed to trash ${entry.path}: ${result.error ?? 'unknown error'}`);
-      }
+      if (!result.ok) reportActionFailure('Delete', result.error);
     },
     { confirmLabel: 'Delete', danger: true },
   );

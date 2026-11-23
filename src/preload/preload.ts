@@ -46,6 +46,9 @@ export interface RCodeApi {
     readImage(filePath: string): Promise<{ dataUrl: string } | null>;
     trashItem(filePath: string): Promise<{ ok: boolean; error?: string }>;
     openInFolder(path: string): Promise<{ ok: boolean; error?: string }>;
+    revealItem(path: string): Promise<{ ok: boolean; error?: string }>;
+    createDirectory(path: string): Promise<{ ok: boolean; error?: string }>;
+    renamePath(path: string, nextName: string): Promise<{ ok: boolean; error?: string }>;
     watchDir(dirPath: string): void;
     unwatchDir(dirPath: string): void;
     onFsChange(callback: (changes: FsChange[]) => void): () => void;
@@ -200,6 +203,9 @@ const api: RCodeApi = {
     readImage: (filePath: string) => ipcRenderer.invoke('fs:readImage', filePath),
     trashItem: (filePath: string) => ipcRenderer.invoke('fs:trashItem', filePath),
     openInFolder: (path: string) => ipcRenderer.invoke('fs:openPath', path),
+    revealItem: (path: string) => ipcRenderer.invoke('fs:revealItem', path),
+    createDirectory: (path: string) => ipcRenderer.invoke('fs:createDirectory', path),
+    renamePath: (path: string, nextName: string) => ipcRenderer.invoke('fs:renamePath', path, nextName),
     watchDir: (dirPath: string) => ipcRenderer.send('fs:watchDir', dirPath),
     unwatchDir: (dirPath: string) => ipcRenderer.send('fs:unwatchDir', dirPath),
     onFsChange: (callback: (changes: FsChange[]) => void) => onChannel('fs:changed', (changes) => callback(changes as FsChange[])),
