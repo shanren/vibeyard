@@ -29,21 +29,29 @@ describe('PiProvider', () => {
     expect(provider.buildArgs({ cliSessionId: 'abc-123', isResume: false, extraArgs: '' })).toEqual([
       '--session-id',
       'abc-123',
+      '--tui-mode',
+      'regular',
     ]);
     expect(provider.buildArgs({ cliSessionId: 'abc-123', isResume: true, extraArgs: '' })).toEqual([
       '--session-id',
       'abc-123',
+      '--tui-mode',
+      'regular',
     ]);
   });
 
   it('falls back to --continue when a resumed session has no id on record', () => {
-    expect(provider.buildArgs({ cliSessionId: null, isResume: true, extraArgs: '' })).toEqual(['--continue']);
+    expect(provider.buildArgs({ cliSessionId: null, isResume: true, extraArgs: '' })).toEqual([
+      '--continue',
+      '--tui-mode',
+      'regular',
+    ]);
   });
 
   it('puts extra args then `--` and the positional prompt last', () => {
     expect(
       provider.buildArgs({ cliSessionId: null, isResume: false, extraArgs: '--model sonnet', initialPrompt: 'fix it' }),
-    ).toEqual(['--model', 'sonnet', '--', 'fix it']);
+    ).toEqual(['--tui-mode', 'regular', '--model', 'sonnet', '--', 'fix it']);
   });
 
   it('augments PATH and reports no settings to fix', async () => {

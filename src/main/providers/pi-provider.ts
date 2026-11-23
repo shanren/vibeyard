@@ -80,6 +80,13 @@ export class PiProvider implements CliProvider {
       args.push('--continue');
     }
 
+    // `--tui-mode regular` keeps pi out of the alternate screen, which is what makes
+    // the terminal's scrollback (and therefore its scrollbar) real. Fullscreen mode
+    // repaints over the alt buffer, where no terminal keeps history — orca solves the
+    // same problem for Codex by passing `--no-alt-screen`. Before extraArgs, so a user
+    // who wants fullscreen can override it there.
+    args.push('--tui-mode', 'regular');
+
     if (opts.extraArgs) args.push(...opts.extraArgs.split(/\s+/).filter(Boolean));
 
     // `pi [options] [--] [@files...] [messages...]`: the prompt is positional, so

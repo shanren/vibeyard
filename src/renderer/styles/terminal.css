@@ -60,6 +60,19 @@
   padding: 4px;
 }
 
+/* xterm 6 moved scrolling to .xterm-scrollable-element and left .xterm-viewport
+   behind as an empty div — but it keeps its inherited `overflow-y: scroll`, so
+   Chromium lays out a *native* scrollbar in the strip it occupies and that bar
+   can never move (the viewport has no scroll range; xterm never reads its
+   scrollTop). It is a dead scrollbar painted over the right edge: hovering the
+   terminal reveals a thumb, dragging it does nothing, and it eats pointer
+   events aimed at the real scroll area underneath. Hide it for good. */
+.terminal-pane .xterm .xterm-viewport,
+#project-terminal-container .xterm .xterm-viewport {
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .terminal-pane.hidden {
   display: none;
 }
