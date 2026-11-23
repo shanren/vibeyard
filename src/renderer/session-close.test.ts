@@ -39,6 +39,8 @@ vi.mock('./session-activity.js', () => ({
 import { appState, _resetForTesting } from './state';
 import {
   closeSessionWithConfirm,
+  closeSessionFromMiddleClick,
+  isFileSession,
   closeSessionWithAlwaysConfirm,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
@@ -148,6 +150,54 @@ describe('closeSessionWithConfirm', () => {
 
     expect(mockShowConfirmDialog).not.toHaveBeenCalled();
     expect(project.sessions).toHaveLength(0);
+  });
+});
+
+describe('isFileSession', () => {
+  it('is true for file readers and diff viewers only', () => {
+    expect(isFileSession({ type: 'file-reader' })).toBe(true);
+    expect(isFileSession({ type: 'diff-viewer' })).toBe(true);
+    expect(isFileSession({ type: undefined })).toBe(false);
+  });
+});
+
+describe('closeSessionFromMiddleClick', () => {
+  it('closes a file reader immediately, with no dialog', () => {
+    const project = appState.addProject('P', '/p');
+    const session = appState.addFileReaderSession(project.id, '/p/a.ts')!;
+    mockGetStatus.mockReturnValue('working'); // even "active" must not prompt
+
+    closeSessionFromMiddleClick(project.id, session.id);
+
+    expect(mockShowConfirmDialog).not.toHaveBeenCalled();
+    expect(project.sessions).toHaveLength(0);
+  });
+
+  it('closes a diff viewer immediately, with no dialog', () => {
+    const project = appState.addProject('P', '/p');
+    const session = appState.addDiffViewerSession(project.id, '/p/a.ts', 'staged')!;
+
+    closeSessionFromMiddleClick(project.id, session.id);
+
+    expect(mockShowConfirmDialog).not.toHaveBeenCalled();
+    expect(project.sessions).toHaveLength(0);
+  });
+
+  it('still asks before closing a CLI session', () => {
+    const { project, sessions } = seedProject(1);
+
+    closeSessionFromMiddleClick(project.id, sessions[0].id);
+
+    expect(mockShowConfirmDialog).toHaveBeenCalledTimes(1);
+    expect(project.sessions).toHaveLength(1); // nothing removed until confirmed
+  });
+
+  it('ignores an unknown session id', () => {
+    const { project } = seedProject(1);
+
+    closeSessionFromMiddleClick(project.id, 'nope');
+
+    expect(mockShowConfirmDialog).not.toHaveBeenCalled();
   });
 });
 

@@ -133,6 +133,7 @@
       "moveRight": "向右移动",
       "copyCliSessionId": "复制 CLI 会话 ID",
       "copyInternalId": "复制内部 ID",
+      "copyFilePath": "复制文件路径",
       "closeInspector": "关闭检查器",
       "inspect": "检查"
     }

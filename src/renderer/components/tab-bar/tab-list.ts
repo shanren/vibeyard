@@ -10,7 +10,7 @@ import { esc } from '../../dom-utils.js';
 import { providerMark } from '../../icons.js';
 import {
   closeSessionWithConfirm,
-  closeSessionWithAlwaysConfirm,
+  closeSessionFromMiddleClick,
   closeAllSessionsWithConfirm,
   closeOtherSessionsWithConfirm,
   closeSessionsFromRightWithConfirm,
@@ -163,6 +163,18 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
     });
   }
 
+  // Copy File Path — only file-backed tabs carry a path worth copying, so the
+  // entry is absent (not disabled) for CLI sessions.
+  const sessionFilePath = session.fileReaderPath ?? session.diffFilePath ?? '';
+  const copyFilePathItem = document.createElement('div');
+  copyFilePathItem.className = 'tab-context-menu-item';
+  copyFilePathItem.textContent = t('contextMenu.tab.copyFilePath');
+  copyFilePathItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideTabContextMenu();
+    navigator.clipboard.writeText(sessionFilePath).catch(() => {});
+  });
+
   const isCli = isCliSession(session);
   const providerCapabilities = getProviderCapabilities(session.providerId || 'claude');
   const canInspect = isCli && providerCapabilities?.hookStatus !== false;
@@ -170,6 +182,12 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   menu.appendChild(renameItem);
   menu.appendChild(moveLeftItem);
   menu.appendChild(moveRightItem);
+  if (sessionFilePath) {
+    const pathSeparator = document.createElement('div');
+    pathSeparator.className = 'tab-context-menu-separator';
+    menu.appendChild(pathSeparator);
+    menu.appendChild(copyFilePathItem);
+  }
 
   if (appState.preferences.debugMode) {
     const sessionSeparator = document.createElement('div');
@@ -291,12 +309,12 @@ export function render(): void {
       }
     });
 
-    // Middle-click to close (always confirmed — an accidental middle-press must
-    // never silently destroy a session, especially a file reader or completed one)
+    // Middle-click to close: a file tab (reader/diff) closes immediately, a CLI
+    // session still confirms — see closeSessionFromMiddleClick.
     tab.addEventListener('auxclick', (e) => {
       if (e.button === 1) {
         e.preventDefault();
-        closeSessionWithAlwaysConfirm(project.id, session.id);
+        closeSessionFromMiddleClick(project.id, session.id);
       }
     });
 

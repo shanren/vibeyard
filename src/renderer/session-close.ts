@@ -39,6 +39,30 @@ function confirmAndClose(
   );
 }
 
+/**
+ * True for tabs backed by a file rather than a running CLI: a file reader or a
+ * diff viewer. They hold no process and no unsaved state, so closing one is
+ * cheap and reversible (reopen the file), unlike closing a working CLI session.
+ */
+export function isFileSession(session: Pick<SessionRecord, 'type'>): boolean {
+  return session.type === 'file-reader' || session.type === 'diff-viewer';
+}
+
+/**
+ * Middle-click on a tab. A file tab closes outright — the gesture is deliberate
+ * and the cost of a mistake is one click to reopen. A CLI session still asks,
+ * because an accidental middle-press must never interrupt running work.
+ */
+export function closeSessionFromMiddleClick(projectId: string, sessionId: string): void {
+  const session = projectSessions(projectId).find((s) => s.id === sessionId);
+  if (!session) return;
+  if (isFileSession(session)) {
+    appState.removeSession(projectId, sessionId);
+    return;
+  }
+  closeSessionWithAlwaysConfirm(projectId, sessionId);
+}
+
 export function closeSessionWithConfirm(projectId: string, sessionId: string): void {
   confirmAndClose(
     projectSessions(projectId),
