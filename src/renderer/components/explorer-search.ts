@@ -1,5 +1,7 @@
 import { appState } from '../state.js';
 import { t } from '../i18n.js';
+import { absolutePathFrom } from '../../shared/platform.js';
+import { showFileEntryMenu } from './file-entry-menu.js';
 import type { SearchFilesResult, SearchTextMatch, SearchTextResult } from '../../shared/types.js';
 
 /** Which result kind the Explorer search shows; persisted via Preferences.explorerSearchMode. */
@@ -181,6 +183,30 @@ function appendContentFootnote(): void {
   resultsEl.appendChild(footnote);
 }
 
+/**
+ * Give a result row the same right-click menu the file tree shows. Search
+ * results carry project-relative paths, so they are resolved against the
+ * project root first — the menu's actions pass the path straight to the main
+ * process, which validates it against the known projects.
+ *
+ * Mutating actions re-run the query: the list is a snapshot, and a renamed or
+ * deleted file would otherwise linger as a row that opens nothing.
+ */
+function attachRowMenu(el: HTMLElement, filePath: string): void {
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const project = appState.activeProject;
+    if (!project) return;
+    showFileEntryMenu(
+      e.clientX,
+      e.clientY,
+      { projectPath: project.path, onMutated: () => { void runSearch(); } },
+      { name: splitResultPath(filePath).name, path: absolutePathFrom(project.path, filePath), isDirectory: false },
+    );
+  });
+}
+
 function createFileGroup(filePath: string, matches: SearchTextMatch[]): HTMLElement {
   const group = document.createElement('div');
   group.className = 'explorer-search-file';
@@ -205,6 +231,9 @@ function createFileGroup(filePath: string, matches: SearchTextMatch[]): HTMLElem
   countEl.className = 'explorer-search-count';
   countEl.textContent = `(${matches.length})`;
   header.appendChild(countEl);
+  // The header is the file itself, so it carries the file's menu (the rows
+  // beneath it are that same file at different lines).
+  attachRowMenu(header, filePath);
   group.appendChild(header);
 
   for (const match of matches) {
@@ -232,6 +261,7 @@ function createMatchRow(filePath: string, match: SearchTextMatch): HTMLElement {
     if (!project) return;
     appState.addFileReaderSession(project.id, filePath, match.line);
   });
+  attachRowMenu(row, filePath);
 
   return row;
 }
@@ -259,6 +289,7 @@ function createResultRow(filePath: string): HTMLElement {
     if (!project) return;
     appState.addFileReaderSession(project.id, filePath);
   });
+  attachRowMenu(row, filePath);
 
   return row;
 }

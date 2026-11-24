@@ -1,6 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchFilesResult, SearchTextResult } from '../../shared/types.js';
 
+const { showContextMenuMock, showConfirmModalMock } = vi.hoisted(() => ({
+  showContextMenuMock: vi.fn(),
+  showConfirmModalMock: vi.fn(),
+}));
+
+// The right-click menu and its modal prompts are exercised in
+// file-entry-menu.test.ts; here they are spies so a row's wiring can be asserted.
+vi.mock('./context-menu.js', () => ({
+  showContextMenu: (...args: unknown[]) => showContextMenuMock(...args),
+  hideContextMenu: vi.fn(),
+  isSeparator: (entry: { separator?: boolean }) => entry?.separator === true,
+}));
+
+vi.mock('./modal.js', () => ({
+  showModal: vi.fn(),
+  showConfirmModal: (...args: unknown[]) => showConfirmModalMock(...args),
+  showConfirmDialog: vi.fn(),
+  showPropertiesDialog: vi.fn(),
+}));
+
 class FakeClassList {
   private values = new Set<string>();
   add(...tokens: string[]): void { for (const t of tokens) this.values.add(t); }
@@ -92,6 +112,10 @@ function getById(id: string): FakeElement {
 
 const searchFilesMock = vi.fn();
 const searchTextMock = vi.fn();
+const revealItemMock = vi.fn(() => Promise.resolve({ ok: true }));
+const openInFolderMock = vi.fn(() => Promise.resolve({ ok: true }));
+const trashItemMock = vi.fn(() => Promise.resolve({ ok: true }));
+const clipboardWriteMock = vi.fn(() => Promise.resolve());
 
 function stubDom(): void {
   const doc = {
@@ -102,11 +126,34 @@ function stubDom(): void {
   vi.stubGlobal('window', {
     rcode: {
       store: { load: vi.fn(), save: vi.fn() },
-      fs: { searchFiles: searchFilesMock, searchText: searchTextMock },
+      fs: {
+        searchFiles: searchFilesMock,
+        searchText: searchTextMock,
+        revealItem: revealItemMock,
+        openInFolder: openInFolderMock,
+        trashItem: trashItemMock,
+      },
+      clipboard: { write: clipboardWriteMock },
     },
   });
   // Mirror index.html: #explorer-search-results starts with the `hidden` class.
   getById('explorer-search-results').classList.add('hidden');
+}
+
+/** Fire a contextmenu event on a stubbed element (the handler calls both). */
+function rightClick(el: FakeElement, x = 40, y = 60): void {
+  el.dispatch('contextmenu', { clientX: x, clientY: y, preventDefault: vi.fn(), stopPropagation: vi.fn() });
+}
+
+/** Labels of the actionable rows in a menu spec, in order. */
+function menuLabels(entries: any[]): string[] {
+  return entries.filter((e) => !e.separator).map((e) => e.label);
+}
+
+function actionFor(entries: any[], label: string): () => void {
+  const found = entries.find((e) => !e.separator && e.label === label);
+  if (!found) throw new Error(`no menu entry labelled ${label}`);
+  return found.action;
 }
 
 async function load() {
@@ -519,5 +566,92 @@ describe('explorer-search', () => {
     expect(SHORTCUT_DEFAULTS.filter((d) => d.defaultKeys === 'CmdOrCtrl+Shift+E')).toHaveLength(1);
     // Table ordering convention: directly after quick-open inside Search & Help.
     expect(SHORTCUT_DEFAULTS[SHORTCUT_DEFAULTS.indexOf(entry!) - 1].id).toBe('quick-open');
+  });
+  it('right-clicking a path result opens the file menu on the absolute path', async () => {
+    const { appState, initExplorerSearch } = await load();
+    project(appState);
+    initExplorerSearch();
+    searchFilesMock.mockResolvedValue({ files: ['src/a.ts'], truncated: false });
+
+    const input = getById('explorer-search-input');
+    input.value = 'a';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(150);
+
+    const row = getById('explorer-search-results').children[0];
+    rightClick(row, 40, 60);
+
+    expect(showContextMenuMock).toHaveBeenCalledTimes(1);
+    const [x, y, entries] = showContextMenuMock.mock.calls[0];
+    expect([x, y]).toEqual([40, 60]);
+    // Same VS Code grouping the file tree uses, minus the folder-only creation rows.
+    expect(menuLabels(entries)).toEqual([
+      'Open',
+      'Reveal in File Explorer',
+      'Copy Path',
+      'Copy Relative Path',
+      'Rename…',
+      'Delete',
+      'Properties',
+    ]);
+
+    // Search results are project-relative; the menu must act on the resolved path.
+    actionFor(entries, 'Reveal in File Explorer')();
+    expect(revealItemMock).toHaveBeenCalledWith('/proj/src/a.ts');
+    actionFor(entries, 'Copy Relative Path')();
+    expect(clipboardWriteMock).toHaveBeenLastCalledWith('src/a.ts');
+  });
+
+  it('right-clicking a content match or its file header targets the file, not the line', async () => {
+    const { appState, initExplorerSearch, setExplorerSearchMode } = await load();
+    project(appState);
+    initExplorerSearch();
+    setExplorerSearchMode('content');
+    searchTextMock.mockResolvedValue({
+      matches: [{ path: 'src/a.ts', line: 12, text: 'needle here' }],
+      truncated: false,
+      engine: 'git',
+      tookMs: 1,
+    });
+
+    const input = getById('explorer-search-input');
+    input.value = 'needle';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(300);
+
+    const results = getById('explorer-search-results');
+    const header = results.querySelectorAll('.explorer-search-file-header')[0];
+    const line = results.querySelectorAll('.explorer-search-line')[0];
+
+    for (const el of [header, line]) {
+      showContextMenuMock.mockClear();
+      rightClick(el);
+      expect(showContextMenuMock).toHaveBeenCalledTimes(1);
+      const entries = showContextMenuMock.mock.calls[0][2];
+      actionFor(entries, 'Reveal in File Explorer')();
+      expect(revealItemMock).toHaveBeenLastCalledWith('/proj/src/a.ts');
+    }
+  });
+
+  it('re-runs the query after a result is deleted so no dead row is left behind', async () => {
+    const { appState, initExplorerSearch } = await load();
+    project(appState);
+    initExplorerSearch();
+    searchFilesMock.mockResolvedValue({ files: ['src/a.ts', 'src/b.ts'], truncated: false });
+
+    const input = getById('explorer-search-input');
+    input.value = 'a';
+    input.dispatch('input');
+    await vi.advanceTimersByTimeAsync(150);
+    expect(searchFilesMock).toHaveBeenCalledTimes(1);
+
+    rightClick(getById('explorer-search-results').children[0]);
+    const entries = showContextMenuMock.mock.calls[0][2];
+    actionFor(entries, 'Delete')();
+    const onConfirm = showConfirmModalMock.mock.calls[0][2] as () => Promise<void>;
+    await onConfirm();
+
+    expect(trashItemMock).toHaveBeenCalledWith('/proj/src/a.ts');
+    expect(searchFilesMock).toHaveBeenCalledTimes(2);
   });
 });

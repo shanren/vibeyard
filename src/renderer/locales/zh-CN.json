@@ -134,6 +134,8 @@
       "copyCliSessionId": "复制 CLI 会话 ID",
       "copyInternalId": "复制内部 ID",
       "copyFilePath": "复制文件路径",
+      "openFilePath": "打开文件",
+      "revealFilePath": "在资源管理器中显示",
       "closeInspector": "关闭检查器",
       "inspect": "检查"
     }

@@ -34,6 +34,25 @@ export function isPathUnder(child: string, parent: string): boolean {
 }
 
 /**
+ * The absolute form of `filePath`, taken as relative to `basePath` when it is
+ * not already rooted. Git-derived paths (diff sessions, search results) are
+ * repo-relative, while the main process resolves every path it is handed and
+ * rejects anything outside a known project — so callers must join before they
+ * act on one.
+ *
+ * The join uses `basePath`'s own separator, so the result is a native-looking
+ * path rather than the mixed `C:\proj/src/a.ts` that string concatenation with
+ * `/` produces. An empty or missing base returns the input untouched.
+ */
+export function absolutePathFrom(basePath: string, filePath: string): string {
+  if (isAbsolutePath(filePath) || !basePath) return filePath;
+  const sep = basePath.includes('\\') ? '\\' : '/';
+  const root = basePath.replace(/[\\/]+$/, '');
+  const rest = filePath.replace(/^[\\/]+/, '').split(/[\\/]/).join(sep);
+  return rest ? `${root}${sep}${rest}` : root;
+}
+
+/**
  * Normalise a path that arrived from outside the app (a shell command line, a
  * file-manager hand-off) into the form we store on projects:
  *

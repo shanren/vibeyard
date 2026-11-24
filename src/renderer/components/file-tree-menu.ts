@@ -1,5 +1,5 @@
 import type { MenuEntry } from './context-menu.js';
-import type { DirEntry } from './file-tree.js';
+import type { DirEntry } from './file-entry-menu.js';
 
 /** Actions a file-tree row can offer. `id` is what the dispatcher switches on. */
 export type FileTreeMenuActionId =

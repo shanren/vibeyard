@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { basename, dirname, isAbsolutePath, isPathUnder, lastSeparatorIndex, samePath } from './platform';
+import { absolutePathFrom, basename, dirname, isAbsolutePath, isPathUnder, lastSeparatorIndex, samePath } from './platform';
 
 describe('basename', () => {
   it('extracts last segment from POSIX paths', () => {
@@ -150,5 +150,29 @@ describe('samePath', () => {
 
   it('is false for genuinely different paths', () => {
     expect(samePath('/a/b/c.ts', '/a/b/d.ts')).toBe(false);
+  });
+});
+
+describe('absolutePathFrom', () => {
+  it('joins a repo-relative path onto a POSIX root', () => {
+    expect(absolutePathFrom('/proj', 'src/a.ts')).toBe('/proj/src/a.ts');
+  });
+
+  it('uses the root separator so a Windows path stays native', () => {
+    expect(absolutePathFrom('E:\\work\\proj', 'src/a.ts')).toBe('E:\\work\\proj\\src\\a.ts');
+  });
+
+  it('tolerates a trailing separator on the root', () => {
+    expect(absolutePathFrom('/proj/', 'src/a.ts')).toBe('/proj/src/a.ts');
+    expect(absolutePathFrom('E:\\proj\\', 'src/a.ts')).toBe('E:\\proj\\src\\a.ts');
+  });
+
+  it('passes an already-absolute path through untouched', () => {
+    expect(absolutePathFrom('/proj', '/elsewhere/b.ts')).toBe('/elsewhere/b.ts');
+    expect(absolutePathFrom('E:\\proj', 'C:\\other\\b.ts')).toBe('C:\\other\\b.ts');
+  });
+
+  it('returns the input when there is no base to join onto', () => {
+    expect(absolutePathFrom('', 'src/a.ts')).toBe('src/a.ts');
   });
 });

@@ -1,7 +1,7 @@
 import type { RCodeApi } from './types.js';
 import type { SessionRecord, ProjectRecord, Preferences, PersistedState, ProviderId, ContextWindowInfo, InitialContextSnapshot, Profile } from '../shared/types.js';
 import { getProviderCapabilities, getProviderAvailabilitySnapshot } from './provider-availability.js';
-import { basename, isAbsolutePath } from '../shared/platform.js';
+import { absolutePathFrom, basename } from '../shared/platform.js';
 import { isCliSession } from './session-utils.js';
 import {
   buildResumedSessionFromCliId,
@@ -454,7 +454,7 @@ class AppState {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) return undefined;
 
-    const normalizedPath = isAbsolutePath(filePath) ? filePath : `${project.path}/${filePath}`;
+    const normalizedPath = absolutePathFrom(project.path, filePath);
 
     const existing = findExistingFileReader(project, normalizedPath);
     if (existing) {

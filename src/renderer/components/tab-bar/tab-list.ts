@@ -17,6 +17,7 @@ import {
   closeSessionsFromLeftWithConfirm,
 } from '../../session-close.js';
 import { hideTabContextMenu, setActiveContextMenu, positionMenu } from './menu.js';
+import { runTabFilePathAction, tabFilePath, tabFilePathMenuItems } from './file-path-menu.js';
 import { tabListEl } from './dom.js';
 import { t } from '../../i18n.js';
 
@@ -163,17 +164,12 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
     });
   }
 
-  // Copy File Path — only file-backed tabs carry a path worth copying, so the
-  // entry is absent (not disabled) for CLI sessions.
-  const sessionFilePath = session.fileReaderPath ?? session.diffFilePath ?? '';
-  const copyFilePathItem = document.createElement('div');
-  copyFilePathItem.className = 'tab-context-menu-item';
-  copyFilePathItem.textContent = t('contextMenu.tab.copyFilePath');
-  copyFilePathItem.addEventListener('click', (e) => {
-    e.stopPropagation();
-    hideTabContextMenu();
-    navigator.clipboard.writeText(sessionFilePath).catch(() => {});
-  });
+  // File-backed tabs (file reader, diff view) carry a real path, so they get the
+  // same view actions the file tree offers — open the file with the OS default
+  // app, reveal it in Explorer/Finder, copy it — built from a DOM-free spec.
+  // CLI sessions have no path, so the group is absent (not disabled) for them.
+  // tabFilePath() resolves a diff tab's repo-relative path against its worktree.
+  const sessionFilePath = tabFilePath(session, project.path);
 
   const isCli = isCliSession(session);
   const providerCapabilities = getProviderCapabilities(session.providerId || 'claude');
@@ -186,7 +182,17 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
     const pathSeparator = document.createElement('div');
     pathSeparator.className = 'tab-context-menu-separator';
     menu.appendChild(pathSeparator);
-    menu.appendChild(copyFilePathItem);
+    for (const item of tabFilePathMenuItems()) {
+      const row = document.createElement('div');
+      row.className = 'tab-context-menu-item';
+      row.textContent = item.label;
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideTabContextMenu();
+        runTabFilePathAction(item.id, sessionFilePath);
+      });
+      menu.appendChild(row);
+    }
   }
 
   if (appState.preferences.debugMode) {

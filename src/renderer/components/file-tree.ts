@@ -1,17 +1,11 @@
 import { appState, ProjectRecord } from '../state.js';
-import { pathToFileURL } from '../file-url.js';
-import { showContextMenu, MenuEntry } from './context-menu.js';
-import { showConfirmDialog, showConfirmModal, showModal, showPropertiesDialog } from './modal.js';
-import { FileTreeMenuActionId, menuEntriesFor, toProjectRelative } from './file-tree-menu.js';
+import { showFileEntryMenu, type DirEntry } from './file-entry-menu.js';
 import { FILE_PATH_DRAG_TYPE } from '../drag-types.js';
-import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../../shared/token-estimate.js';
 import { isPathUnder } from '../../shared/platform.js';
 
-export interface DirEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-}
+// The entry shape and its right-click actions live in file-entry-menu.ts, which
+// the Explorer's search results share; re-exported here for existing importers.
+export type { DirEntry };
 
 const expandedFolders = new Map<string, Set<string>>();
 const entryCache = new Map<string, DirEntry[]>();
@@ -257,7 +251,7 @@ function createEntry(projectId: string, depth: number, entry: DirEntry): HTMLEle
     row.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showContextMenu(e.clientX, e.clientY, entryMenu(projectId, entry));
+      showFileEntryMenu(e.clientX, e.clientY, { projectPath: projectPathOf(projectId) }, entry);
     });
     return [row, subContainer];
   }
@@ -276,7 +270,7 @@ function createEntry(projectId: string, depth: number, entry: DirEntry): HTMLEle
   row.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY, entryMenu(projectId, entry));
+    showFileEntryMenu(e.clientX, e.clientY, { projectPath: projectPathOf(projectId) }, entry);
   });
   return [row];
 }
@@ -374,154 +368,9 @@ async function reconcileChildren(
   }
 }
 
-async function showFileProperties(entry: DirEntry): Promise<void> {
-  const [statResult, readResult] = await Promise.all([
-    window.rcode.fs.stat(entry.path),
-    window.rcode.fs.readFile(entry.path),
-  ]);
-
-  const rows: Array<{ label: string; value: string; mono?: boolean }> = [];
-  rows.push({ label: 'Path', value: entry.path, mono: true });
-  rows.push({ label: 'Type', value: fileTypeLabel(entry.name) });
-  rows.push({ label: 'Size', value: statResult.ok ? formatBytes(statResult.size) : '—' });
-  rows.push({ label: 'Modified', value: statResult.ok ? formatMtime(statResult.mtimeMs) : '—' });
-
-  if (readResult.ok) {
-    const lines = readResult.content.length === 0 ? 0 : readResult.content.split('\n').length;
-    rows.push({ label: 'Lines', value: lines.toLocaleString() });
-    if (readResult.content.length > TOKEN_COUNT_MAX_CHARS) {
-      rows.push({ label: 'Tokens', value: 'too large to count' });
-    } else {
-      rows.push({ label: 'Tokens', value: `~ ${estimateTokens(readResult.content).toLocaleString()}` });
-    }
-  } else {
-    const why = readResult.reason === 'binary' ? 'binary file' : 'unreadable';
-    rows.push({ label: 'Lines', value: `— (${why})` });
-    rows.push({ label: 'Tokens', value: `— (${why})` });
-  }
-
-  showPropertiesDialog(entry.name, rows);
-}
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
-  let val = n / 1024;
-  let i = 0;
-  while (val >= 1024 && i < units.length - 1) {
-    val /= 1024;
-    i++;
-  }
-  return `${val.toFixed(1)} ${units[i]}`;
-}
-
-function formatMtime(ms: number): string {
-  const diffSec = Math.max(1, Math.floor((Date.now() - ms) / 1000));
-  let rel: string;
-  if (diffSec < 60) rel = `${diffSec}s ago`;
-  else if (diffSec < 3600) rel = `${Math.floor(diffSec / 60)}m ago`;
-  else if (diffSec < 86400) rel = `${Math.floor(diffSec / 3600)}h ago`;
-  else if (diffSec < 86400 * 30) rel = `${Math.floor(diffSec / 86400)}d ago`;
-  else rel = `${Math.floor(diffSec / (86400 * 30))}mo ago`;
-  return `${rel} · ${new Date(ms).toLocaleString()}`;
-}
-
-function fileTypeLabel(name: string): string {
-  const dot = name.lastIndexOf('.');
-  if (dot <= 0 || dot === name.length - 1) return '(no ext)';
-  return name.slice(dot + 1).toLowerCase();
-}
-
 /** Absolute path of the row's project, for the "Copy Relative Path" action. */
 function projectPathOf(projectId: string): string {
   return appState.projects.find((p) => p.id === projectId)?.path ?? '';
-}
-
-/** Surface a filesystem failure instead of failing silently. */
-function reportActionFailure(title: string, error?: string): void {
-  showConfirmDialog(title, error ?? 'The operation could not be completed.', {
-    confirmLabel: 'OK',
-    cancelLabel: 'Close',
-    onConfirm: () => {},
-  });
-}
-
-function promptNewEntry(dir: DirEntry, kind: 'file' | 'folder'): void {
-  const isFolder = kind === 'folder';
-  showModal(
-    isFolder ? 'New Folder' : 'New File',
-    [{ label: 'Name', id: 'name', type: 'text', placeholder: isFolder ? 'folder-name' : 'file-name.ts' }],
-    async (values) => {
-      const name = (values.name ?? '').trim();
-      if (!name) return;
-      // The name is a bare segment (the main process rejects separators); `/`
-      // joins cleanly on both platforms and the walker normalizes it.
-      const target = `${dir.path}/${name}`;
-      const result = isFolder
-        ? await window.rcode.fs.createDirectory(target)
-        : await window.rcode.fs.writeFile(target, '');
-      if (!result.ok) reportActionFailure(isFolder ? 'New Folder' : 'New File', result.error);
-    },
-    { confirmLabel: 'Create' },
-  );
-}
-
-function promptRename(entry: DirEntry): void {
-  showModal(
-    `Rename ${entry.isDirectory ? 'Folder' : 'File'}`,
-    [{ label: 'Name', id: 'name', type: 'text', defaultValue: entry.name }],
-    async (values) => {
-      const name = (values.name ?? '').trim();
-      if (!name || name === entry.name) return;
-      const result = await window.rcode.fs.renamePath(entry.path, name);
-      if (!result.ok) reportActionFailure('Rename', result.error);
-    },
-    { confirmLabel: 'Rename' },
-  );
-}
-
-function copyToClipboard(text: string): void {
-  void window.rcode.clipboard.write(text).catch(() => {});
-}
-
-/** Right-click menu for one row: view/copy, mutate, then the destructive action. */
-function entryMenu(projectId: string, entry: DirEntry): MenuEntry[] {
-  const handlers: Record<FileTreeMenuActionId, () => void> = {
-    open: () => { void window.rcode.fs.openInFolder(entry.path); },
-    reveal: () => { void window.rcode.fs.revealItem(entry.path); },
-    copyPath: () => copyToClipboard(entry.path),
-    copyRelativePath: () => copyToClipboard(toProjectRelative(projectPathOf(projectId), entry.path)),
-    newFile: () => promptNewEntry(entry, 'file'),
-    newFolder: () => promptNewEntry(entry, 'folder'),
-    rename: () => promptRename(entry),
-    delete: () => confirmAndTrash(entry),
-    properties: () => { void showFileProperties(entry); },
-  };
-  return menuEntriesFor(entry, handlers);
-}
-
-function confirmAndTrash(entry: DirEntry): void {
-  const kind = entry.isDirectory ? 'folder' : 'file';
-  const base = entry.isDirectory
-    ? `Move "${entry.name}" and its contents to the Trash?`
-    : `Move "${entry.name}" to the Trash?`;
-  // Deleting a VCS directory destroys history and is not obvious from the row
-  // label alone, so say what is actually at stake before the user confirms.
-  const isVcsDir = entry.isDirectory && ['.git', '.hg', '.svn'].includes(entry.name);
-  const message = isVcsDir
-    ? `${base}
-
-This is a version-control directory: deleting it removes the repository's history from this folder.`
-    : base;
-  showConfirmModal(
-    `Delete ${kind}`,
-    message,
-    async () => {
-      const result = await window.rcode.fs.trashItem(entry.path);
-      if (!result.ok) reportActionFailure('Delete', result.error);
-    },
-    { confirmLabel: 'Delete', danger: true },
-  );
 }
 
 export function renderFileTree(project: ProjectRecord, container: HTMLElement): void {

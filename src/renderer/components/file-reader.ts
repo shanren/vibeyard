@@ -4,7 +4,7 @@ import { appState } from '../state.js';
 import { closeSessionIfFileMissing } from '../session-close.js';
 import { destroySearchBar } from './search-bar.js';
 import { createFileEditor, type FileEditorHandle } from './code-editor.js';
-import { isAbsolutePath, dirname, samePath } from '../../shared/platform.js';
+import { absolutePathFrom, dirname, samePath } from '../../shared/platform.js';
 import { estimateTokens, TOKEN_COUNT_MAX_CHARS } from '../../shared/token-estimate.js';
 import { pathToFileURL } from '../file-url.js';
 
@@ -115,9 +115,7 @@ function markDirty(instance: FileReaderInstance): void {
 }
 
 function resolveFilePath(instance: FileReaderInstance): string {
-  const project = appState.activeProject;
-  if (isAbsolutePath(instance.filePath)) return instance.filePath;
-  return project ? `${project.path}/${instance.filePath}` : instance.filePath;
+  return absolutePathFrom(appState.activeProject?.path ?? '', instance.filePath);
 }
 
 function showFileReaderMessage(body: Element, message: string): void {

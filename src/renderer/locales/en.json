@@ -134,6 +134,8 @@
       "copyCliSessionId": "Copy CLI Session ID",
       "copyInternalId": "Copy Internal ID",
       "copyFilePath": "Copy File Path",
+      "openFilePath": "Open File",
+      "revealFilePath": "Reveal in File Explorer",
       "closeInspector": "Close Inspector",
       "inspect": "Inspect"
     }
