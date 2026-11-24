@@ -15,6 +15,7 @@ import {
   buildFileReaderSession,
 } from './state/session-factory.js';
 import { NavHistory } from './state/nav-history.js';
+import { findProjectForDirectory } from './state/shell-open.js';
 import { hydrateLoadedState, serializeForSave } from './state/persistence.js';
 import {
   buildPlanSessionArgs,
@@ -265,7 +266,24 @@ class AppState {
     this.emit('project-changed');
   }
 
+  /**
+   * Add a project, or switch to the one already rooted at `path`.
+   *
+   * One folder is one sidebar entry: a second record on the same root would give
+   * the same directory two independent session lists (and two terminal trees) on
+   * top of each other, so a repeat add is a no-op that activates the existing
+   * project. `findProjectForDirectory` compares with `samePath`, so a trailing
+   * separator or — on Windows/macOS — different letter case does not slip past.
+   * Parent/child paths are still distinct projects; only an exact root match is
+   * collapsed.
+   */
   addProject(name: string, path: string, defaultProfileId?: string): ProjectRecord {
+    const existing = findProjectForDirectory(this.state.projects, path);
+    if (existing) {
+      if (this.state.activeProjectId !== existing.id) this.setActiveProject(existing.id);
+      return existing;
+    }
+
     const project: ProjectRecord = {
       id: crypto.randomUUID(),
       name,

@@ -84,7 +84,9 @@ describe('explorer-panel', () => {
     return { appState, initExplorerPanel, toggleExplorerPanel };
   }
 
-  function project(appState: any, id = 'p1', path = '/proj') {
+  // Each fixture project needs its own root: addProject() collapses a repeated
+  // path onto the existing project (one folder = one sidebar entry).
+  function project(appState: any, id = 'p1', path = `/proj-${id}`) {
     return appState.addProject(id, path);
   }
 

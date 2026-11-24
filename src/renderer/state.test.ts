@@ -208,6 +208,45 @@ describe('addProject()', () => {
     expect(appState.activeProjectId).toBe('uuid-1');
   });
 
+  it('activates the existing project instead of adding the same path twice', () => {
+    const first = addProject('First', '/same');
+    addProject('Second', '/same');
+    expect(appState.projects).toHaveLength(1);
+    expect(appState.projects[0]).toBe(first);
+  });
+
+  it('switches back to the existing project when a duplicate add names another one', () => {
+    const shared = addProject('Shared', '/same');
+    const other = addProject('Other', '/other');
+    expect(appState.activeProjectId).toBe(other.id);
+
+    const again = appState.addProject('Duplicate', '/same');
+    expect(again).toBe(shared);
+    expect(appState.activeProjectId).toBe(shared.id);
+    expect(appState.projects).toHaveLength(2);
+  });
+
+  it('treats a trailing separator as the same path', () => {
+    const first = addProject('First', '/same');
+    expect(appState.addProject('Second', '/same/')).toBe(first);
+    expect(appState.projects).toHaveLength(1);
+  });
+
+  it('does not emit project-added for a duplicate', () => {
+    addProject('First', '/same');
+    const addedCb = vi.fn();
+    appState.on('project-added', addedCb);
+    appState.addProject('Second', '/same');
+    expect(addedCb).not.toHaveBeenCalled();
+  });
+
+  it('still adds a nested path as its own project', () => {
+    addProject('Parent', '/same');
+    const nested = addProject('Nested', '/same/sub');
+    expect(appState.projects).toHaveLength(2);
+    expect(nested.path).toBe('/same/sub');
+  });
+
   it('emits project-added and project-changed', () => {
     const addedCb = vi.fn();
     const changedCb = vi.fn();

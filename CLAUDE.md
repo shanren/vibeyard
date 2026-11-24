@@ -250,6 +250,8 @@ Scope is **lazy**: only expanded tree folders and the parent dirs of open reader
 
 App state (projects, sessions, layout) persists to `~/.rcode/state.json` via the main process store. Saves are debounced and flushed on quit. Sessions track `cliSessionId` for CLI session resume capability.
 
+**One folder is one project.** `appState.addProject` (`src/renderer/state.ts`) returns *and activates* the project already rooted at that path instead of adding a second record — two records on one root would mean two independent session lists over the same directory. The comparison is `findProjectForDirectory` (`src/renderer/state/shell-open.ts`, `samePath`), so a trailing separator, or different letter case on Windows/macOS, does not slip past. All three creation points funnel through it: the New Project dialog (`sidebar.ts`), global-search resume (`session-search-palette.ts`), and the shell hand-off (`index.ts`, "Open with RCode"). Parent/child roots stay distinct projects (only an exact root match collapses), and duplicates already present in a saved `state.json` are left alone — merging them would drop sessions.
+
 ## UI Development
 
 When working on renderer/UI code, the `/ui-dev` skill is automatically invoked. It documents all custom components (dropdowns, modals, alerts, badges), CSS theming variables, styling conventions, and component architecture patterns. Always follow it — never use native `<select>`, never hardcode colors, always reuse existing components.

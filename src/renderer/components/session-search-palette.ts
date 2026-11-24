@@ -1,4 +1,5 @@
 import { appState } from '../state.js';
+import { findProjectForDirectory } from '../state/shell-open.js';
 import { getProviderDisplayName } from '../provider-availability.js';
 import { escapeHtml, escapeRegExp } from './dom-search-backend.js';
 import { deriveProjectName } from '../../shared/project-name.js';
@@ -229,8 +230,10 @@ function openResult(r: ResolvedResult): void {
     appState.setActiveProject(r.projectId);
     appState.setActiveSession(r.projectId, r.activeSessionId);
   } else {
-    // Not in RCode — find or create project by cwd, then open session directly
-    let project = appState.projects.find(p => p.path === r.projectCwd);
+    // Not in RCode — find or create project by cwd, then open session directly.
+    // Same lookup the shell hand-off uses, so a separator/case variant of an
+    // existing project's path reuses it instead of adding a second entry.
+    let project = findProjectForDirectory(appState.projects, r.projectCwd);
     if (!project) {
       const name = deriveProjectName(r.projectCwd, r.projectSlug);
       project = appState.addProject(name, r.projectCwd);
