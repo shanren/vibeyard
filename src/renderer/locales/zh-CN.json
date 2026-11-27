@@ -30,6 +30,8 @@
     "activeSessions": "活动会话",
     "activeSessionStatuses": "活动会话状态",
     "terminalFontSize": "终端字号",
+    "terminalScrollback": "终端回滚行数",
+    "terminalScrollbackLines": "{count} 行",
     "terminalRenderer": "终端渲染器",
     "terminalRendererAuto": "自动",
     "terminalRendererGpu": "GPU 加速",
@@ -46,6 +48,8 @@
     "openFolderTooltip": "在文件管理器中打开文件夹",
     "explorerTitle": "资源管理器",
     "git": "Git",
+    "switchBranch": "切换分支",
+    "uncommittedChanges": "未提交的改动",
     "newProject": {
       "title": "新建项目",
       "nameLabel": "名称",
@@ -331,5 +335,19 @@
       "waiting": "等待中",
       "input": "等待输入"
     }
+  },
+  "gitBranch": {
+    "loading": "正在加载分支…",
+    "filter": "过滤分支…",
+    "noMatch": "没有匹配的分支",
+    "loadFailed": "分支加载失败",
+    "create": "新建分支…",
+    "createTitle": "新建分支",
+    "name": "分支名称",
+    "nameRequired": "请填写分支名称",
+    "nameNoSpaces": "分支名称不能包含空格",
+    "dirtyConfirm": "有未提交的改动，仍要切换到「{branch}」吗？",
+    "switchFailed": "切换分支失败：{error}",
+    "createFailed": "创建分支失败：{error}"
   }
 }

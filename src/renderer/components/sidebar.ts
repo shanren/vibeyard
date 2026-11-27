@@ -14,7 +14,9 @@ import {
 } from './session-history.js';
 import { attachHoverCard } from './hover-card.js';
 import { mountGitPanel, closeGitPanel } from './git-panel.js';
-import { getGitStatus, gitChangeCount, onChange as onGitStatusChange } from '../git-status.js';
+import { getGitStatus, gitChangeCount, ensureProjectStatus, onChange as onGitStatusChange } from '../git-status.js';
+import { showBranchContextMenu } from './git-branch-switcher.js';
+import { projectGitSummary } from './project-git-summary.js';
 import { ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
 import { t } from '../i18n.js';
 
@@ -156,8 +158,13 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
   el.draggable = true;
 
   const git = getGitStatus(project.id);
-  const branch = git?.isGitRepo ? git.branch : null;
+  const summary = projectGitSummary(project);
   const status = getProjectStatus(project);
+
+  // Inactive projects are not polled, so their row would stay a bare path (and
+  // the branch switcher would have nothing to attach to). Ask once — deferred,
+  // deduped, cached; the status listener re-renders the row when it lands.
+  if (!git) ensureProjectStatus(project.id, project.path);
 
   // Three levels, largest first: project name, then its branch (the thing you
   // actually switch between), then a quiet detail line. Same shape whether the
@@ -169,14 +176,21 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
   const profileBadge = profileLabel
     ? `<span class="project-profile-badge" title="${esc(t('sidebar.claudeProfileTooltip'))}">${esc(profileLabel)}</span>`
     : '';
-  const repoBadge = git?.isGitRepo
-    ? `<span class="project-badge" title="Uncommitted changes">${gitChangeCount(project.id) ?? 0}</span>`
-    : '';
 
-  const detail = branch ?? project.path;
-  const ab: string[] = [];
-  if (git?.ahead) ab.push(`↑${git.ahead}`);
-  if (git?.behind) ab.push(`↓${git.behind}`);
+  // The branch is the thing you switch between, so it is the control here.
+  // A repo with no branch yet (unborn HEAD) keeps the plain path line.
+  const branchControl = summary.branch
+    ? `<button type="button" class="project-branch-btn" title="${esc(t('sidebar.switchBranch'))}">`
+      + `<span class="project-branch">${esc(summary.branch)}</span>`
+      + `<span class="project-branch-caret" aria-hidden="true">▾</span>`
+      + '</button>'
+    : `<span class="project-branch is-path" title="${esc(project.path)}">${esc(project.path)}</span>`;
+
+  const changes = summary.changes.length
+    ? `<span class="project-changes" title="${esc(summary.changesTitle)}">`
+      + summary.changes.map((c) => `<span class="${c.className}">${esc(c.text)}</span>`).join('')
+      + '</span>'
+    : '';
 
   el.innerHTML = `
     <div class="project-head">
@@ -189,11 +203,20 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
     </div>
     <div class="project-sub">
       <span class="project-dot ${status}" aria-hidden="true"></span>
-      <span class="project-branch${branch ? '' : ' is-path'}" title="${esc(detail)}">${esc(detail)}</span>
-      ${ab.length ? `<span class="project-ab">${ab.join(' ')}</span>` : ''}
-      ${repoBadge}
+      ${branchControl}
+      ${summary.aheadBehind ? `<span class="project-ab">${esc(summary.aheadBehind)}</span>` : ''}
+      ${changes}
     </div>
   `;
+
+  el.querySelector('.project-branch-btn')?.addEventListener('click', (e) => {
+    // The row's own click activates the project, and the switcher reads that
+    // project's repo — so activate first, then open, and stop the row handler
+    // from doing it a second time.
+    e.stopPropagation();
+    if (!isActive) appState.setActiveProject(project.id);
+    void showBranchContextMenu(e.currentTarget as HTMLElement, project.id);
+  });
 
   el.addEventListener('click', () => {
     if (isActive) return;

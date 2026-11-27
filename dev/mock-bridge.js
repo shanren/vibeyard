@@ -327,7 +327,16 @@ const api = {
     unstageFile: () => resolved(),
     discardFile: () => resolved(),
     openInEditor: () => resolved(),
-    listBranches: () => resolved([{ name: 'feat/terminal-polish', current: true }, { name: 'main', current: false }]),
+    // Per-project branches so the sidebar switcher can be exercised on a
+    // project that is not the active one.
+    listBranches: (projectPath) => {
+      const key = PROJECTS.find((p) => p.path === projectPath)?.id ?? 'p-qis';
+      const BRANCHES = {
+        'p-qis': [{ name: 'feat/terminal-polish', current: true }, { name: 'main', current: false }],
+        'p-portal': [{ name: 'main', current: true }, { name: 'release/2026-11', current: false }],
+      };
+      return resolved(BRANCHES[key] ?? []);
+    },
     checkoutBranch: () => resolved(),
     createBranch: () => resolved(),
     watchProject: noop,

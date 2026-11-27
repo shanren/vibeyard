@@ -30,6 +30,8 @@
     "activeSessions": "Active Sessions",
     "activeSessionStatuses": "Active Session Statuses",
     "terminalFontSize": "Terminal font size",
+    "terminalScrollback": "Terminal scrollback",
+    "terminalScrollbackLines": "{count} lines",
     "terminalRenderer": "Terminal renderer",
     "terminalRendererAuto": "Auto",
     "terminalRendererGpu": "GPU",
@@ -46,6 +48,8 @@
     "openFolderTooltip": "Open folder in file explorer",
     "explorerTitle": "Explorer",
     "git": "Git",
+    "switchBranch": "Switch branch",
+    "uncommittedChanges": "Uncommitted changes",
     "newProject": {
       "title": "New Project",
       "nameLabel": "Name",
@@ -331,5 +335,19 @@
       "waiting": "Waiting",
       "input": "Needs input"
     }
+  },
+  "gitBranch": {
+    "loading": "Loading branches…",
+    "filter": "Filter branches…",
+    "noMatch": "No matching branches",
+    "loadFailed": "Failed to load branches",
+    "create": "Create New Branch…",
+    "createTitle": "Create New Branch",
+    "name": "Branch name",
+    "nameRequired": "Branch name is required",
+    "nameNoSpaces": "Branch name cannot contain spaces",
+    "dirtyConfirm": "You have uncommitted changes. Switch to \"{branch}\" anyway?",
+    "switchFailed": "Failed to switch branch: {error}",
+    "createFailed": "Failed to create branch: {error}"
   }
 }

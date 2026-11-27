@@ -228,6 +228,12 @@ export interface Preferences {
   /** Terminal font size in px. Absent ⇒ 13 (TERMINAL_FONT_SIZE_DEFAULT). */
   terminalFontSize?: number;
   /**
+   * Rows of terminal scrollback retained above the viewport. Absent ⇒ 10000
+   * (TERMINAL_SCROLLBACK_DEFAULT). xterm's own default is 1000, which silently
+   * discarded the older output of any long agent session.
+   */
+  terminalScrollback?: number;
+  /**
    * Whether the terminal may upgrade to the WebGL renderer. Absent ⇒ not probed
    * yet; the probe runs once after startup and stores the verdict, because a
    * software-rasterised GPU path blocks the main thread for seconds.

@@ -141,6 +141,40 @@ export function getGitStatus(projectId: string): GitStatus | null {
   return cache.get(projectId) ?? null;
 }
 
+const pendingEnsure = new Set<string>();
+
+/**
+ * Fetch a project's git status once, if it is not known yet.
+ *
+ * Only the *active* project is watched and polled, so every other sidebar row
+ * rendered as a bare path — no branch name, and since the branch line is now the
+ * branch switcher, no way to switch that project's branch without activating it
+ * first. One deferred, deduped `git:status` per project fills the row in; the
+ * result is cached and pushed to listeners like any poll. Nothing is watched or
+ * polled afterwards — the row refreshes for real once the project is activated.
+ *
+ * Deferred on purpose: the sidebar renders on the startup path, and startup is a
+ * measured budget (see CLAUDE.md), so a git call per project must not sit in
+ * front of it.
+ */
+export function ensureProjectStatus(projectId: string, projectPath: string): void {
+  if (cache.has(projectId) || pendingEnsure.has(projectId)) return;
+  pendingEnsure.add(projectId);
+  setTimeout(() => {
+    window.rcode.git.getStatus(getActiveGitPath(projectId) || projectPath)
+      .then((raw) => {
+        const status = raw as GitStatus;
+        const prev = cache.get(projectId);
+        cache.set(projectId, status);
+        if (!prev || JSON.stringify(prev) !== JSON.stringify(status)) {
+          for (const cb of listeners) cb(projectId, status);
+        }
+      })
+      .catch(() => {})
+      .finally(() => pendingEnsure.delete(projectId));
+  }, 0);
+}
+
 /** Total uncommitted changes for a project, or null when it's not a git repo. */
 export function gitChangeCount(projectId: string): number | null {
   const status = getGitStatus(projectId);

@@ -258,6 +258,55 @@
   min-height: 20px;
 }
 
+/* The branch is the row's control: hover says so, the caret shows a menu follows.
+   Sized to its text so the row still reads as [dot] branch……  ↑ab  +~?! counts. */
+.project-branch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  margin: 0 0 0 -3px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: var(--app-radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Hugs the text so the caret sits right after the branch name — the button keeps
+   the row's slack (flex: 1) so the counts stay right-aligned. */
+.project-branch-btn .project-branch {
+  flex: 0 1 auto;
+}
+
+.project-branch-btn:hover {
+  background: var(--app-hover-bg);
+}
+
+.project-branch-btn:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 0;
+}
+
+.project-branch-caret {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--app-text-secondary);
+  opacity: 0.45;
+  transition: opacity var(--app-duration-color) ease;
+}
+
+.project-branch-btn:hover .project-branch-caret,
+.project-branch-btn:focus-visible .project-branch-caret {
+  opacity: 1;
+}
+
 .project-dot {
   width: 8px;
   height: 8px;
@@ -293,18 +342,21 @@
   color: var(--app-text-secondary);
 }
 
-.project-badge {
+/* Staged / modified / untracked / conflicted counts, moved here from the tab
+   bar's `#git-status` chip. Colour carries the meaning; the title has the rest. */
+.project-changes {
+  display: flex;
   flex-shrink: 0;
-  min-width: 18px;
-  height: 16px;
-  padding: 0 5px;
-  border-radius: var(--app-radius-control);
-  background: var(--vscode-badge-background);
-  color: var(--vscode-badge-foreground);
+  gap: 5px;
   font-size: var(--app-font-size-xs);
-  line-height: 16px;
-  text-align: center;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
 }
+
+.project-changes .git-staged { color: var(--vscode-charts-green); }
+.project-changes .git-modified { color: var(--vscode-charts-yellow); }
+.project-changes .git-untracked { color: var(--app-text-secondary); }
+.project-changes .git-conflicted { color: var(--app-accent); }
 
 .project-session-count {
   flex-shrink: 0;

@@ -1,4 +1,4 @@
-import { Terminal } from '@xterm/xterm';
+import { Terminal, type IDisposable } from '@xterm/xterm';
 import { getTerminalTheme } from '../terminal-theme.js';
 import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
@@ -7,8 +7,10 @@ import { fitAllVisible } from './terminal-pane.js';
 import { destroySearchBar, hideSearchBar } from './search-bar.js';
 import { shortcutManager, displayKeys } from '../shortcuts.js';
 import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade } from './terminal-utils.js';
+import { attachImeAnchor } from './terminal-ime.js';
 import { esc } from '../dom-utils.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
+import { getTerminalScrollback } from '../terminal-scrollback.js';
 
 interface ShellTerminalInstance {
   id: string;
@@ -20,6 +22,7 @@ interface ShellTerminalInstance {
   projectId: string;
   sessionId: string;
   spawned: boolean;
+  imeAnchor: IDisposable | null;
 }
 
 const shells = new Map<string, ShellTerminalInstance[]>();
@@ -72,6 +75,8 @@ function createShell(projectId: string): ShellTerminalInstance {
     theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
     fontSize: getTerminalFontSize(),
     fontFamily: TERMINAL_FONT_FAMILY,
+    // Same reason as the CLI panes: xterm's 1000-row default drops older output.
+    scrollback: getTerminalScrollback(),
     cursorBlink: true,
     allowProposedApi: true,
   });
@@ -98,6 +103,7 @@ function createShell(projectId: string): ShellTerminalInstance {
     projectId,
     sessionId,
     spawned: false,
+    imeAnchor: null,
   };
 
   terminal.onData((data) => {
@@ -131,6 +137,7 @@ function activateShellInstance(instance: ShellTerminalInstance): void {
     containerEl.appendChild(instance.element);
     instance.terminal.open(instance.element);
     attachCopyOnSelect(instance.terminal);
+    instance.imeAnchor = attachImeAnchor(instance.terminal);
     scheduleWebglUpgrade(instance.terminal);
   }
   instance.element.style.display = '';
@@ -218,6 +225,8 @@ function closeShell(projectId: string, shellId: string): void {
 
   destroySearchBar(instance.sessionId);
   window.rcode.pty.kill(instance.sessionId);
+  instance.imeAnchor?.dispose();
+  instance.imeAnchor = null;
   instance.terminal.dispose();
   instance.element.remove();
   list.splice(idx, 1);
@@ -339,6 +348,8 @@ function destroyAllShells(projectId: string): void {
   for (const instance of list) {
     destroySearchBar(instance.sessionId);
     window.rcode.pty.kill(instance.sessionId);
+    instance.imeAnchor?.dispose();
+    instance.imeAnchor = null;
     instance.terminal.dispose();
     instance.element.remove();
   }
@@ -483,6 +494,16 @@ export function applyThemeToAllShells(theme: 'dark' | 'light'): void {
   for (const list of shells.values()) {
     for (const instance of list) {
       instance.terminal.options.theme = termTheme;
+    }
+  }
+}
+
+/** Re-apply the scrollback depth to open project shells (not retroactive). */
+export function applyScrollbackToAllShells(): void {
+  const scrollback = getTerminalScrollback();
+  for (const list of shells.values()) {
+    for (const instance of list) {
+      instance.terminal.options.scrollback = scrollback;
     }
   }
 }

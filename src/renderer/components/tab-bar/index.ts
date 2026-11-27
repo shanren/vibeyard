@@ -1,14 +1,11 @@
 import { appState } from '../../state.js';
 import { onChange as onStatusChange } from '../../session-activity.js';
-import { onChange as onGitStatusChange } from '../../git-status.js';
 import { onChange as onUnreadChange } from '../../session-unread.js';
 import { ICON_TERMINAL, ICON_MENU, ICON_FILES, providerMark } from '../../icons.js';
 import { loadProviderAvailability, hasMultipleAvailableProviders, getProviderDisplayName } from '../../provider-availability.js';
 import { t } from '../../i18n.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
-import { gitStatusEl } from './dom.js';
 import { render, updateTabStatus } from './tab-list.js';
-import { renderGitStatus, showBranchContextMenu } from './git-status-bar.js';
 import { showMoreMenu, showNewSessionMenu, promptNewSession, quickNewSession, resolveProviderForNewSession } from './session-menu.js';
 
 const btnAddSession = document.getElementById('btn-add-session')!;
@@ -70,7 +67,6 @@ export function initTabBar(): void {
     const rect = btnMore.getBoundingClientRect();
     showMoreMenu(rect.left, rect.bottom + 4);
   });
-  gitStatusEl.addEventListener('click', (e) => showBranchContextMenu(e));
 
   // Icons only distinguish providers when multiple are installed
   loadProviderAvailability().then(() => {
@@ -88,10 +84,8 @@ export function initTabBar(): void {
 
   onUnreadChange(render);
 
-  onGitStatusChange((projectId) => {
-    if (projectId === appState.activeProjectId) renderGitStatus();
-  });
-  appState.on('project-changed', renderGitStatus);
+  // Git state is rendered on the project rows in the sidebar (see
+  // components/sidebar.ts); the tab bar no longer owns a branch chip.
 
   document.addEventListener('click', hideTabContextMenu);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTabContextMenu(); });

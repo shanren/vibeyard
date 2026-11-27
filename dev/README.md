@@ -41,6 +41,14 @@ non-zero if there were any, so it doubles as a smoke test. Each run uses a
 throwaway Chrome profile and closes the browser over CDP — a stray headless
 instance would otherwise serve stale CSS to the next run.
 
+IME behaviour is testable the same way: `Input.imeSetComposition` over CDP
+(`{ text: 'ni hao', selectionStart: 6, selectionEnd: 6 }`) starts a real
+composition in the focused xterm, so the pre-edit's DOM node
+(`.composition-view`) and the helper textarea can be measured with
+`getBoundingClientRect()` rather than eyeballed. Replaying a recorded agent TUI
+frame through `window.__mock.emit('pty:data', sessionId, bytes)` reproduces the
+"parked cursor" layouts that misplace both.
+
 ## Limits
 
 The harness is for **look and layout**. Anything that needs the main process

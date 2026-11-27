@@ -1,68 +1,41 @@
-import { appState } from '../../state.js';
-import { esc } from '../../dom-utils.js';
-import { getGitStatus, getActiveGitPath, refreshGitStatus } from '../../git-status.js';
-import { showModal, closeModal, setModalError } from '../modal.js';
-import { hideTabContextMenu, getActiveContextMenu, setActiveContextMenu, positionMenu } from './menu.js';
-import { gitStatusEl } from './dom.js';
+/**
+ * Branch switcher, opened from a project's branch row in the sidebar.
+ *
+ * It used to live in the tab bar as `#git-status`, which meant the control only
+ * ever addressed the *active* project — switching branches was a two-step move
+ * (activate the project, then find the chip at the far right of the tab bar).
+ * The sidebar row already names each project's branch, so the switcher belongs
+ * on that row instead: one click, correct project, no activation round-trip
+ * needed first.
+ *
+ * The menu is therefore anchored to the clicked element and scoped to an
+ * explicit `projectId`; nothing here reads `appState.activeProject`.
+ */
 
-export function renderGitStatus(): void {
-  const project = appState.activeProject;
-  if (!project) {
-    gitStatusEl.innerHTML = '';
-    return;
-  }
+import { getGitStatus, getActiveGitPath, refreshGitStatus } from '../git-status.js';
+import { t } from '../i18n.js';
+import { showModal, closeModal, setModalError } from './modal.js';
+import { hideTabContextMenu, getActiveContextMenu, setActiveContextMenu, positionMenu } from './tab-bar/menu.js';
 
-  const status = getGitStatus(project.id);
-  if (!status || !status.isGitRepo) {
-    gitStatusEl.innerHTML = '';
-    return;
-  }
-
-  const parts: string[] = [];
-
-  if (status.branch) {
-    parts.push(`<span class="git-branch">⎇ ${esc(status.branch)}</span>`);
-  }
-
-  const ab: string[] = [];
-  if (status.ahead > 0) ab.push(`↑${status.ahead}`);
-  if (status.behind > 0) ab.push(`↓${status.behind}`);
-  if (ab.length) {
-    parts.push(`<span class="git-ahead-behind">${ab.join(' ')}</span>`);
-  }
-
-  if (status.staged > 0) parts.push(`<span class="git-staged">+${status.staged}</span>`);
-  if (status.modified > 0) parts.push(`<span class="git-modified">~${status.modified}</span>`);
-  if (status.untracked > 0) parts.push(`<span class="git-untracked">?${status.untracked}</span>`);
-  if (status.conflicted > 0) parts.push(`<span class="git-conflicted">!${status.conflicted}</span>`);
-
-  gitStatusEl.innerHTML = parts.join(' ');
-}
-
-export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
-  e.stopPropagation();
+export async function showBranchContextMenu(anchor: HTMLElement, projectId: string): Promise<void> {
   hideTabContextMenu();
 
-  const project = appState.activeProject;
-  if (!project) return;
-
-  const status = getGitStatus(project.id);
+  const status = getGitStatus(projectId);
   if (!status || !status.isGitRepo) return;
 
-  const gitPath = getActiveGitPath(project.id);
+  // Worktree-aware: the active worktree's repo, not necessarily the project root.
+  const gitPath = getActiveGitPath(projectId);
 
   const menu = document.createElement('div');
   menu.className = 'tab-context-menu';
 
-  // Position below the git status element
-  const elRect = gitStatusEl.getBoundingClientRect();
+  const elRect = anchor.getBoundingClientRect();
   menu.style.left = `${elRect.left}px`;
   menu.style.top = `${elRect.bottom + 4}px`;
 
-  // Show loading
   const loadingItem = document.createElement('div');
   loadingItem.className = 'tab-context-menu-item disabled';
-  loadingItem.textContent = 'Loading branches…';
+  loadingItem.textContent = t('gitBranch.loading');
   menu.appendChild(loadingItem);
 
   document.body.appendChild(menu);
@@ -80,7 +53,7 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
     const searchInput = document.createElement('input');
     searchInput.className = 'branch-search-input';
     searchInput.type = 'text';
-    searchInput.placeholder = 'Filter branches…';
+    searchInput.placeholder = t('gitBranch.filter');
     menu.appendChild(searchInput);
 
     const container = document.createElement('div');
@@ -94,7 +67,7 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
     function renderBranchItems(query: string): void {
       const lowerQuery = query.toLowerCase();
       filteredBranches = lowerQuery
-        ? branches.filter(b => b.name.toLowerCase().includes(lowerQuery))
+        ? branches.filter((b) => b.name.toLowerCase().includes(lowerQuery))
         : branches;
       activeIndex = 0;
       itemElements = [];
@@ -103,7 +76,7 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
       if (filteredBranches.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'tab-context-menu-item disabled';
-        empty.textContent = 'No matching branches';
+        empty.textContent = t('gitBranch.noMatch');
         container.appendChild(empty);
         return;
       }
@@ -124,7 +97,7 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
         if (!branch.current) {
           item.addEventListener('click', () => {
             hideTabContextMenu();
-            switchBranch(gitPath, branch.name);
+            switchBranch(gitPath, projectId, branch.name);
           });
         }
         itemElements.push(item);
@@ -168,7 +141,7 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
             const selected = filteredBranches[activeIndex];
             if (!selected.current) {
               hideTabContextMenu();
-              switchBranch(gitPath, selected.name);
+              switchBranch(gitPath, projectId, selected.name);
             }
           }
           break;
@@ -181,14 +154,13 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
 
     renderBranchItems('');
 
-    // Separator + Create New Branch
     const separator = document.createElement('div');
     separator.className = 'tab-context-menu-separator';
     menu.appendChild(separator);
 
     const createItem = document.createElement('div');
     createItem.className = 'tab-context-menu-item';
-    createItem.textContent = 'Create New Branch…';
+    createItem.textContent = t('gitBranch.create');
     createItem.addEventListener('click', () => {
       hideTabContextMenu();
       promptCreateBranch(gitPath);
@@ -203,39 +175,37 @@ export async function showBranchContextMenu(e: MouseEvent): Promise<void> {
     menu.innerHTML = '';
     const errItem = document.createElement('div');
     errItem.className = 'tab-context-menu-item disabled';
-    errItem.textContent = 'Failed to load branches';
+    errItem.textContent = t('gitBranch.loadFailed');
     menu.appendChild(errItem);
   }
 }
 
-async function switchBranch(gitPath: string, branchName: string): Promise<void> {
-  const project = appState.activeProject;
-  const freshStatus = project ? getGitStatus(project.id) : null;
-  const dirty = freshStatus ? freshStatus.staged + freshStatus.modified + freshStatus.conflicted : 0;
-  if (dirty > 0) {
-    const confirmed = confirm(`You have uncommitted changes. Switch to "${branchName}" anyway?`);
-    if (!confirmed) return;
-  }
+async function switchBranch(gitPath: string, projectId: string, branchName: string): Promise<void> {
+  const freshStatus = getGitStatus(projectId);
+  const dirty = freshStatus
+    ? freshStatus.staged + freshStatus.modified + freshStatus.conflicted
+    : 0;
+  if (dirty > 0 && !confirm(t('gitBranch.dirtyConfirm', { branch: branchName }))) return;
 
   try {
     await window.rcode.git.checkoutBranch(gitPath, branchName);
     refreshGitStatus();
   } catch (err) {
-    alert(`Failed to switch branch: ${err instanceof Error ? err.message : err}`);
+    alert(t('gitBranch.switchFailed', { error: err instanceof Error ? err.message : String(err) }));
   }
 }
 
 function promptCreateBranch(gitPath: string): void {
-  showModal('Create New Branch', [
-    { label: 'Branch name', id: 'branch-name', placeholder: 'feature/my-branch' },
+  showModal(t('gitBranch.createTitle'), [
+    { label: t('gitBranch.name'), id: 'branch-name', placeholder: 'feature/my-branch' },
   ], async (values) => {
     const name = values['branch-name']?.trim();
     if (!name) {
-      setModalError('branch-name', 'Branch name is required');
+      setModalError('branch-name', t('gitBranch.nameRequired'));
       return;
     }
     if (/\s/.test(name)) {
-      setModalError('branch-name', 'Branch name cannot contain spaces');
+      setModalError('branch-name', t('gitBranch.nameNoSpaces'));
       return;
     }
     try {
@@ -243,7 +213,7 @@ function promptCreateBranch(gitPath: string): void {
       closeModal();
       refreshGitStatus();
     } catch (err) {
-      setModalError('branch-name', err instanceof Error ? err.message : 'Failed to create branch');
+      setModalError('branch-name', t('gitBranch.createFailed', { error: err instanceof Error ? err.message : String(err) }));
     }
   });
 }

@@ -1,4 +1,4 @@
-import { Terminal } from '@xterm/xterm';
+import { Terminal, type IDisposable } from '@xterm/xterm';
 import { getTerminalTheme } from '../terminal-theme.js';
 import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
@@ -9,9 +9,11 @@ import { removeSession as removeContextSession, type ContextWindowInfo } from '.
 import type { ProviderId } from '../types.js';
 import { getProviderCapabilities } from '../provider-availability.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
+import { getTerminalScrollback } from '../terminal-scrollback.js';
 import { appState } from '../state.js';
 import { FilePathLinkProvider, GithubLinkProvider } from './terminal-link-provider.js';
 import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade, wrapBracketedPaste } from './terminal-utils.js';
+import { attachImeAnchor } from './terminal-ime.js';
 import { FILE_PATH_DRAG_TYPE, NATIVE_FILES_DRAG_TYPE } from '../drag-types.js';
 import { showTerminalContextMenu } from './terminal-context-menu.js';
 
@@ -36,6 +38,7 @@ interface TerminalInstance {
   exited: boolean;
   pendingPrompt: string | null;
   pendingPromptTimer: ReturnType<typeof setTimeout> | null;
+  imeAnchor: IDisposable | null;
   /**
    * Peak output-token count seen this session, used to render a stable "out"
    * figure. Claude's `context_window.total_output_tokens` is per-turn, not
@@ -77,6 +80,8 @@ export function createTerminalPane(
     theme: getTerminalTheme(appState.preferences.theme ?? 'dark'),
     fontSize: getTerminalFontSize(),
     fontFamily: TERMINAL_FONT_FAMILY,
+    // Without this xterm keeps only its default 1000 rows and drops the rest.
+    scrollback: getTerminalScrollback(),
     cursorBlink: true,
     allowProposedApi: true,
     linkHandler: {
@@ -141,6 +146,7 @@ export function createTerminalPane(
     exited: false,
     pendingPrompt: null,
     pendingPromptTimer: null,
+    imeAnchor: null,
     peakOutputTokens: 0,
   };
 
@@ -226,6 +232,17 @@ export function applyFontSizeToAllTerminals(): void {
   }
 }
 
+/**
+ * Re-apply the scrollback depth to open CLI terminals. xterm cannot recover rows
+ * it already discarded, so this only deepens (or shrinks) what is kept from now on.
+ */
+export function applyScrollbackToAllTerminals(): void {
+  const scrollback = getTerminalScrollback();
+  for (const instance of instances.values()) {
+    instance.terminal.options.scrollback = scrollback;
+  }
+}
+
 export function applyThemeToAllTerminals(theme: 'dark' | 'light'): void {
   const termTheme = getTerminalTheme(theme);
   for (const instance of instances.values()) {
@@ -307,6 +324,9 @@ export function attachToContainer(sessionId: string, container: HTMLElement): vo
     instance.terminal.open(xtermWrap as HTMLElement);
 
     attachCopyOnSelect(instance.terminal);
+    // Agent TUIs park the terminal cursor away from their visible input, which
+    // would put the IME pre-edit and the OS candidate window in the wrong place.
+    instance.imeAnchor = attachImeAnchor(instance.terminal);
     // Not awaited on purpose: see scheduleWebglUpgrade.
     scheduleWebglUpgrade(instance.terminal);
   } else {
@@ -403,6 +423,8 @@ export function destroyTerminal(sessionId: string): void {
 
   clearPendingPromptTimer(instance);
   window.rcode.pty.kill(sessionId);
+  instance.imeAnchor?.dispose();
+  instance.imeAnchor = null;
   instance.terminal.dispose();
   instance.element.remove();
   instances.delete(sessionId);

@@ -346,6 +346,45 @@ describe('applyThemeToAllTerminals()', () => {
   });
 });
 
+describe('terminal scrollback', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+
+    vi.stubGlobal('document', new FakeDocument());
+    vi.stubGlobal('window', makeWindowStub());
+    vi.stubGlobal('navigator', { platform: 'MacIntel', clipboard: { writeText: mockClipboardWrite } });
+  });
+
+  it('gives a new terminal the configured scrollback depth, not xterm\u2019s 1000', async () => {
+    const { appState } = await import('../state.js');
+    const { createTerminalPane, getTerminalInstance } = await import('./terminal-pane.js');
+    const { TERMINAL_SCROLLBACK_DEFAULT } = await import('../terminal-scrollback.js');
+
+    expect(appState.preferences.terminalScrollback).toBeUndefined();
+
+    createTerminalPane('claude-scrollback-1', '/project', null, false, '', 'claude');
+    const instance = getTerminalInstance('claude-scrollback-1')!;
+
+    expect((instance.terminal as unknown as FakeTerminal).options.scrollback).toBe(TERMINAL_SCROLLBACK_DEFAULT);
+    expect(TERMINAL_SCROLLBACK_DEFAULT).toBeGreaterThan(1000);
+  });
+
+  it('re-applies a changed scrollback depth to open terminals', async () => {
+    const { appState } = await import('../state.js');
+    const { createTerminalPane, applyScrollbackToAllTerminals, getTerminalInstance } = await import('./terminal-pane.js');
+
+    createTerminalPane('claude-scrollback-2', '/project', null, false, '', 'claude');
+    const instance = getTerminalInstance('claude-scrollback-2')!;
+
+    appState.preferences.terminalScrollback = 50_000;
+    applyScrollbackToAllTerminals();
+
+    expect((instance.terminal as unknown as FakeTerminal).options.scrollback).toBe(50_000);
+  });
+});
+
 describe('terminal Ctrl+Shift+C clipboard copy', () => {
   beforeEach(() => {
     vi.resetModules();

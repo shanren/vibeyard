@@ -2,7 +2,8 @@ import { appState } from '../../state.js';
 import { createCustomSelect, type CustomSelectInstance } from '../custom-select.js';
 import { applyZoom, getZoomFactor, ZOOM_STEPS } from '../../zoom.js';
 import { TERMINAL_FONT_SIZES, getTerminalFontSize } from '../../terminal-font.js';
-import { t } from '../../i18n.js';
+import { TERMINAL_SCROLLBACK_OPTIONS, getTerminalScrollback } from '../../terminal-scrollback.js';
+import { t, getLocale } from '../../i18n.js';
 import type { PreferencesContext, SectionController } from './section.js';
 import { toggleRow } from './shared.js';
 import type { Preferences } from '../../../shared/types.js';
@@ -15,6 +16,7 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
   let themeSelect: CustomSelectInstance | null = null;
   let zoomSelect: CustomSelectInstance | null = null;
   let fontSelect: CustomSelectInstance | null = null;
+  let scrollbackSelect: CustomSelectInstance | null = null;
   let zoomPrefUnsub: (() => void) | null = null;
   let sidebarCheckboxes: Record<keyof SidebarViews, HTMLInputElement> | null = null;
   let statusCheckboxes: Record<keyof ActiveStatuses, HTMLInputElement> | null = null;
@@ -29,6 +31,7 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       if (themeSelect) themeSelect.destroy();
       if (zoomSelect) zoomSelect.destroy();
       if (fontSelect) fontSelect.destroy();
+      if (scrollbackSelect) scrollbackSelect.destroy();
 
       const themeRow = document.createElement('div');
       themeRow.className = 'modal-toggle-field';
@@ -70,6 +73,29 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       fontRow.appendChild(fontSelect.element);
       container.appendChild(fontRow);
 
+      // xterm drops everything past `scrollback` rows, so the default has to be
+      // deep enough for a long agent session or the older output is unrecoverable.
+      const scrollbackRow = document.createElement('div');
+      scrollbackRow.className = 'modal-toggle-field';
+      const scrollbackLabel = document.createElement('label');
+      scrollbackLabel.textContent = t('appearance.terminalScrollback');
+      const scrollbackOptions = TERMINAL_SCROLLBACK_OPTIONS.map((v) => ({
+        value: String(v),
+        label: t('appearance.terminalScrollbackLines', { count: v.toLocaleString(getLocale()) }),
+      }));
+      scrollbackSelect = createCustomSelect(
+        'pref-terminal-scrollback',
+        scrollbackOptions,
+        String(getTerminalScrollback()),
+        (value) => {
+          const n = Number(value);
+          if (!Number.isNaN(n)) appState.setPreference('terminalScrollback', n);
+        },
+      );
+      scrollbackRow.appendChild(scrollbackLabel);
+      scrollbackRow.appendChild(scrollbackSelect.element);
+      container.appendChild(scrollbackRow);
+
       // The GPU renderer is auto-detected once (a slow software-rasterised path
       // blocks the main thread for seconds), but the verdict can be wrong on a
       // machine that was busy during the probe — so it stays overridable.
@@ -99,6 +125,7 @@ export function createAppearanceSection(ctx: PreferencesContext): SectionControl
       zoomPrefUnsub = appState.on('preferences-changed', () => {
         zoomSelect?.setValue(String(getZoomFactor()));
         fontSelect?.setValue(String(getTerminalFontSize()));
+        scrollbackSelect?.setValue(String(getTerminalScrollback()));
       });
 
       const sidebarHeading = document.createElement('div');

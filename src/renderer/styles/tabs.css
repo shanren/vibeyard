@@ -150,47 +150,6 @@
   color: var(--accent);
 }
 
-/* Git status indicator */
-#git-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px;
-  font-size: 11px;
-  white-space: nowrap;
-  user-select: none;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-#git-status:empty {
-  display: none;
-}
-
-#git-status .git-branch {
-  color: var(--text-secondary);
-}
-
-#git-status .git-ahead-behind {
-  color: var(--text-muted);
-}
-
-#git-status .git-staged {
-  color: var(--vscode-charts-green);
-}
-
-#git-status .git-modified {
-  color: var(--vscode-charts-yellow);
-}
-
-#git-status .git-untracked {
-  color: var(--text-muted);
-}
-
-#git-status .git-conflicted {
-  color: var(--accent);
-}
-
 #tab-actions {
   display: flex;
   align-items: center;

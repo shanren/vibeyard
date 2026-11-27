@@ -6,14 +6,14 @@ import { initTabBar } from './components/tab-bar.js';
 import { initExplorerPanel } from './components/explorer-panel.js';
 import { initSplitLayout } from './components/split-layout.js';
 import { initKeybindings } from './keybindings.js';
-import { handlePtyData, destroyTerminal, updateContextDisplay, applyThemeToAllTerminals, applyFontSizeToAllTerminals, refreshProfileLabels } from './components/terminal-pane.js';
+import { handlePtyData, destroyTerminal, updateContextDisplay, applyThemeToAllTerminals, applyFontSizeToAllTerminals, applyScrollbackToAllTerminals, refreshProfileLabels } from './components/terminal-pane.js';
 import { setIdle, setHookStatus, notifyInterrupt } from './session-activity.js';
 import { parseTitle, clearSession as clearTitleSession } from './session-title.js';
 import { setContextData, onChange as onContextChange } from './session-context.js';
 import { initNotificationSound } from './notification-sound.js';
 import { initNotificationDesktop } from './notification-desktop.js';
 import { init as initSessionUnread } from './session-unread.js';
-import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSessionId, applyThemeToAllShells, applyFontSizeToAllShells } from './components/project-terminal.js';
+import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSessionId, applyThemeToAllShells, applyFontSizeToAllShells, applyScrollbackToAllShells } from './components/project-terminal.js';
 import { startPolling as startGitPolling } from './git-status.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initActiveSessions } from './components/active-sessions-panel.js';
@@ -290,6 +290,9 @@ async function main(): Promise<void> {
     // Font size lives on the same preferences-changed event.
     applyFontSizeToAllTerminals();
     applyFontSizeToAllShells();
+    // Scrollback depth: only affects rows kept from here on, never the past.
+    applyScrollbackToAllTerminals();
+    applyScrollbackToAllShells();
 
     const newLocale = appState.preferences.locale;
     if (newLocale && newLocale !== lastLocale) {
