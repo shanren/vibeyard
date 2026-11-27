@@ -298,6 +298,8 @@ export interface PersistedState {
   activeProjectId: string | null;
   preferences: Preferences;
   sidebarWidth?: number;
+  /** Right-hand Explorer (file tree) width in px. Absent ⇒ the CSS default (260). */
+  explorerWidth?: number;
   sidebarCollapsed?: boolean;
   explorerPanelOpen?: boolean;
   /** Global, provider-scoped CLI profiles (e.g. Claude work/personal config dirs). */

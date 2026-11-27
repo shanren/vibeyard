@@ -207,6 +207,15 @@ class AppState {
     this.persist();
   }
 
+  get explorerWidth(): number | undefined {
+    return this.state.explorerWidth;
+  }
+
+  setExplorerWidth(width: number): void {
+    this.state.explorerWidth = width;
+    this.persist();
+  }
+
   get sidebarCollapsed(): boolean {
     return this.state.sidebarCollapsed ?? false;
   }

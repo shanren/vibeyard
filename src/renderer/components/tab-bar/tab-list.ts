@@ -278,6 +278,22 @@ function showTabContextMenu(x: number, y: number, project: ProjectRecord, sessio
   positionMenu(menu);
 }
 
+/**
+ * Keep middle-click-to-close working once the tab strip overflows.
+ *
+ * Chromium starts auto-scroll on a middle press inside a *scrollable* element
+ * and swallows the `auxclick` that follows, so the gesture broke only after
+ * enough tabs appeared to raise the strip's scrollbar — the same press in a
+ * non-scrolling strip still delivered `auxclick`. Cancelling the press's default
+ * action stops auto-scroll from starting (no scroll cursor either), and the
+ * `auxclick` reaches the tab again.
+ */
+export function initMiddleClickClose(): void {
+  tabListEl.addEventListener('mousedown', (e) => {
+    if (e.button === 1) e.preventDefault();
+  });
+}
+
 export function render(): void {
   if (tabListEl.querySelector('.tab-name input')) return;
   tabListEl.innerHTML = '';

@@ -278,6 +278,9 @@ const api = {
     searchFiles: () => resolved([]),
     topFilesByTokens: () => resolved({ files: [], totalTokens: 0 }),
     exists: () => resolved(true),
+    // Terminal path links resolve candidates with stat + isDirectory before
+    // turning them into links, so the harness needs both.
+    isDirectory: () => resolved(false),
     readFile: (_p, rel) => resolved({ ok: true, content: FILE_CONTENT[rel] ?? `// fixture: ${rel}\n` }),
     writeFile: () => resolved(),
     stat: () => resolved({ exists: true, isDirectory: false, size: 1024, mtimeMs: NOW }),
@@ -352,6 +355,8 @@ const api = {
     onQuitting: unsubscribe,
     onConfirmClose: unsubscribe,
     closeConfirmed: noop,
+    // Fire-and-forget startup timing report from index.ts; no main process here.
+    startupReport: noop,
   },
   mcp: {
     connect: () => resolved({ success: true, data: {} }),

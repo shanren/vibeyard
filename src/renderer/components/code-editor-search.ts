@@ -117,7 +117,12 @@ export class CodeMirrorSearchBackend implements SearchBackend {
       effects: EditorView.scrollIntoView(match.from, { y: 'nearest' }),
     });
     this.applyDeco();
-    this.view.focus();
+    // Never focus the view here. `apply` runs on every keystroke in the find bar
+    // (search-bar.ts wires `input` → findNext → apply); focusing the editor moved
+    // the caret out of the input after the first character, so everything typed
+    // after it landed in the document instead of the query. The current match
+    // stays visible via the search decorations, and `focus()` (the SearchBackend
+    // method) is what hands focus back when the bar closes.
     this.emitResultState();
   }
 

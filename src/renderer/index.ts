@@ -17,7 +17,6 @@ import { initProjectTerminal, handleShellPtyData, handleShellPtyExit, isShellSes
 import { startPolling as startGitPolling } from './git-status.js';
 import { initGitPanel } from './components/git-panel.js';
 import { initActiveSessions } from './components/active-sessions-panel.js';
-import { initFilePrompt } from './components/file-prompt.js';
 import { initSessionHistory } from './components/session-history.js';
 import { captureInitialContext } from './session-insights.js';
 import { initInsightAlert } from './components/insight-alert.js';
@@ -230,7 +229,7 @@ async function main(): Promise<void> {
     ['project-terminal', initProjectTerminal], ['git-panel', initGitPanel], ['active-sessions', initActiveSessions],
     ['session-history', initSessionHistory], ['insight-alert', initInsightAlert], ['tool-detector', initToolDetector],
     ['tool-alert', initToolAlert], ['large-file-detector', initLargeFileDetector], ['large-file-alert', initLargeFileAlert],
-    ['settings-guard', initSettingsGuard], ['session-inspector', initSessionInspector], ['file-prompt', initFilePrompt],
+    ['settings-guard', initSettingsGuard], ['session-inspector', initSessionInspector],
     ['git-polling', startGitPolling],
   ];
   for (const [label, fn] of inits) {

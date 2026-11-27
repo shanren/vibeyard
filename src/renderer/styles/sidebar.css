@@ -258,53 +258,57 @@
   min-height: 20px;
 }
 
-/* The branch is the row's control: hover says so, the caret shows a menu follows.
-   Sized to its text so the row still reads as [dot] branch……  ↑ab  +~?! counts. */
-.project-branch-btn {
+/* The branch is the row's control — but only its chevron. The name reads as
+   text, so the row still reads as [dot] branch…… [▾]  ↑ab  +~?! counts and a
+   click anywhere but the chevron activates the project. */
+.project-branch-group {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 3px;
+  gap: 2px;
+  /* Takes the row's slack (not the name) so the counts stay right-aligned. */
   flex: 1;
   min-width: 0;
-  margin: 0 0 0 -3px;
-  padding: 0 3px;
+}
+
+.project-branch-group .project-branch {
+  flex: 0 1 auto;
+}
+
+/* Chevron-only control: an 18px hit area hugging the name. */
+.project-branch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
   border: 0;
   border-radius: var(--app-radius-control);
   background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
+  color: var(--app-text-secondary);
   cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--app-duration-color) ease, background var(--app-duration-color) ease;
 }
 
-/* Hugs the text so the caret sits right after the branch name — the button keeps
-   the row's slack (flex: 1) so the counts stay right-aligned. */
-.project-branch-btn .project-branch {
-  flex: 0 1 auto;
+.project-branch-btn svg {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 .project-branch-btn:hover {
   background: var(--app-hover-bg);
+  color: var(--app-text);
+  opacity: 1;
 }
 
 .project-branch-btn:focus-visible {
+  opacity: 1;
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 0;
-}
-
-.project-branch-caret {
-  flex-shrink: 0;
-  font-size: 9px;
-  line-height: 1;
-  color: var(--app-text-secondary);
-  opacity: 0.45;
-  transition: opacity var(--app-duration-color) ease;
-}
-
-.project-branch-btn:hover .project-branch-caret,
-.project-branch-btn:focus-visible .project-branch-caret {
-  opacity: 1;
 }
 
 .project-dot {
@@ -321,7 +325,6 @@
 .project-dot.completed { background: var(--app-status-completed); }
 
 .project-branch {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -331,6 +334,8 @@
 }
 
 .project-branch.is-path {
+  /* No branch, so the path is the row's whole subject: it takes the slack. */
+  flex: 1;
   font-size: 12px;
   color: var(--app-text-disabled);
 }

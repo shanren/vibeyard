@@ -8,6 +8,7 @@ import { destroySearchBar, hideSearchBar } from './search-bar.js';
 import { shortcutManager, displayKeys } from '../shortcuts.js';
 import { attachAlternateScroll, attachClipboardCopyHandler, attachCopyOnSelect, scheduleWebglUpgrade } from './terminal-utils.js';
 import { attachImeAnchor } from './terminal-ime.js';
+import { FilePathLinkProvider } from './terminal-link-provider.js';
 import { esc } from '../dom-utils.js';
 import { TERMINAL_FONT_FAMILY, getTerminalFontSize } from '../terminal-font.js';
 import { getTerminalScrollback } from '../terminal-scrollback.js';
@@ -92,6 +93,11 @@ function createShell(projectId: string): ShellTerminalInstance {
 
   attachClipboardCopyHandler(terminal, undefined, (data) => window.rcode.pty.write(sessionId, data));
   attachAlternateScroll(terminal, (data) => window.rcode.pty.write(sessionId, data));
+
+  // Shells print paths too (`ls`, compiler output), so they get the same
+  // Ctrl/Cmd+click file links as the CLI panes.
+  const projectPath = appState.projects.find((p) => p.id === projectId)?.path;
+  if (projectPath) terminal.registerLinkProvider(new FilePathLinkProvider(projectId, projectPath, terminal));
 
   const instance: ShellTerminalInstance = {
     id: shellId,

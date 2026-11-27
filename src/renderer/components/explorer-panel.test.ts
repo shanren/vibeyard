@@ -52,6 +52,8 @@ function stubDom() {
   vi.stubGlobal('document', doc);
   vi.stubGlobal('window', {
     rcode: { store: { load: vi.fn(), save: vi.fn() } },
+    innerWidth: 1400,
+    addEventListener: () => {},
   });
 }
 
@@ -167,5 +169,58 @@ describe('explorer-panel', () => {
       gitPanel: true, sessionHistory: true, fileTree: false, activeSessions: true,
     });
     expect(getById('btn-toggle-explorer').classList.contains('hidden')).toBe(true);
+  });
+
+  it('shows the resize handle only while the panel is open', async () => {
+    const { appState, initExplorerPanel } = await load();
+    project(appState);
+    initExplorerPanel();
+    expect(getById('explorer-resize-handle').classList.contains('hidden')).toBe(true);
+    appState.setExplorerPanelOpen(true);
+    expect(getById('explorer-resize-handle').classList.contains('hidden')).toBe(false);
+    appState.setExplorerPanelOpen(false);
+    expect(getById('explorer-resize-handle').classList.contains('hidden')).toBe(true);
+  });
+
+  it('applies a persisted width on init, clamped to the window', async () => {
+    const { appState, initExplorerPanel } = await load();
+    project(appState);
+    appState.setExplorerWidth(520);
+    initExplorerPanel();
+    expect(getById('explorer-panel').style.width).toBe('520px');
+  });
+
+  it('clamps a persisted width that no longer fits the window', async () => {
+    const { appState, initExplorerPanel } = await load();
+    project(appState);
+    appState.setExplorerWidth(5000);
+    initExplorerPanel();
+    // EXPLORER_MAX_WIDTH wins over the edge of the window.
+    expect(getById('explorer-panel').style.width).toBe('640px');
+  });
+
+  describe('clampExplorerWidth', () => {
+    it('keeps a width inside the panel bounds untouched', async () => {
+      const { clampExplorerWidth } = await import('./explorer-panel.js');
+      expect(clampExplorerWidth(320, 1400)).toBe(320);
+    });
+
+    it('never goes below the minimum', async () => {
+      const { clampExplorerWidth } = await import('./explorer-panel.js');
+      expect(clampExplorerWidth(10, 1400)).toBe(180);
+    });
+
+    it('never goes above the maximum', async () => {
+      const { clampExplorerWidth } = await import('./explorer-panel.js');
+      expect(clampExplorerWidth(9999, 1400)).toBe(640);
+    });
+
+    it('leaves room for the main area on a narrow window', async () => {
+      const { clampExplorerWidth } = await import('./explorer-panel.js');
+      // 900 - 420 leaves 480, under the 640 cap.
+      expect(clampExplorerWidth(9999, 900)).toBe(480);
+      // …but never below the minimum, even when the window is tiny.
+      expect(clampExplorerWidth(9999, 400)).toBe(180);
+    });
   });
 });

@@ -152,7 +152,7 @@ export function createTerminalPane(
 
   instances.set(sessionId, instance);
 
-  // Register file path link provider for Cmd+Click
+  // Register file path link provider for Ctrl/Cmd+Click
   if (projectId) {
     terminal.registerLinkProvider(new FilePathLinkProvider(projectId, projectPath, terminal));
   }

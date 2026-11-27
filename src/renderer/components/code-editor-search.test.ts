@@ -118,6 +118,23 @@ describe('CodeMirrorSearchBackend', () => {
     expect(backend.getResultState()).toEqual({ currentIndex: -1, totalCount: 0 });
   });
 
+  it('never focuses the editor while searching', () => {
+    // Regression: `apply()` used to call view.focus(), so the first character
+    // typed into the raw-mode find bar moved the caret into the document and
+    // every later character was typed into the file.
+    const { view, focus } = makeStubView('abc abc');
+    const backend = new CodeMirrorSearchBackend(view, makeContainer());
+
+    backend.findNext('abc', { caseSensitive: false, regex: false });
+    backend.findNext('abc', { caseSensitive: false, regex: false });
+    backend.findPrevious('abc', { caseSensitive: false, regex: false });
+    expect(focus).not.toHaveBeenCalled();
+
+    // Closing the bar is what hands focus back to the editor.
+    backend.focus();
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
   it('notifies subscribers of result state changes', () => {
     const { view } = makeStubView('abc abc');
     const backend = new CodeMirrorSearchBackend(view, makeContainer());

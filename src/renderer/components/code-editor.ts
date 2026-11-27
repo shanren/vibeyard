@@ -20,7 +20,7 @@ import { java } from '@codemirror/lang-java';
 import { rust } from '@codemirror/lang-rust';
 import { go } from '@codemirror/lang-go';
 import { php } from '@codemirror/lang-php';
-import { sql } from '@codemirror/lang-sql';
+import { sql, PostgreSQL, MySQL, MariaSQL, MSSQL, PLSQL } from '@codemirror/lang-sql';
 import { xml } from '@codemirror/lang-xml';
 import { yaml } from '@codemirror/lang-yaml';
 import { shell } from '@codemirror/legacy-modes/mode/shell';
@@ -63,6 +63,21 @@ const EXT_LANGUAGES: Record<string, LanguageFactory> = {
   go: () => go(),
   php: () => php(),
   sql: () => sql(),
+  // SQL dialects: the extension picks the tokenizer, because quoting and
+  // procedural syntax differ enough that standard SQL mis-highlights them
+  // (backtick identifiers in MySQL, `::casts` and `$$` bodies in Postgres,
+  // `%TYPE`/`BEGIN…END` in PL/SQL, `[brackets]` in T-SQL).
+  ddl: () => sql(),
+  dml: () => sql(),
+  psql: () => sql({ dialect: PostgreSQL }),
+  pgsql: () => sql({ dialect: PostgreSQL }),
+  mysql: () => sql({ dialect: MySQL }),
+  mariadb: () => sql({ dialect: MariaSQL }),
+  mssql: () => sql({ dialect: MSSQL }),
+  tsql: () => sql({ dialect: MSSQL }),
+  plsql: () => sql({ dialect: PLSQL }),
+  pkb: () => sql({ dialect: PLSQL }),
+  pks: () => sql({ dialect: PLSQL }),
   xml: () => xml(),
   xsl: () => xml(),
   xsd: () => xml(),

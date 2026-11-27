@@ -592,26 +592,3 @@
   vertical-align: middle;
 }
 
-/* Ask-AI bubble shown near a text selection inside file panes */
-.file-prompt-bubble {
-  position: absolute;
-  z-index: 102;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  background: var(--accent);
-  color: var(--app-text-on-accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--app-radius-control);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.file-prompt-bubble:hover {
-  opacity: 0.9;
-}
-

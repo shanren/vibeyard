@@ -20,6 +20,9 @@ export const ICON_GIT = STROKE_ICON('<circle cx="6" cy="6" r="2.5"/><circle cx="
 
 export const ICON_TERMINAL = STROKE_ICON('<path d="m4 17 6-6-6-6"/><path d="M12 19h8"/>');
 
+// "A menu opens from here" — the branch switcher on a project row.
+export const ICON_CHEVRON_DOWN = STROKE_ICON('<path d="m7 10 5 5 5-5"/>');
+
 export const ICON_MENU = STROKE_ICON('<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>');
 
 export const ICON_PROJECTS = STROKE_ICON('<path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l1.8 2H19a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 10.5h17"/>');

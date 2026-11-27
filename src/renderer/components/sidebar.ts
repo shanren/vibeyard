@@ -17,7 +17,7 @@ import { mountGitPanel, closeGitPanel } from './git-panel.js';
 import { getGitStatus, gitChangeCount, ensureProjectStatus, onChange as onGitStatusChange } from '../git-status.js';
 import { showBranchContextMenu } from './git-branch-switcher.js';
 import { projectGitSummary } from './project-git-summary.js';
-import { ICON_SESSIONS, ICON_FILES, ICON_GIT } from '../icons.js';
+import { ICON_SESSIONS, ICON_FILES, ICON_GIT, ICON_CHEVRON_DOWN } from '../icons.js';
 import { t } from '../i18n.js';
 
 type ProjectPanel = 'history' | 'git' | null;
@@ -177,13 +177,16 @@ function buildProjectRow(project: ProjectRecord, isActive: boolean, opts: Render
     ? `<span class="project-profile-badge" title="${esc(t('sidebar.claudeProfileTooltip'))}">${esc(profileLabel)}</span>`
     : '';
 
-  // The branch is the thing you switch between, so it is the control here.
+  // Only the chevron is a control: the branch name reads as text, so clicking
+  // it activates the project like the rest of the row and the switcher never
+  // opens by accident.
   // A repo with no branch yet (unborn HEAD) keeps the plain path line.
   const branchControl = summary.branch
-    ? `<button type="button" class="project-branch-btn" title="${esc(t('sidebar.switchBranch'))}">`
-      + `<span class="project-branch">${esc(summary.branch)}</span>`
-      + `<span class="project-branch-caret" aria-hidden="true">▾</span>`
-      + '</button>'
+    ? '<span class="project-branch-group">'
+      + `<span class="project-branch" title="${esc(summary.branch)}">${esc(summary.branch)}</span>`
+      + `<button type="button" class="project-branch-btn" title="${esc(t('sidebar.switchBranch'))}"`
+      + ` aria-label="${esc(t('sidebar.switchBranch'))}">${ICON_CHEVRON_DOWN}</button>`
+      + '</span>'
     : `<span class="project-branch is-path" title="${esc(project.path)}">${esc(project.path)}</span>`;
 
   const changes = summary.changes.length

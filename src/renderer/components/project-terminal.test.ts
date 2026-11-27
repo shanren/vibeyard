@@ -28,6 +28,7 @@ class FakeTerminal {
   setSelection(s: string): void { this._selection = s; }
   onSelectionChange(_listener: () => void): { dispose(): void } { return { dispose() {} }; }
   onData(_cb: (data: string) => void): void {}
+  registerLinkProvider(_provider: unknown): { dispose(): void } { return { dispose() {} }; }
   open(): void {}
   write(): void {}
   focus(): void {}

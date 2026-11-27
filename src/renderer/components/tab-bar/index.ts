@@ -5,7 +5,7 @@ import { ICON_TERMINAL, ICON_MENU, ICON_FILES, providerMark } from '../../icons.
 import { loadProviderAvailability, hasMultipleAvailableProviders, getProviderDisplayName } from '../../provider-availability.js';
 import { t } from '../../i18n.js';
 import { getActiveContextMenu, hideTabContextMenu } from './menu.js';
-import { render, updateTabStatus } from './tab-list.js';
+import { render, updateTabStatus, initMiddleClickClose } from './tab-list.js';
 import { showMoreMenu, showNewSessionMenu, promptNewSession, quickNewSession, resolveProviderForNewSession } from './session-menu.js';
 
 const btnAddSession = document.getElementById('btn-add-session')!;
@@ -16,6 +16,7 @@ const btnToggleExplorer = document.getElementById('btn-toggle-explorer')!;
 const btnToggleTerminal = document.getElementById('btn-toggle-terminal')!;
 
 export function initTabBar(): void {
+  initMiddleClickClose();
   btnToggleTerminal.innerHTML = ICON_TERMINAL;
   btnMore.innerHTML = ICON_MENU;
   btnToggleExplorer.innerHTML = ICON_FILES;
@@ -44,14 +45,15 @@ export function initTabBar(): void {
     showNewSessionMenu(rect.left, rect.bottom + 4);
   });
 
-  const newSessionLabel = btnAddSession.querySelector('.new-session-label');
+  // Icon-only button: the text label lives in the tooltip and the accessible
+  // name instead of costing ~80px of tab bar (the shortcut is the usual path).
   const newSessionIcon = btnAddSession.querySelector('.new-session-icon');
   const syncNewSessionButton = (): void => {
     const providerId = resolveProviderForNewSession();
     const name = getProviderDisplayName(providerId);
     if (newSessionIcon) newSessionIcon.innerHTML = providerMark(providerId, 'button');
-    if (newSessionLabel) newSessionLabel.textContent = t('tab.newSession.label');
     btnAddSession.title = t('tab.newSession.tooltip', { name });
+    btnAddSession.setAttribute('aria-label', t('tab.newSession.label'));
     btnAddSessionMenu.title = t('tab.newSession.moreTooltip');
   };
   syncNewSessionButton();

@@ -28,6 +28,8 @@ describe('detectLanguage', () => {
   it('handles extensions case-insensitively', () => {
     expect(detectLanguage('/repo/App.TS')).not.toBeNull();
     expect(detectLanguage('/repo/Main.PY')).not.toBeNull();
+    expect(detectLanguage('/repo/schema.SQL')).not.toBeNull();
+    expect(detectLanguage('/repo/dump.PGSQL')).not.toBeNull();
   });
 
   it('maps basename-based files', () => {
@@ -41,5 +43,32 @@ describe('detectLanguage', () => {
     expect(detectLanguage('/repo/notes.xyz')).toBeNull();
     expect(detectLanguage('/repo/README')).toBeNull();
     expect(detectLanguage('/repo/LICENSE')).toBeNull();
+  });
+
+  // SQL is one language with per-dialect tokenizers; which file extension a dump
+  // arrives with is a property of the dump, not of SQL. Missing one used to mean
+  // "SQL renders unhighlighted", so every common dump extension is mapped.
+  describe('sql dialects', () => {
+    const extensions = [
+      'sql', 'ddl', 'dml',            // standard
+      'psql', 'pgsql',                // PostgreSQL
+      'mysql', 'mariadb',             // MySQL / MariaDB
+      'mssql', 'tsql',                // SQL Server
+      'plsql', 'pkb', 'pks',          // Oracle PL/SQL (package body/spec)
+    ];
+
+    it.each(extensions)('highlights .%s', (ext) => {
+      expect(detectLanguage(`/repo/migrations/0001_init.${ext}`)).not.toBeNull();
+    });
+
+    it('selects a different dialect per extension', () => {
+      // Each factory builds a fresh LanguageSupport; dialects differ, so the
+      // objects are never shared between extensions.
+      const standard = detectLanguage('a.sql');
+      const postgres = detectLanguage('a.pgsql');
+      const mysql = detectLanguage('a.mysql');
+      expect(standard).not.toBe(postgres);
+      expect(postgres).not.toBe(mysql);
+    });
   });
 });

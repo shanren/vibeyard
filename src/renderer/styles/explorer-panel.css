@@ -1,4 +1,4 @@
-/* Right-hand Explorer panel — mirrors the left sidebar: fixed width, own
+/* Right-hand Explorer panel — mirrors the left sidebar: its own resizable width,
    header row, scrollable file tree. Toggled via #btn-toggle-explorer. */
 
 #explorer-panel {
@@ -12,6 +12,23 @@
 }
 
 #explorer-panel.hidden {
+  display: none;
+}
+
+/* 4px drag strip on the panel's left edge, mirroring #sidebar-resize-handle. */
+#explorer-resize-handle {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+#explorer-resize-handle:hover,
+#explorer-resize-handle.active {
+  background: var(--accent);
+}
+
+#explorer-resize-handle.hidden {
   display: none;
 }
 
